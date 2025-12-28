@@ -160,17 +160,50 @@ The mountain transitions through lighting phases as you descend:
 | 6-10km | Dusk | 120m | Golden hour, shadows lengthen |
 | 10km+ | Night | 80m | Headlamp mode (if unlocked), stars visible |
 
-**Lighting Effects:**
+**Dynamic Lighting:**
+- Real-time sun position affects shadow direction and length
 - Shadows affect obstacle visibility (trees harder to see in shadow)
-- Sasquatch eyes glow brighter in low light (easier to track)
-- Snow sparkle intensity changes with sun angle
-- Fog density increases at dawn/dusk transitions
+- Snow sparkle intensity changes with sun angle (brightest at low angles)
+- Tree shadows sweep across the slope as time progresses
+- Powder spray catches light differently based on sun position
+
+**Moonlight (Night Phase):**
+- Full moon provides 40m ambient visibility (bluish tint)
+- Moon phases cycle daily: Full → Half → New → Half → Full
+- New moon nights = near-total darkness (20m visibility without headlamp)
+- Moonlight reflects off snow creating subtle glow on open slopes
+- Sasquatch silhouette visible against moonlit sky at 150m
 
 **Night Mode (10km unlock):**
 - Headlamp provides 40m cone of bright visibility
 - Peripheral vision reduced to 20m
 - Sasquatch eyes visible at 100m (glowing red dots)
 - Stars and aurora borealis visual effects
+
+### Fog System
+
+Fog dynamically limits visibility, creating tension and preventing players from planning too far ahead:
+
+**Fog Behavior:**
+- Forward visibility: Capped at phase maximum (80-200m depending on time of day)
+- Rear visibility: Always limited to 50m (can't see Sasquatch until close)
+- Fog density increases at dawn/dusk transitions (+20% thickness)
+- Fog rolls in waves—momentary clear patches followed by dense banks
+
+**Fog Density by Terrain:**
+
+| Location | Fog Modifier | Effect |
+|----------|--------------|--------|
+| Open slopes | Standard | Normal visibility |
+| Forest | +30% density | Trees fade into mist |
+| Valleys/Chutes | +50% density | Very limited sightlines |
+| Peaks/Ridges | -20% density | Clearer views, exposed |
+
+**Gameplay Impact:**
+- Cannot see upcoming obstacles beyond fog limit—react, don't plan
+- Sasquatch roars echo in fog (audio cue more important than visual)
+- Powerups glow through light fog (visible at 1.5x normal range)
+- Coin trails shimmer to help navigation in dense fog
 
 ### Procedural Terrain Generation
 
@@ -184,9 +217,48 @@ The mountain transitions through lighting phases as you descend:
 **Variety Over Distance:**
 - 0-2km: Tutorial slopes, sparse trees.
 - 2-5km: Dense forests, jumps.
-- 5km+: Extreme terrain, powder fields, ruins (ancient ski lifts homage).
+- 5km+: Extreme terrain, powder fields, abandoned chairlifts.
 
 **Seeding:** Daily global seed for leaderboards + player-custom seeds.
+
+### Abandoned Chairlifts
+
+Derelict ski infrastructure appears in the 5km+ zone, serving as both obstacles and trick opportunities:
+
+**Structure:**
+- Towers: 15m tall steel pylons, spaced 50-80m apart
+- Cable: Steel cable runs between towers at 8m height
+- Chairs: 2-person chairs hang from cable every 10m, swaying slightly
+
+**Cable Grinding:**
+
+Jump onto the cable from a ramp or high point to grind:
+
+| Grind Duration | Points | Speed |
+|----------------|--------|-------|
+| 0-2 seconds | 500 base | Maintains entry speed |
+| 2-5 seconds | +200/sec | Gradual acceleration (+5 km/h/sec) |
+| 5+ seconds | +400/sec | Max grind speed (80 km/h) |
+
+- **Entry:** Must hit cable within 1m of center; too far off = miss and fall
+- **Balance:** Slight left/right input keeps you centered; no input = slow wobble
+- **Exit:** Jump off anytime, or auto-dismount at tower (launches you forward)
+- **Chair dodge:** Chairs are obstacles while grinding—jump over or bail before impact
+
+**Night Lighting:**
+
+At night (10km+), chairlifts become beacons:
+
+| Element | Lighting |
+|---------|----------|
+| Safety bars | Neon glow (pink/cyan alternating per chair) |
+| Towers | Red warning lights at top (blink every 2s) |
+| Cable | Faint reflective shimmer in moonlight |
+| Tower base | Floodlight pools (30m radius, warm yellow) |
+
+- Neon chairs visible at 100m through fog
+- Tower lights help navigation in darkness
+- Grinding the cable at night leaves a neon trail matching your board trail color
 
 ### Sasquatch Chase
 
