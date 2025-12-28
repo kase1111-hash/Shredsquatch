@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 65000000000000000}
   m_Layer: 0
   m_Name: Ramp_Small
-  m_TagString: Ramp_NaturalBump
+  m_TagString: SmallBump
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -173,7 +173,7 @@ GameObject:
   - component: {fileID: 65000000000000001}
   m_Layer: 0
   m_Name: LaunchTrigger
-  m_TagString: Ramp_NaturalBump
+  m_TagString: SmallBump
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
