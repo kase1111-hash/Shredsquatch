@@ -1,0 +1,19 @@
+{
+    "name": "Shredsquatch.Powerups",
+    "rootNamespace": "Shredsquatch.Powerups",
+    "references": [
+        "Shredsquatch.Core",
+        "Shredsquatch.Player",
+        "Shredsquatch.Tricks",
+        "Shredsquatch.Sasquatch"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
