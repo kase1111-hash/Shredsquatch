@@ -1,7 +1,5 @@
 # Shredsquatch
 
-*Hero Image*
-
 A modern homage to the classic SkiFree, reimagined as a tense, infinite 3D first-person snowboarding descent where a relentless Sasquatch pursues you down procedurally generated peaks. Shred the powder, nail tricks, and survive the chase—distance is king.
 
 ## Overview
@@ -12,7 +10,7 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 
 **Core Loop:** Accelerate → Steer & trick → Survive → Outrun or get squatched. Never-ending until caught. High-score chases fuel replayability.
 
-**Playtime:** 2-10 minutes per run. Perfect for itch.io, browsers, or mobile (with gyro controls).
+**Playtime:** 2-10 minutes per run. Perfect for itch.io and browsers.
 
 ### Homages to SkiFree:
 
@@ -75,18 +73,6 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 | Grab Tricks | D-Pad |
 | Pause/Menu | Start/Options |
 
-### Mobile Touch
-
-| Action | Gesture |
-|--------|---------|
-| Steer Left/Right | Left Swipe/Drag |
-| Accelerate (Tuck) | Right Lower Swipe Down |
-| Brake/Slow | Right Upper Swipe Up |
-| Jump | Tap Screen Center |
-| Look Around | Gyro / Right Drag |
-| Grab Tricks | On-Screen Buttons |
-| Pause/Menu | Top-Right Icon |
-
 **Trick Inputs:** In air, combine spins (Q/E or Mouse X) + grabs for multipliers (e.g., 540 Indy = x5).
 
 **Pro Tip:** Tuck + perfect carves = top speed (~120 km/h). Strafe mid-air for style.
@@ -135,7 +121,7 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 |--------------------|----------------|
 | >800m | +30% (bursts) |
 | 200-800m | Base |
-| <200m | -20% (tires) |
+| <200m | -20% (tired) |
 
 - **Catches you?** Game Over screen with slow-mo squash.
 - **Visuals:** 3m tall, furry beast with snowboard? No—raw primal chase (bounds over powder, smashes trees).
@@ -195,13 +181,7 @@ Max Combo: 7
 - **Assets:** ProBuilder terrain, custom shader for powder displacement.
 - **Physics:** Custom raycast carver (no wheels—slope normal snapping).
 - **Audio:** FMOD for adaptive chase music (builds tension).
-- **Export:** WebGL (60fps target), Android/iOS (gyro), Steam.
-
-## Installation & Play
-
-1. Download from itch.io or GitHub Releases.
-2. Run `index.html` in browser (Chrome/Firefox best).
-3. No install—play instantly!
+- **Export:** WebGL (60fps target), Steam.
 
 ## Credits
 
