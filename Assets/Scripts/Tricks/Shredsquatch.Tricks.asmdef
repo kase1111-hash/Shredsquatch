@@ -1,0 +1,17 @@
+{
+    "name": "Shredsquatch.Tricks",
+    "rootNamespace": "Shredsquatch.Tricks",
+    "references": [
+        "Shredsquatch.Core",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
