@@ -114,14 +114,87 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
   - 3.0s+: Full combo potential (multiple spins + grab)
 - **Landing:** Must be within 30° of slope angle for clean land. Steeper = stumble. Perpendicular = crash.
 
-**Ramp Bonuses:**
+**Ramp Types:**
 
-| Ramp Type | Height Boost | Speed Boost |
-|-----------|--------------|-------------|
-| Small Bump | +1m | None |
-| Medium Ramp | +2m | +10 km/h |
-| Large Kicker | +4m | +20 km/h |
-| Half-pipe Lip | +3m | Maintains speed |
+| Ramp Type | Height Boost | Speed Boost | Notes |
+|-----------|--------------|-------------|-------|
+| Small Bump | +1m | None | Natural snow mounds, common |
+| Medium Ramp | +2m | +10 km/h | Packed snow kickers |
+| Large Kicker | +4m | +20 km/h | Constructed jump, rare |
+| Half-pipe Lip | +3m | Maintains speed | Found in chutes |
+| Cabin A-Frame | +3m | +15 km/h | Abandoned cabin roofs, grindable peak |
+| Cliff Jump | +5-8m | +25 km/h | Natural rock ledges, high risk/reward |
+| Log Ramp | +2m | +5 km/h | Fallen trees angled upward |
+
+**Cabin A-Frames:**
+- Spawn in 3km+ zone near ruins
+- Approach from downhill side to launch off roof peak
+- Can grind the roof ridge (see Rails section)
+- Miss the roof = crash through window (full ragdoll)
+
+**Cliff Jumps:**
+- Natural rock outcrops, 5km+ zone
+- Variable height (5-8m) based on cliff size
+- Must jump before edge or suffer cliff drop penalty
+- Longest airtime potential (3-4 seconds)
+- Often have powder landing zones below (+soft landing bonus)
+
+### Rails & Grinds
+
+Grindable surfaces appear throughout the mountain. Approach and jump onto rails to grind for points and speed:
+
+**Rail Types:**
+
+| Rail Type | Length | Points/sec | Spawn Zone | Notes |
+|-----------|--------|------------|------------|-------|
+| Fallen Pine | 8-15m | 150 | 1km+ | Toppled trees, bark texture |
+| Fence Rail | 5-10m | 200 | 2km+ | Wooden fence posts, weathered |
+| Log Pile | 3-6m | 250 | 2km+ | Stacked lumber, unstable |
+| Metal Barrier | 10-20m | 300 | 4km+ | Highway guardrails, rusted |
+| Cabin Ridge | 6-12m | 350 | 3km+ | A-frame roof peaks |
+| Pipe Rail | 8-15m | 400 | 5km+ | Industrial pipes, smooth |
+| Chairlift Cable | 50-80m | 200-400 | 5km+ | See Chairlift section |
+
+**Fallen Pine Trees:**
+- Naturally toppled trees lying across the slope
+- Bark provides good grip (no balance wobble)
+- Branch stubs act as obstacles—jump over or bail
+- Can spawn at angles (diagonal grinds)
+- Occasional Y-splits let you choose left or right path
+
+**Fence Rails:**
+- Old ski area boundary fences
+- Wooden posts every 3m (jump over while grinding)
+- Some sections missing—gap jumps required
+- Connect multiple fence segments for combo chains
+
+**Log Piles:**
+- Stacked cut lumber near abandoned camps
+- Short but high-value grinds
+- Unstable: wobble increases over time
+- Launch bonus when exiting (+1m height)
+
+**Metal Barriers:**
+- Highway-style guardrails from mountain roads
+- Longest common rail type
+- Smooth surface = faster acceleration while grinding
+- Rust patches cause micro-stumbles (visual only)
+
+**Grind Mechanics:**
+
+| Action | Effect |
+|--------|--------|
+| Jump onto rail | Start grind (must be within 0.5m of center) |
+| Balance (L/R input) | Keep centered, prevent fall |
+| Jump while grinding | Hop over obstacle or gap |
+| No input | Gradual wobble, fall after 2s |
+| Ollie off end | +200 bonus, extra height |
+
+**Grind Combos:**
+- Rail-to-rail transfers (jump from one rail to another): x2 multiplier
+- Spin onto rail (180/360 entry): +500 bonus
+- Grind + grab: +300 bonus (grab while grinding)
+- Perfect dismount (ollie in last 0.5m): +200 bonus
 
 ### Crash & Recovery
 
