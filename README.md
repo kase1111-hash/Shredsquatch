@@ -222,12 +222,23 @@ The mountain transitions through lighting phases as you descend:
 
 **Grabs (1-4 Keys or D-Pad):**
 
-| Trick | Input | Points | Description |
-|-------|-------|--------|-------------|
-| Nose Grab | 1 / D-Up | 300 | Grab front of board |
-| Indy Grab | 2 / D-Right | 300 | Grab toe edge, between bindings |
-| Melon Grab | 3 / D-Left | 300 | Grab heel edge, between bindings |
-| Stalefish | 4 / D-Down | 300 | Grab heel edge, behind back foot |
+Grab points are based on timing—waiting longer before initiating the grab scores higher:
+
+| Trick | Input | Description |
+|-------|-------|-------------|
+| Nose Grab | 1 / D-Up | Grab front of board |
+| Indy Grab | 2 / D-Right | Grab toe edge, between bindings |
+| Melon Grab | 3 / D-Left | Grab heel edge, between bindings |
+| Stalefish | 4 / D-Down | Grab heel edge, behind back foot |
+
+**Grab Timing Points:**
+
+| Grab Start | Points | Difficulty |
+|------------|--------|------------|
+| 0-0.3s into air | 150 | Easy (panic grab) |
+| 0.3-0.6s into air | 300 | Standard |
+| 0.6-1.0s into air | 450 | Skilled |
+| 1.0s+ into air | 600 | Expert (late grab) |
 
 **Grab Hold Bonus:** +50 points per 0.5s held (max 2s hold = +200 bonus)
 
@@ -257,6 +268,19 @@ The mountain transitions through lighting phases as you descend:
 | 4 tricks | x2.5 |
 | 5+ tricks | x3 (max) |
 
+**Repetition Penalty:**
+
+Repeating the same trick consecutively degrades its point value—variety is rewarded:
+
+| Same Trick in a Row | Point Modifier |
+|---------------------|----------------|
+| 1st-2nd time | 100% (full points) |
+| 3rd time | 50% points |
+| 4th time | 25% points |
+| 5th+ time | 10% points (minimum) |
+
+*Note: The counter resets when you perform a different trick. Spins of different degrees count as different tricks (e.g., 360 → 360 → 540 resets the penalty on the 540).*
+
 **Clean Land Bonus:** +500 points for landing within 15° of slope. Requires completing rotation before touchdown.
 
 **Style Bonuses:**
@@ -266,7 +290,7 @@ The mountain transitions through lighting phases as you descend:
 | Spin + Grab same jump | x1.5 to that trick |
 | Flip + Spin same jump | x2 to that trick |
 | Flip + Spin + Grab | x3 to that trick |
-| Late grab (last 0.3s of air) | +100 points |
+| Grab held until landing (release in last 0.3s) | +100 points |
 
 ## Scoring System
 
@@ -278,7 +302,7 @@ The mountain transitions through lighting phases as you descend:
 | Basic Jump (no trick) | 100 | x1 |
 | Single Spin (180-360) | 500-1,500 | x2 (chain 3+) |
 | Big Spin (540+) | 3,000-12,000 | x2 (chain 3+) |
-| Grab | +300 (+hold bonus) | x1.5 airtime |
+| Grab (timing-based) | 150-600 (+hold bonus) | x1.5 airtime |
 | Flip | 2,000-5,000 | x2 |
 | Full Combo (Spin + Grab + Clean) | Sum + bonuses | x5 max |
 
