@@ -2,6 +2,14 @@
     "name": "Shredsquatch",
     "rootNamespace": "Shredsquatch",
     "references": [
+        "Shredsquatch.Core",
+        "Shredsquatch.Player",
+        "Shredsquatch.Terrain",
+        "Shredsquatch.Tricks",
+        "Shredsquatch.Sasquatch",
+        "Shredsquatch.Powerups",
+        "Shredsquatch.UI",
+        "Shredsquatch.Audio",
         "Unity.InputSystem",
         "Unity.TextMeshPro",
         "Unity.AI.Navigation"

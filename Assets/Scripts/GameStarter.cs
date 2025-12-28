@@ -1,6 +1,9 @@
 using UnityEngine;
+using Shredsquatch.Core;
+using Shredsquatch.Terrain;
+using Shredsquatch.Sasquatch;
 
-namespace Shredsquatch.Core
+namespace Shredsquatch
 {
     /// <summary>
     /// Auto-starts the game for testing and development.
@@ -15,8 +18,8 @@ namespace Shredsquatch.Core
 
         [Header("References")]
         [SerializeField] private Transform _player;
-        [SerializeField] private Terrain.TerrainGenerator _terrainGenerator;
-        [SerializeField] private Sasquatch.SasquatchAI _sasquatch;
+        [SerializeField] private TerrainGenerator _terrainGenerator;
+        [SerializeField] private SasquatchAI _sasquatch;
 
         private void Start()
         {
