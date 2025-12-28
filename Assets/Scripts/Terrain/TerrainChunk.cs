@@ -45,8 +45,11 @@ namespace Shredsquatch.Terrain
             int width = heightMap.GetLength(0);
             int height = heightMap.GetLength(1);
 
-            float topLeftX = (width - 1) / -2f;
-            float topLeftZ = (height - 1) / 2f;
+            // Scale factor to match chunk size (vertices to world units)
+            float meshScale = Size / (width - 1);
+
+            float topLeftX = Size / -2f;
+            float topLeftZ = Size / 2f;
 
             Vector3[] vertices = new Vector3[width * height];
             Vector2[] uvs = new Vector2[width * height];
@@ -63,13 +66,14 @@ namespace Shredsquatch.Terrain
                         ? heightCurve.Evaluate(heightMap[x, y])
                         : heightMap[x, y];
 
+                    // Scale vertices to match chunk size
                     vertices[vertexIndex] = new Vector3(
-                        topLeftX + x,
+                        topLeftX + x * meshScale,
                         heightValue * heightMultiplier,
-                        topLeftZ - y
+                        topLeftZ - y * meshScale
                     );
 
-                    uvs[vertexIndex] = new Vector2(x / (float)width, y / (float)height);
+                    uvs[vertexIndex] = new Vector2(x / (float)(width - 1), y / (float)(height - 1));
 
                     if (x < width - 1 && y < height - 1)
                     {

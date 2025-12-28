@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 23000000000000}
   - component: {fileID: 64000000000000}
   - component: {fileID: 114000000000000}
-  m_Layer: 14
+  m_Layer: 8
   m_Name: TerrainChunk
   m_TagString: Ground
   m_Icon: {fileID: 0}
@@ -63,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20032, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -108,7 +108,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1000000000000000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000030, type: 3}
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20030, type: 3}
   m_Name: TerrainChunk
   m_EditorClassIdentifier: Shredsquatch.Terrain.TerrainChunk
   _meshFilter: {fileID: 33000000000000}
