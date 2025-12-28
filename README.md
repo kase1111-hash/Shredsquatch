@@ -24,10 +24,10 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 - **Procedural Infinite World:** Seamless terrain generation using Perlin/Simplex noise for slopes, forests, jumps, and chutes. Chunks load 2km ahead, unload behind—zero loading screens.
 - **3D First-Person Physics:** Arcade-style snowboarding with momentum, carve turns, powder drag, and crash recovery.
 - **Dynamic Chase System:** Sasquatch rubber-bands to keep 200-800m behind at top speeds. Faster if you slow/crash; lags if you're flawless.
-- **Trick System:** 20+ tricks with combos, multipliers, and a dedicated score/counter.
+- **Trick System:** 14 base tricks (6 spins, 4 grabs, 4 flips) with 50+ combinations, multipliers, and a dedicated score/counter.
 - **Visual/SFX Polish:** Volumetric fog, snow particles, dynamic lighting (dawn-to-dusk cycle), booming Sasquatch roars, and carve squeals.
 - **Collectibles & Powerups:** Golden boards (trick multipliers), speed bursts, and "Yeti Repellent" (temp slow for beast).
-- **UI/Meters:** Clean HUD—distance/speed, trick combo/counter/score, Sasquatch proximity bar (pulses red when close).
+- **UI/Meters:** Clean HUD—distance/speed, trick combo/counter/score, Sasquatch proximity bar (green >600m, yellow 300-600m, red <300m, pulsing red <150m).
 - **Achievements/Leaderboards:** Steam/itch.io integration for global distance/trick highs.
 - **Accessibility:** Color-blind modes, control remapping, auto-camera smoothing.
 
@@ -56,6 +56,7 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 | Jump | A Button |
 | Look Around | Right Stick |
 | Spin Left/Right | LB/RB (in air) |
+| Flip (at ramp) | Left Stick Up/Down + A |
 | Grab Tricks | D-Pad (Up/Down/Left/Right) |
 | Pause/Menu | Start |
 
@@ -70,8 +71,9 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 | Brake/Slow | Left Trigger |
 | Jump | Face Button South (A/Cross) |
 | Look Around | Right Stick |
-| Grab Tricks | D-Pad |
 | Spin Left/Right | Left/Right Bumpers (in air) |
+| Flip (at ramp) | Left Stick Up/Down + Jump |
+| Grab Tricks | D-Pad |
 | Pause/Menu | Start/Options |
 
 **Trick Inputs:** In air, combine spins (Q/E or Mouse X) + grabs for multipliers (e.g., 540 Indy = x5).
@@ -194,11 +196,11 @@ The mountain transitions through lighting phases as you descend:
   - Base speed: 90 km/h (foot bounds + unnatural stamina).
 - **Rubber-Banding:** Distance target 400m avg.
 
-| Player Dist Behind | Sasq Speed Mod |
-|--------------------|----------------|
-| >800m | +30% (bursts) |
-| 200-800m | Base |
-| <200m | -20% (tired) |
+| Player Lead Distance | Sasq Speed Mod |
+|----------------------|----------------|
+| >800m ahead | +30% (bursts) |
+| 200-800m ahead | Base (90 km/h) |
+| <200m ahead | -20% (tired) |
 
 - **Catches you?** Game Over screen with slow-mo squash.
 - **Visuals:** 3m tall, furry beast with snowboard? No—raw primal chase (bounds over powder, smashes trees).
@@ -289,12 +291,18 @@ The mountain transitions through lighting phases as you descend:
 
 ## Powerups & Collectibles
 
-Spawn procedurally (rarer post-5km):
+**Spawn Rates:**
 
-- **Golden Board:** x2 tricks (10s).
-- **Nitro Tuck:** +50km/h (5s).
-- **Repellent Cloud:** Sasq slows 50% (15s).
-- **Coins:** 50 trick pts each; magnet on combos.
+| Distance | Powerup Chance | Coin Density |
+|----------|----------------|--------------|
+| 0-2km | Every 200m | 10 per 100m |
+| 2-5km | Every 300m | 8 per 100m |
+| 5km+ | Every 500m | 5 per 100m |
+
+- **Golden Board:** x2 trick points (10s duration).
+- **Nitro Tuck:** +50 km/h instant boost (5s duration).
+- **Repellent Cloud:** Sasquatch slows 50% (15s duration). Does not stack.
+- **Coins:** 50 trick pts each. During active combo, coins within 5m are magnetically pulled toward you.
 
 ## Game Over & Progression
 
@@ -309,9 +317,15 @@ Max Combo: 7
 ```
 
 **Unlocks (local/savefile):**
-- 5km: Sasq skins (Yeti homage).
-- 10km: Night mode (headlamp shreds).
-- 20km: Board trails (fire/rainbow).
+
+| Distance PB | Unlock |
+|-------------|--------|
+| 5km | Sasquatch Skins: Classic Yeti (white fur), Abominable (ice blue) |
+| 10km | Night Mode: Headlamp visibility, starfield sky |
+| 15km | Board Trail: Fire (orange/red particle trail) |
+| 20km | Board Trail: Rainbow (multicolor cycling trail) |
+| 25km | Board Trail: Lightning (electric blue with sparks) |
+| 30km | Golden Sasquatch skin + all trails unlocked |
 
 **Endless Mode Variants (unlock via PB):**
 
