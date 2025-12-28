@@ -785,7 +785,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0000000000000000000000000000002a, type: 3}
   m_Name:
-  m_EditorClassIdentifier: Shredsquatch.Core.GameStarter
+  m_EditorClassIdentifier: Shredsquatch.GameStarter
   _autoStart: 1
   _startDelay: 0.5
   _defaultMode: 0
