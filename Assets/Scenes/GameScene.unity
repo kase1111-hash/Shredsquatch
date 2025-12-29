@@ -208,7 +208,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 100000001}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000002, type: 3}
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20033, type: 3}
   m_Name:
   m_EditorClassIdentifier: Shredsquatch.Terrain.TerrainGenerator
   _chunkSize: 256
@@ -216,12 +216,42 @@ MonoBehaviour:
   _loadDistance: 512
   _unloadDistance: 768
   _heightMultiplier: 50
+  _heightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   _seed: 42
   _noiseScale: 200
   _octaves: 4
   _persistence: 0.5
   _lacunarity: 2
   _slopeBias: 0.4
+  _chunkPrefab: {fileID: 1000000000000000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20031, type: 3}
+  _terrainMaterial: {fileID: 2100000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20032, type: 2}
+  _treePrefabs: []
+  _rockPrefabs: []
+  _rampPrefabs: []
+  _player: {fileID: 400000020}
 --- !u!1 &100000010
 GameObject:
   m_ObjectHideFlags: 0
@@ -720,7 +750,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20035, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -854,7 +884,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20032, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
