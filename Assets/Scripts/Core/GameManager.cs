@@ -109,9 +109,11 @@ namespace Shredsquatch.Core
 
             CurrentRun.RunTime += Time.deltaTime;
 
-            // Calculate distance in kilometers
-            float rawDistance = Vector3.Distance(_startPosition, _player.position);
-            CurrentRun.Distance = rawDistance / 1000f; // Convert to km
+            // Calculate distance in kilometers using Z-axis (downhill direction)
+            // This accurately tracks how far down the mountain the player has traveled
+            // Using Max ensures we only count forward progress (can't go backwards)
+            float downhillDistance = Mathf.Max(0f, _player.position.z - _startPosition.z);
+            CurrentRun.Distance = downhillDistance / 1000f; // Convert to km
 
             // Notify listeners periodically (every 0.1km)
             if (CurrentRun.Distance - _lastDistanceUpdate >= 0.1f)

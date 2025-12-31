@@ -174,11 +174,6 @@ namespace Shredsquatch.Tricks
             _currentTrick.Reset();
         }
 
-        public void OnLanding(bool wasClean)
-        {
-            // Called from PlayerController - actual logic in OnLandingInternal
-        }
-
         private int CalculateTrickScore(float airTime, bool wasClean)
         {
             int total = 0;

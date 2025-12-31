@@ -53,7 +53,7 @@ namespace Shredsquatch.Player
 
             // Subscribe to events
             _physics.OnCrash += OnCrash;
-            _jumpController.OnLand += OnLand;
+            // Note: TrickController subscribes directly to JumpController.OnLand
         }
 
         private void OnDestroy()
@@ -65,7 +65,6 @@ namespace Shredsquatch.Player
             }
 
             _physics.OnCrash -= OnCrash;
-            _jumpController.OnLand -= OnLand;
         }
 
         private void Update()
@@ -155,14 +154,6 @@ namespace Shredsquatch.Player
             if (_trickController != null)
             {
                 _trickController.EndCombo(false);
-            }
-        }
-
-        private void OnLand(float airTime, bool wasClean)
-        {
-            if (_trickController != null)
-            {
-                _trickController.OnLanding(wasClean);
             }
         }
 
