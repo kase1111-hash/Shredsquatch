@@ -20,6 +20,18 @@ namespace Shredsquatch
         [SerializeField] private Transform _player;
         [SerializeField] private TerrainGenerator _terrainGenerator;
         [SerializeField] private SasquatchAI _sasquatch;
+        [SerializeField] private ErrorRecoveryManager _errorRecovery;
+
+        private void Awake()
+        {
+            // Ensure ErrorRecoveryManager exists (create if not assigned)
+            if (_errorRecovery == null && ErrorRecoveryManager.Instance == null)
+            {
+                var errorRecoveryGO = new GameObject("ErrorRecoveryManager");
+                _errorRecovery = errorRecoveryGO.AddComponent<ErrorRecoveryManager>();
+                DontDestroyOnLoad(errorRecoveryGO);
+            }
+        }
 
         private void Start()
         {

@@ -8,7 +8,7 @@ namespace Shredsquatch.Player
     [RequireComponent(typeof(SnowboardPhysics))]
     [RequireComponent(typeof(JumpController))]
     [RequireComponent(typeof(CrashHandler))]
-    public class PlayerController : MonoBehaviour
+    public class PlayerController : MonoBehaviour, IRecoverable
     {
         [Header("Components")]
         [SerializeField] private PlayerInput _input;
@@ -29,6 +29,11 @@ namespace Shredsquatch.Player
 
         // State
         private bool _isActive;
+
+        // Error recovery
+        private bool _updateHasErrored;
+        private Vector3 _lastSafePosition;
+        private Quaternion _lastSafeRotation;
 
         private void Awake()
         {
@@ -51,9 +56,19 @@ namespace Shredsquatch.Player
                 GameManager.Instance.OnRunStarted += OnRunStarted;
             }
 
+            // Register with error recovery system
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.RegisterRecoverable(this);
+            }
+
             // Subscribe to events
-            _physics.OnCrash += OnCrash;
+            if (_physics != null) _physics.OnCrash += OnCrash;
             // Note: TrickController subscribes directly to JumpController.OnLand
+
+            // Store initial safe position
+            _lastSafePosition = transform.position;
+            _lastSafeRotation = transform.rotation;
         }
 
         private void OnDestroy()
@@ -64,15 +79,34 @@ namespace Shredsquatch.Player
                 GameManager.Instance.OnRunStarted -= OnRunStarted;
             }
 
-            _physics.OnCrash -= OnCrash;
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.UnregisterRecoverable(this);
+            }
+
+            if (_physics != null) _physics.OnCrash -= OnCrash;
         }
 
         private void Update()
         {
             if (!_isActive) return;
 
-            HandlePause();
-            UpdateEffects();
+            SafeExecution.TryUpdate(() => {
+                HandlePause();
+                UpdateEffects();
+                UpdateSafePosition();
+            }, ref _updateHasErrored, "PlayerController.Update");
+        }
+
+        private void UpdateSafePosition()
+        {
+            // Store last known good position when grounded and not in ragdoll
+            if (_physics != null && _physics.IsGrounded &&
+                _crashHandler != null && !_crashHandler.IsInRagdoll)
+            {
+                _lastSafePosition = transform.position;
+                _lastSafeRotation = transform.rotation;
+            }
         }
 
         private void HandlePause()
@@ -165,11 +199,41 @@ namespace Shredsquatch.Player
         }
 
         // Public getters for other systems
-        public float GetCurrentSpeed() => _physics.CurrentSpeed;
-        public float GetCurrentSpeedKmh() => _physics.CurrentSpeedKmh;
-        public bool IsGrounded() => _physics.IsGrounded;
-        public bool IsInRagdoll() => _crashHandler.IsInRagdoll;
-        public bool IsInvincible() => _crashHandler.IsInvincible;
-        public float GetAirTime() => _jumpController.AirTime;
+        public float GetCurrentSpeed() => _physics?.CurrentSpeed ?? 0f;
+        public float GetCurrentSpeedKmh() => _physics?.CurrentSpeedKmh ?? 0f;
+        public bool IsGrounded() => _physics?.IsGrounded ?? true;
+        public bool IsInRagdoll() => _crashHandler?.IsInRagdoll ?? false;
+        public bool IsInvincible() => _crashHandler?.IsInvincible ?? false;
+        public float GetAirTime() => _jumpController?.AirTime ?? 0f;
+
+        /// <summary>
+        /// IRecoverable implementation - reset player to a safe state.
+        /// </summary>
+        public void AttemptRecovery()
+        {
+            // Clear error state
+            _updateHasErrored = false;
+
+            // Reset to last safe position
+            transform.position = _lastSafePosition;
+            transform.rotation = _lastSafeRotation;
+
+            // Reset physics state
+            if (_physics != null)
+            {
+                _physics.SetSpeedAfterRecovery();
+            }
+
+            // End any active tricks/combos
+            if (_trickController != null)
+            {
+                SafeExecution.Try(() => _trickController.EndCombo(false), "RecoveryEndCombo");
+            }
+
+            // Deactivate until game restarts
+            _isActive = false;
+
+            Debug.Log("[PlayerController] Recovery complete - player reset to safe state");
+        }
     }
 }
