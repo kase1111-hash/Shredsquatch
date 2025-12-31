@@ -3,7 +3,7 @@ using System;
 
 namespace Shredsquatch.Core
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : MonoBehaviour, IRecoverable
     {
         public static GameManager Instance { get; private set; }
 
@@ -29,6 +29,9 @@ namespace Shredsquatch.Core
         private Vector3 _startPosition;
         private float _lastDistanceUpdate;
 
+        // Error recovery
+        private bool _updateHasErrored;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -42,11 +45,28 @@ namespace Shredsquatch.Core
             LoadProgress();
         }
 
+        private void Start()
+        {
+            // Register with error recovery system
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.RegisterRecoverable(this);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.UnregisterRecoverable(this);
+            }
+        }
+
         private void Update()
         {
             if (_currentState == GameState.Playing)
             {
-                UpdateRunStats();
+                SafeExecution.TryUpdate(UpdateRunStats, ref _updateHasErrored, "GameManager.Update");
             }
         }
 
@@ -61,7 +81,7 @@ namespace Shredsquatch.Core
             }
 
             SetState(GameState.Playing);
-            OnRunStarted?.Invoke();
+            SafeExecution.TryInvoke(OnRunStarted, "OnRunStarted");
         }
 
         public void PauseGame()
@@ -85,10 +105,10 @@ namespace Shredsquatch.Core
         public void EndRun()
         {
             Time.timeScale = 1f;
-            Progress.CheckUnlocks(CurrentRun.Distance);
-            SaveProgress();
+            SafeExecution.Try(() => Progress.CheckUnlocks(CurrentRun.Distance), "CheckUnlocks");
+            SafeExecution.Try(SaveProgress, "SaveProgress");
             SetState(GameState.GameOver);
-            OnGameOver?.Invoke();
+            SafeExecution.TryInvoke(OnGameOver, "OnGameOver");
         }
 
         public void ReturnToMenu()
@@ -100,7 +120,7 @@ namespace Shredsquatch.Core
         private void SetState(GameState newState)
         {
             _currentState = newState;
-            OnStateChanged?.Invoke(newState);
+            SafeExecution.TryInvoke(OnStateChanged, newState, "OnStateChanged");
         }
 
         private void UpdateRunStats()
@@ -119,7 +139,7 @@ namespace Shredsquatch.Core
             if (CurrentRun.Distance - _lastDistanceUpdate >= 0.1f)
             {
                 _lastDistanceUpdate = CurrentRun.Distance;
-                OnDistanceChanged?.Invoke(CurrentRun.Distance);
+                SafeExecution.TryInvoke(OnDistanceChanged, CurrentRun.Distance, "OnDistanceChanged");
             }
         }
 
@@ -192,6 +212,35 @@ namespace Shredsquatch.Core
         public void SetPlayerReference(Transform player)
         {
             _player = player;
+        }
+
+        /// <summary>
+        /// IRecoverable implementation - reset game to a safe state.
+        /// </summary>
+        public void AttemptRecovery()
+        {
+            // Reset time scale
+            Time.timeScale = 1f;
+
+            // Clear error state
+            _updateHasErrored = false;
+
+            // If we were playing, end the run gracefully
+            if (_currentState == GameState.Playing || _currentState == GameState.Paused)
+            {
+                // Save any progress we can
+                SafeExecution.Try(SaveProgress, "RecoverySave");
+
+                // Return to menu
+                _currentState = GameState.MainMenu;
+                SafeExecution.TryInvoke(OnStateChanged, _currentState, "RecoveryStateChange");
+            }
+
+            // Reset run stats
+            CurrentRun.Reset();
+            _lastDistanceUpdate = 0f;
+
+            Debug.Log("[GameManager] Recovery complete - returned to safe state");
         }
     }
 }

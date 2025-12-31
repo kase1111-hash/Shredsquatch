@@ -4,7 +4,7 @@ using Shredsquatch.Core;
 
 namespace Shredsquatch.Terrain
 {
-    public class TerrainGenerator : MonoBehaviour
+    public class TerrainGenerator : MonoBehaviour, IRecoverable
     {
         [Header("Chunk Settings")]
         [SerializeField] private float _chunkSize = 256f;
@@ -48,6 +48,10 @@ namespace Shredsquatch.Terrain
         // Object pooling
         private Transform _chunkContainer;
 
+        // Error recovery
+        private bool _updateHasErrored;
+        private bool _generationHasErrored;
+
         private void Start()
         {
             _chunkContainer = new GameObject("TerrainChunks").transform;
@@ -61,16 +65,30 @@ namespace Shredsquatch.Terrain
             // Initialize seeded random for deterministic procedural generation
             _seededRandom = new System.Random(_seed);
 
+            // Register with error recovery system
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.RegisterRecoverable(this);
+            }
+
             // Initial chunk generation around player
-            UpdateChunks();
+            SafeExecution.Try(UpdateChunks, "TerrainGenerator.InitialUpdate");
+        }
+
+        private void OnDestroy()
+        {
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.UnregisterRecoverable(this);
+            }
         }
 
         private void Update()
         {
             if (GameManager.Instance?.CurrentState == GameState.Playing)
             {
-                UpdateChunks();
-                ProcessChunkQueue();
+                SafeExecution.TryUpdate(UpdateChunks, ref _updateHasErrored, "TerrainGenerator.UpdateChunks");
+                SafeExecution.TryUpdate(ProcessChunkQueue, ref _generationHasErrored, "TerrainGenerator.ProcessQueue");
             }
         }
 
@@ -416,6 +434,36 @@ namespace Shredsquatch.Terrain
         public void SetPlayerReference(Transform player)
         {
             _player = player;
+        }
+
+        /// <summary>
+        /// IRecoverable implementation - clear bad chunks and reset generation state.
+        /// </summary>
+        public void AttemptRecovery()
+        {
+            // Clear error states
+            _updateHasErrored = false;
+            _generationHasErrored = false;
+
+            // Clear the generation queue
+            _chunksToGenerate.Clear();
+            _queuedChunks.Clear();
+
+            // Try to clear all chunks safely
+            var chunksToRemove = new List<Vector2Int>(_chunks.Keys);
+            foreach (var coord in chunksToRemove)
+            {
+                SafeExecution.Try(() => UnloadChunk(coord), "RecoveryUnloadChunk");
+            }
+
+            // Re-initialize seeded random
+            _seededRandom = new System.Random(_seed);
+
+            // Clear tracking lists
+            _chunks.Clear();
+            _activeChunks.Clear();
+
+            Debug.Log("[TerrainGenerator] Recovery complete - terrain reset");
         }
     }
 }
