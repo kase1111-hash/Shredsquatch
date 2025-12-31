@@ -223,6 +223,12 @@ namespace Shredsquatch.Player
             // Spawn powder particle effect
             // TODO: Implement particle effect
             Debug.Log($"Powder spray at {position}");
+
+            // Trigger near-miss feedback (screen shake + haptics)
+            if (GameFeedback.Instance != null)
+            {
+                GameFeedback.Instance.TriggerNearMiss();
+            }
         }
 
         private void TriggerStumble()
