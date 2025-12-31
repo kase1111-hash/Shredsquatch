@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 114000000000006}
   - component: {fileID: 114000000000007}
   - component: {fileID: 114000000000008}
+  - component: {fileID: 114000000000009}
   m_Layer: 9
   m_Name: Player
   m_TagString: Player
@@ -40,7 +41,6 @@ Transform:
   - {fileID: 4000000000000001}
   - {fileID: 4000000000000002}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &143000000000000
 CharacterController:
@@ -68,7 +68,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0000000000000000000000000000001a, type: 3}
-  m_Name: PlayerInput
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Player.PlayerInput
 --- !u!114 &114000000000002
 MonoBehaviour:
@@ -80,21 +80,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0000000000000000000000000000001b, type: 3}
-  m_Name: SnowboardPhysics
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Player.SnowboardPhysics
-  _controller: {fileID: 143000000000000}
-  _input: {fileID: 114000000000001}
-  _boardTransform: {fileID: 4000000000000002}
   _gravity: 20
   _slopeAcceleration: 15
   _maxSpeed: 120
   _turnSpeed: 100
   _tuckSpeedBonus: 1.5
   _brakeStrength: 0.5
-  _groundCheckDistance: 0.5
-  _groundMask:
-    serializedVersion: 2
-    m_Bits: 256
+  _groundCheckDistance: 1.0
 --- !u!114 &114000000000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -105,10 +99,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0000000000000000000000000000001c, type: 3}
-  m_Name: JumpController
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Player.JumpController
-  _physics: {fileID: 114000000000002}
-  _input: {fileID: 114000000000001}
   _baseJumpForce: 8
   _chargeRate: 1
 --- !u!114 &114000000000004
@@ -121,9 +113,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0000000000000000000000000000001d, type: 3}
-  m_Name: CrashHandler
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Player.CrashHandler
-  _physics: {fileID: 114000000000002}
 --- !u!114 &114000000000005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -134,12 +125,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0000000000000000000000000000001e, type: 3}
-  m_Name: PlayerController
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Player.PlayerController
-  _input: {fileID: 114000000000001}
-  _physics: {fileID: 114000000000002}
-  _jumpController: {fileID: 114000000000003}
-  _crashHandler: {fileID: 114000000000004}
 --- !u!114 &114000000000006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,10 +137,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0000000000000000000000000000001f, type: 3}
-  m_Name: TrickController
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Tricks.TrickController
-  _input: {fileID: 114000000000001}
-  _jumpController: {fileID: 114000000000003}
   _spinSpeed: 360
   _flipSpeed: 360
 --- !u!114 &114000000000007
@@ -166,10 +151,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00000000000000000000000000000020, type: 3}
-  m_Name: RailGrindController
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Tricks.RailGrindController
-  _physics: {fileID: 114000000000002}
-  _input: {fileID: 114000000000001}
 --- !u!114 &114000000000008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,8 +163,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00000000000000000000000000000021, type: 3}
-  m_Name: PowerupManager
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Powerups.PowerupManager
+--- !u!114 &114000000000009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000029, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Shredsquatch.Player.BoardVisuals
+  _leanMultiplier: 1
+  _leanSmoothing: 10
+  _trailMinSpeed: 20
 --- !u!1 &1000000000000001
 GameObject:
   m_ObjectHideFlags: 0
@@ -213,7 +211,6 @@ Transform:
   m_Children:
   - {fileID: 4000000000000003}
   m_Father: {fileID: 4000000000000000}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &114000000000010
 MonoBehaviour:
@@ -225,11 +222,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00000000000000000000000000000022, type: 3}
-  m_Name: FirstPersonCamera
+  m_Name:
   m_EditorClassIdentifier: Shredsquatch.Player.FirstPersonCamera
-  _playerBody: {fileID: 4000000000000000}
-  _cameraHolder: {fileID: 4000000000000001}
-  _input: {fileID: 114000000000001}
   _mouseSensitivity: 2
   _controllerSensitivity: 100
   _maxLookUp: 60
@@ -242,90 +236,6 @@ MonoBehaviour:
   _tiltAmount: 5
   _tiltSpeed: 3
   _shakeDecay: 5
---- !u!1 &1000000000000003
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4000000000000003}
-  - component: {fileID: 20000000000000}
-  - component: {fileID: 81000000000000}
-  m_Layer: 0
-  m_Name: MainCamera
-  m_TagString: MainCamera
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4000000000000003
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000000000000003}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 4000000000000001}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!20 &20000000000000
-Camera:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000000000000003}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.5, g: 0.7, b: 0.9, a: 1}
-  m_projectionMatrixMode: 1
-  m_GateFitMode: 2
-  m_FOVAxisMode: 0
-  m_SensorSize: {x: 36, y: 24}
-  m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
-  m_NormalizedViewPortRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
-  near clip plane: 0.1
-  far clip plane: 500
-  field of view: 75
-  orthographic: 0
-  orthographic size: 5
-  m_Depth: 0
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: -1
-  m_TargetTexture: {fileID: 0}
-  m_TargetDisplay: 0
-  m_TargetEye: 3
-  m_HDR: 1
-  m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
-  m_ForceIntoRenderTexture: 0
-  m_OcclusionCulling: 1
-  m_StereoConvergence: 10
-  m_StereoSeparation: 0.022
---- !u!81 &81000000000000
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000000000000003}
-  m_Enabled: 1
 --- !u!1 &1000000000000002
 GameObject:
   m_ObjectHideFlags: 0
@@ -337,7 +247,6 @@ GameObject:
   - component: {fileID: 4000000000000002}
   - component: {fileID: 33000000000000}
   - component: {fileID: 23000000000000}
-  - component: {fileID: 114000000000020}
   m_Layer: 0
   m_Name: Snowboard
   m_TagString: Untagged
@@ -358,7 +267,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4000000000000000}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &33000000000000
 MeshFilter:
@@ -410,19 +318,86 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &114000000000020
-MonoBehaviour:
+--- !u!1 &1000000000000003
+GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000000000000002}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4000000000000003}
+  - component: {fileID: 20000000000000}
+  - component: {fileID: 81000000000000}
+  m_Layer: 0
+  m_Name: MainCamera
+  m_TagString: MainCamera
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4000000000000003
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000003}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4000000000000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!20 &20000000000000
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000003}
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000023, type: 3}
-  m_Name: BoardVisuals
-  m_EditorClassIdentifier: Shredsquatch.Player.BoardVisuals
-  _boardMesh: {fileID: 4000000000000002}
-  _leanMultiplier: 1
-  _leanSmoothing: 10
-  _trailMinSpeed: 20
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.5, g: 0.7, b: 0.9, a: 1}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_FocalLength: 50
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.1
+  far clip plane: 1000
+  field of view: 75
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRenderTexture: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!81 &81000000000000
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000003}
+  m_Enabled: 1

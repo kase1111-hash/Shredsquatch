@@ -1,0 +1,30 @@
+{
+    "name": "Shredsquatch.Tests.PlayMode",
+    "rootNamespace": "Shredsquatch.Tests.PlayMode",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Shredsquatch",
+        "Shredsquatch.Core",
+        "Shredsquatch.Player",
+        "Shredsquatch.Terrain",
+        "Shredsquatch.Tricks",
+        "Shredsquatch.Sasquatch",
+        "Shredsquatch.Powerups",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
