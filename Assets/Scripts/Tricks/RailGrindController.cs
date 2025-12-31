@@ -32,6 +32,7 @@ namespace Shredsquatch.Tricks
         private bool _isGrinding;
         private RailType _currentRailType;
         private float _grindDuration;
+        private float _grindDistance;        // Meters traveled on rail
         private float _balance;              // -1 to 1
         private float _wobbleTimer;
         private int _grindScore;
@@ -47,6 +48,7 @@ namespace Shredsquatch.Tricks
 
         // Events
         public event System.Action<int> OnGrindComplete;         // points
+        public event System.Action<float> OnGrindDistanceComplete; // meters
         public event System.Action<string> OnGrindStart;         // rail name
         public event System.Action OnGrindFail;
 
@@ -68,6 +70,7 @@ namespace Shredsquatch.Tricks
             _currentRail = rail;
             _currentRailType = type;
             _grindDuration = 0f;
+            _grindDistance = 0f;
             _grindScore = 0;
             _balance = 0f;
             _wobbleTimer = 0f;
@@ -86,6 +89,9 @@ namespace Shredsquatch.Tricks
         private void UpdateGrind()
         {
             _grindDuration += Time.deltaTime;
+
+            // Track distance traveled (speed in m/s * time)
+            _grindDistance += _physics.CurrentSpeed * Time.deltaTime;
 
             // Points per second based on rail type
             int pointsPerSec = GetRailPointsPerSecond(_currentRailType);
@@ -227,6 +233,7 @@ namespace Shredsquatch.Tricks
                 }
 
                 OnGrindComplete?.Invoke(_grindScore);
+                OnGrindDistanceComplete?.Invoke(_grindDistance);
 
                 // Add to game score
                 GameManager.Instance?.AddTrickScore(_grindScore, 1);
