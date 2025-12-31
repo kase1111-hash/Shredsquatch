@@ -39,7 +39,11 @@ namespace Shredsquatch.Terrain
         // Chunk management
         private Dictionary<Vector2Int, TerrainChunk> _chunks = new Dictionary<Vector2Int, TerrainChunk>();
         private Queue<Vector2Int> _chunksToGenerate = new Queue<Vector2Int>();
+        private HashSet<Vector2Int> _queuedChunks = new HashSet<Vector2Int>(); // For O(1) lookup
         private List<Vector2Int> _activeChunks = new List<Vector2Int>();
+
+        // Seeded random for deterministic generation
+        private System.Random _seededRandom;
 
         // Object pooling
         private Transform _chunkContainer;
@@ -53,6 +57,9 @@ namespace Shredsquatch.Terrain
             {
                 _seed = System.DateTime.Now.DayOfYear + System.DateTime.Now.Year * 1000;
             }
+
+            // Initialize seeded random for deterministic procedural generation
+            _seededRandom = new System.Random(_seed);
 
             // Initial chunk generation around player
             UpdateChunks();
@@ -118,7 +125,8 @@ namespace Shredsquatch.Terrain
 
         private void QueueChunk(Vector2Int coord)
         {
-            if (!_chunksToGenerate.Contains(coord))
+            // Use HashSet for O(1) lookup instead of O(n) Queue.Contains
+            if (_queuedChunks.Add(coord))
             {
                 _chunksToGenerate.Enqueue(coord);
             }
@@ -132,6 +140,7 @@ namespace Shredsquatch.Terrain
             while (_chunksToGenerate.Count > 0 && chunksPerFrame > 0)
             {
                 Vector2Int coord = _chunksToGenerate.Dequeue();
+                _queuedChunks.Remove(coord); // Keep HashSet in sync
 
                 if (!_chunks.ContainsKey(coord))
                 {
@@ -232,6 +241,17 @@ namespace Shredsquatch.Terrain
             SpawnRamps(chunk, heightMap, zone);
         }
 
+        // Helper methods for seeded random
+        private float SeededRandomRange(float min, float max)
+        {
+            return (float)(_seededRandom.NextDouble() * (max - min) + min);
+        }
+
+        private int SeededRandomRange(int min, int maxExclusive)
+        {
+            return _seededRandom.Next(min, maxExclusive);
+        }
+
         private void SpawnTrees(TerrainChunk chunk, float[,] heightMap, float density, TerrainZone zone)
         {
             if (_treePrefabs == null || _treePrefabs.Length == 0) return;
@@ -241,8 +261,8 @@ namespace Shredsquatch.Terrain
 
             for (int i = 0; i < treeCount; i++)
             {
-                float x = Random.Range(0, _chunkSize);
-                float z = Random.Range(0, _chunkSize);
+                float x = SeededRandomRange(0f, _chunkSize);
+                float z = SeededRandomRange(0f, _chunkSize);
 
                 // Sample height at this position
                 int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
@@ -254,10 +274,10 @@ namespace Shredsquatch.Terrain
                 if (clusterNoise < 0.4f) continue; // Skip for sparse areas
 
                 Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
-                Quaternion rotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
-                float scale = Random.Range(0.8f, 1.5f);
+                Quaternion rotation = Quaternion.Euler(0, SeededRandomRange(0, 360), 0);
+                float scale = SeededRandomRange(0.8f, 1.5f);
 
-                GameObject prefab = _treePrefabs[Random.Range(0, _treePrefabs.Length)];
+                GameObject prefab = _treePrefabs[SeededRandomRange(0, _treePrefabs.Length)];
                 chunk.SpawnObject(prefab, localPos, rotation, Vector3.one * scale);
             }
         }
@@ -270,8 +290,8 @@ namespace Shredsquatch.Terrain
 
             for (int i = 0; i < rockCount; i++)
             {
-                float x = Random.Range(0, _chunkSize);
-                float z = Random.Range(0, _chunkSize);
+                float x = SeededRandomRange(0f, _chunkSize);
+                float z = SeededRandomRange(0f, _chunkSize);
 
                 int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
                 int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
@@ -279,13 +299,13 @@ namespace Shredsquatch.Terrain
 
                 Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
                 Quaternion rotation = Quaternion.Euler(
-                    Random.Range(-10, 10),
-                    Random.Range(0, 360),
-                    Random.Range(-10, 10)
+                    SeededRandomRange(-10, 10),
+                    SeededRandomRange(0, 360),
+                    SeededRandomRange(-10, 10)
                 );
-                float scale = Random.Range(0.5f, 2f);
+                float scale = SeededRandomRange(0.5f, 2f);
 
-                GameObject prefab = _rockPrefabs[Random.Range(0, _rockPrefabs.Length)];
+                GameObject prefab = _rockPrefabs[SeededRandomRange(0, _rockPrefabs.Length)];
                 chunk.SpawnObject(prefab, localPos, rotation, Vector3.one * scale);
             }
         }
@@ -305,10 +325,10 @@ namespace Shredsquatch.Terrain
 
             for (int i = 0; i < rampCount; i++)
             {
-                if (Random.value > 0.3f) continue; // 30% chance per potential ramp
+                if (_seededRandom.NextDouble() > 0.3) continue; // 30% chance per potential ramp
 
-                float x = Random.Range(_chunkSize * 0.2f, _chunkSize * 0.8f);
-                float z = Random.Range(_chunkSize * 0.2f, _chunkSize * 0.8f);
+                float x = SeededRandomRange(_chunkSize * 0.2f, _chunkSize * 0.8f);
+                float z = SeededRandomRange(_chunkSize * 0.2f, _chunkSize * 0.8f);
 
                 int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
                 int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
@@ -316,9 +336,9 @@ namespace Shredsquatch.Terrain
 
                 Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
                 // Ramps face downhill (positive Z)
-                Quaternion rotation = Quaternion.Euler(0, Random.Range(-20, 20), 0);
+                Quaternion rotation = Quaternion.Euler(0, SeededRandomRange(-20, 20), 0);
 
-                GameObject prefab = _rampPrefabs[Random.Range(0, _rampPrefabs.Length)];
+                GameObject prefab = _rampPrefabs[SeededRandomRange(0, _rampPrefabs.Length)];
                 chunk.SpawnObject(prefab, localPos, rotation, Vector3.one);
             }
         }
@@ -390,6 +410,7 @@ namespace Shredsquatch.Terrain
         public void SetSeed(int seed)
         {
             _seed = seed;
+            _seededRandom = new System.Random(_seed);
         }
 
         public void SetPlayerReference(Transform player)
