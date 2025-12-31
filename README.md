@@ -29,7 +29,6 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 - **Collectibles & Powerups:** Golden boards (trick multipliers), speed bursts, and "Yeti Repellent" (temp slow for beast).
 - **UI/Meters:** Clean HUD—distance/speed, trick combo/counter/score, Sasquatch proximity bar (green >600m, yellow 300-600m, red <300m, pulsing red <150m).
 - **Achievements/Leaderboards:** Steam/itch.io integration for global distance/trick highs.
-- **Accessibility:** Color-blind modes, control remapping, auto-camera smoothing.
 
 ## Controls
 
@@ -524,7 +523,7 @@ Max Combo: 7
 - **Engine:** Unity 2023.2 (URP for performance).
 - **Assets:** ProBuilder terrain, custom shader for powder displacement.
 - **Physics:** Custom raycast carver (no wheels—slope normal snapping).
-- **Audio:** FMOD for adaptive chase music (builds tension).
+- **Audio:** Unity AudioMixer for adaptive chase music (builds tension).
 - **Export:** WebGL (60fps target), Steam.
 
 ## Credits
