@@ -63,8 +63,15 @@ namespace Shredsquatch.Core
         public bool AvalancheModeUnlocked;  // 15km
         public bool StormModeUnlocked;      // 20km
         public bool GoldenSasquatchUnlocked; // 30km
-        public string[] UnlockedSkins;
-        public string[] UnlockedTrails;
+        public string[] UnlockedSkins = System.Array.Empty<string>();
+        public string[] UnlockedTrails = System.Array.Empty<string>();
+
+        public PlayerProgress()
+        {
+            // Ensure arrays are initialized even after JSON deserialization
+            UnlockedSkins ??= System.Array.Empty<string>();
+            UnlockedTrails ??= System.Array.Empty<string>();
+        }
 
         public void CheckUnlocks(float distance)
         {

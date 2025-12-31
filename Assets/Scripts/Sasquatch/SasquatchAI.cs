@@ -12,6 +12,9 @@ namespace Shredsquatch.Sasquatch
         [SerializeField] private Animator _animator;
         [SerializeField] private AudioSource _roarAudio;
 
+        // Cached component references
+        private Player.SnowboardPhysics _playerPhysics;
+
         [Header("Chase Settings")]
         [SerializeField] private float _baseSpeed = 25f;          // m/s (90 km/h)
         [SerializeField] private float _targetDistance = 400f;
@@ -126,8 +129,14 @@ namespace Shredsquatch.Sasquatch
         {
             if (_player == null) return;
 
-            // Get player speed (smoothed to avoid jitter)
-            float playerSpeed = _player.GetComponent<Rigidbody>()?.velocity.magnitude ?? 0f;
+            // Cache player physics component if needed
+            if (_playerPhysics == null)
+            {
+                _playerPhysics = _player.GetComponent<Player.SnowboardPhysics>();
+            }
+
+            // Get player speed from SnowboardPhysics (smoothed to avoid jitter)
+            float playerSpeed = _playerPhysics != null ? _playerPhysics.CurrentSpeed : 0f;
             _smoothedPlayerSpeed = Mathf.Lerp(_smoothedPlayerSpeed, playerSpeed, Time.deltaTime * 2f);
 
             // Rubber-band based on distance
@@ -292,6 +301,7 @@ namespace Shredsquatch.Sasquatch
         public void SetPlayerReference(Transform player)
         {
             _player = player;
+            _playerPhysics = null; // Clear cached reference so it gets re-fetched
         }
 
         // Called when destroying trees
