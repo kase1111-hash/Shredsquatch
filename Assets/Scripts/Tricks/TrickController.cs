@@ -168,6 +168,12 @@ namespace Shredsquatch.Tricks
 
                 GameManager.Instance?.AddTrickScore(finalPoints, _comboCount);
 
+                // Trigger feedback (screen shake + haptics)
+                if (GameFeedback.Instance != null)
+                {
+                    GameFeedback.Instance.TriggerTrickLand(finalPoints);
+                }
+
                 _lastLandTime = Time.time;
             }
 
