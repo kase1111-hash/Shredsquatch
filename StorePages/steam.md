@@ -23,7 +23,7 @@ Every run starts the same: dawn breaks over fresh powder, the slope stretches en
 
 ---
 
-### 🏂 ARCADE SNOWBOARDING REIMAGINED
+### ARCADE SNOWBOARDING REIMAGINED
 
 Feel the rush of first-person shredding with responsive, arcade-style physics:
 
@@ -31,22 +31,23 @@ Feel the rush of first-person shredding with responsive, arcade-style physics:
 - **14+ Tricks** - 180s to 1080s, nose grabs to stalefish, frontflips and backflips.
 - **Combo System** - Chain tricks within 1 second for multipliers up to x3.
 - **Rail Grinding** - Hit fallen pines, fences, pipes, and chairlift cables.
+- **7 Rail Types** - Each with unique mechanics and point values.
 
 ---
 
-### 🏔️ INFINITE PROCEDURAL TERRAIN
+### INFINITE PROCEDURAL TERRAIN
 
 No two runs are the same. Our terrain generator creates:
 
 - Gentle tutorial slopes (0-2km)
 - Dense forests and jump zones (2-5km)
 - Extreme terrain, cliffs, and abandoned infrastructure (5km+)
-- Day-to-night progression with visibility changes
-- Daily seeds for leaderboard competition
+- Day-to-night progression with dynamic visibility
+- Daily seeds for fair leaderboard competition
 
 ---
 
-### 👹 THE CHASE THAT NEVER ENDS
+### THE CHASE THAT NEVER ENDS
 
 The Sasquatch uses rubber-band AI to maintain relentless pressure:
 
@@ -58,14 +59,14 @@ The proximity bar tells you how close death is. Green means safe. Red means run.
 
 ---
 
-### 🌙 UNLOCK THE NIGHT
+### UNLOCK THE NIGHT
 
 Survive long enough to unlock new challenges:
 
 | Distance | Unlock |
 |----------|--------|
 | 5km | Sasquatch Skins (Classic Yeti, Abominable) |
-| 10km | Night Mode (headlamp visibility, stars) |
+| 10km | Night Mode (headlamp visibility, stars, aurora) |
 | 15km | Fire Board Trail + Avalanche Mode |
 | 20km | Rainbow Trail + Storm Mode |
 | 25km | Lightning Trail |
@@ -76,7 +77,19 @@ Survive long enough to unlock new challenges:
 
 ---
 
-### 🎮 FULL CONTROLLER SUPPORT
+### STUNNING VISUAL EFFECTS
+
+9 custom-built shaders bring the mountain to life:
+
+- **Dynamic Snow Sparkle** - Glitters based on sun angle and time of day
+- **Aurora Borealis** - Northern lights illuminate night runs
+- **Sasquatch Eye Glow** - Those red eyes pulse when he's close
+- **Board Trails** - Fire, Rainbow, and Lightning effects
+- **Weather Effects** - Frost accumulation and blizzard visuals
+
+---
+
+### FULL CONTROLLER SUPPORT
 
 Play your way:
 
@@ -87,7 +100,7 @@ Play your way:
 
 ---
 
-### 📊 COMPETE GLOBALLY
+### COMPETE GLOBALLY
 
 - **Distance Leaderboards** - How far can you go?
 - **Trick Score Leaderboards** - Style points matter
@@ -100,13 +113,15 @@ Play your way:
 
 - First-person snowboarding with arcade physics
 - Procedurally generated infinite terrain
-- 14+ tricks with combo multipliers
+- 14+ tricks with combo multipliers up to x3
+- 7 rail types for grinding
 - Relentless Sasquatch pursuit with rubber-band AI
 - Day/night cycle with dynamic lighting
+- 9 custom URP shaders for visual polish
 - Multiple game modes (Standard, Avalanche, Storm)
 - Full controller support with haptic feedback
-- Global leaderboards
-- Steam Achievements
+- Global leaderboards with daily seeds
+- 16 Steam Achievements
 
 ---
 
@@ -132,7 +147,7 @@ Play your way:
 ---
 
 ## Tags
-Endless Runner, Snowboarding, Horror, Arcade, First-Person, Procedural Generation, Score Attack, Singleplayer, Atmospheric, Fast-Paced, Action, Sports
+Endless Runner, Snowboarding, Horror, Arcade, First-Person, Procedural Generation, Score Attack, Singleplayer, Atmospheric, Fast-Paced, Action, Sports, Indie
 
 ## Genre
 Action, Sports, Indie
@@ -142,7 +157,7 @@ Single-player, Steam Achievements, Full Controller Support, Steam Cloud, Steam L
 
 ---
 
-## Steam Achievements (Draft)
+## Steam Achievements
 
 | Achievement | Description |
 |-------------|-------------|
@@ -166,7 +181,7 @@ Single-player, Steam Achievements, Full Controller Support, Steam Cloud, Steam L
 ---
 
 ## Curator Connect Description
-Shredsquatch is a first-person endless snowboarding game where a Sasquatch chases you down infinite procedural mountains. Think SkiFree meets SSX meets horror. Perfect for streamers—every run is different, the tension is real, and chat will love the near-misses.
+Shredsquatch is a first-person endless snowboarding game where a Sasquatch chases you down infinite procedural mountains. Think SkiFree meets SSX meets horror. Features 9 custom shaders, 14+ tricks, 7 rail types, and multiple game modes. Perfect for streamers—every run is different, the tension is real, and chat will love the near-misses.
 
 ## Review Copies Note
 Keys available for press and content creators. Contact: [email]
@@ -176,3 +191,15 @@ Keys available for press and content creators. Contact: [email]
 ## Localization Status
 - English: Full
 - Additional languages: Community contributions welcome
+
+---
+
+## Technical Highlights
+
+Built with Unity 2023.2 and Universal Render Pipeline (URP):
+
+- **Modular Architecture** - 10 assembly definitions for clean code organization
+- **Custom Physics** - Raycast-based carving for authentic snowboard feel
+- **Shader System** - 9 custom URP shaders with runtime property control
+- **Terrain Streaming** - Infinite world via chunk-based generation
+- **Performance Optimized** - 60 FPS target with dynamic LOD
