@@ -12,12 +12,12 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 
 **Playtime:** 2-10 minutes per run. Perfect for itch.io and browsers.
 
-### Homages to SkiFree:
+### Homages to SkiFree
 
-- Distance-based monster spawn (~5km in).
-- Classic obstacles (trees, rocks) with modern flair.
-- "Get me off this mountain!" achievement unlock.
-- Hidden Yeti skin for Sasquatch (unlock via 10km run).
+- Distance-based monster spawn (~5km in)
+- Classic obstacles (trees, rocks) with modern flair
+- "Get me off this mountain!" achievement unlock
+- Hidden Yeti skin for Sasquatch (unlock via 10km run)
 
 ## Features
 
@@ -25,9 +25,11 @@ Unlike the top-down original, this is a full 3D experience with realistic physic
 - **3D First-Person Physics:** Arcade-style snowboarding with momentum, carve turns, powder drag, and crash recovery.
 - **Dynamic Chase System:** Sasquatch rubber-bands to keep 200-800m behind at top speeds. Faster if you slow/crash; lags if you're flawless.
 - **Trick System:** 14 base tricks (6 spins, 4 grabs, 4 flips) with 50+ combinations, multipliers, and a dedicated score/counter.
-- **Visual/SFX Polish:** Volumetric fog, snow particles, dynamic lighting (dawn-to-dusk cycle), booming Sasquatch roars, and carve squeals.
+- **Rail Grinding:** 7 rail types including fallen pines, fences, log piles, metal barriers, cabin ridges, pipes, and chairlift cables.
+- **Visual/SFX Polish:** 9 custom URP shaders, volumetric fog, snow particles, dynamic lighting (dawn-to-dusk cycle), booming Sasquatch roars, and carve squeals.
 - **Collectibles & Powerups:** Golden boards (trick multipliers), speed bursts, and "Yeti Repellent" (temp slow for beast).
 - **UI/Meters:** Clean HUD—distance/speed, trick combo/counter/score, Sasquatch proximity bar (green >600m, yellow 300-600m, red <300m, pulsing red <150m).
+- **Challenger Mode:** Alternate gameplay with trick-based survival mechanics (pending external assets).
 - **Achievements/Leaderboards:** Steam/itch.io integration for global distance/trick highs.
 
 ## Controls
@@ -280,16 +282,16 @@ Fog dynamically limits visibility, creating tension and preventing players from 
 ### Procedural Terrain Generation
 
 **Infinite Heightmap:** 1024x1024m chunks. Noise layers:
-- Base slope (steep downhill bias).
-- Forests (clustered trees via Poisson sampling).
-- Jumps/Ramps (raised ridges + splats).
-- Half-pipes/Chutes (valleys for speed runs).
-- Cliffs (rare drops—jump or death).
+- Base slope (steep downhill bias)
+- Forests (clustered trees via Poisson sampling)
+- Jumps/Ramps (raised ridges + splats)
+- Half-pipes/Chutes (valleys for speed runs)
+- Cliffs (rare drops—jump or death)
 
 **Variety Over Distance:**
-- 0-2km: Tutorial slopes, sparse trees.
-- 2-5km: Dense forests, jumps.
-- 5km+: Extreme terrain, powder fields, abandoned chairlifts.
+- 0-2km: Tutorial slopes, sparse trees
+- 2-5km: Dense forests, jumps
+- 5km+: Extreme terrain, powder fields, abandoned chairlifts
 
 **Seeding:** Daily global seed for leaderboards + player-custom seeds.
 
@@ -336,8 +338,8 @@ At night (10km+), chairlifts become beacons:
 
 - **Spawn:** 5km mark—roar SFX, fog parts, eyes glow in distance.
 - **AI Behavior:**
-  - Pathfinds via A* on terrain mesh.
-  - Base speed: 90 km/h (foot bounds + unnatural stamina).
+  - Pathfinds via A* on terrain mesh (NavMesh-based)
+  - Base speed: 90 km/h (foot bounds + unnatural stamina)
 - **Rubber-Banding:** Distance target 400m avg.
 
 | Player Lead Distance | Sasq Speed Mod |
@@ -472,6 +474,56 @@ Repeating the same trick consecutively degrades its point value—variety is rew
 - **Repellent Cloud:** Sasquatch slows 50% (15s duration). Does not stack.
 - **Coins:** 50 trick pts each. During active combo, coins within 5m are magnetically pulled toward you.
 
+## Game Modes
+
+### Standard Mode
+The default endless run experience. Survive as long as possible, rack up distance, and escape the Sasquatch.
+
+### Avalanche Mode (15km unlock)
+- Boulders spawn every 5-10 seconds after 2km
+- Boulder speed: 60-80 km/h (slower than max player speed)
+- Boulder size: 2-4m diameter
+- Shadow warning appears 1.5 seconds before impact zone
+- Direct hit = instant ragdoll + 100m tumble
+- Boulders destroy trees on contact (creates clear paths)
+
+### Storm Mode (20km unlock)
+- Visibility range: 50m (vs 200m normal)
+- Wind gusts every 8-15 seconds
+- Wind push: 10-20 km/h lateral force for 2-3 seconds
+- Wind direction shown by snow particle angle
+- Sasquatch visibility: 30m (harder to see coming)
+- Audio cues amplified (roars echo longer)
+
+### Challenger Mode (Hidden)
+An alternate gameplay mode featuring creature mounts and trick-based survival mechanics:
+
+**Gameplay:**
+- Ride a creature mount instead of a snowboard
+- No Sasquatch chase—purely skill-based survival
+- Energy constantly drains over time
+- Perform tricks to refill energy
+- 10-second grace period at start
+- Game ends when energy depletes ("poof")
+
+**Mount Types:**
+
+| Mount Style | Turn Speed | Max Speed | Jump | Description |
+|-------------|------------|-----------|------|-------------|
+| Waddle | 80% | 90% | 110% | Penguin-style movement |
+| Slide | 60% | 110% | 90% | Belly slide |
+| Hop | 100% | 80% | 130% | Bouncy movement |
+| Glide | 70% | 100% | 100% | Smooth glide |
+
+**Energy System:**
+- Starting energy: 100
+- Drain rate: 5 per second
+- Energy per trick point: 0.1
+- Minimum trick score for energy: 100 points
+- Combo bonuses: +2 energy per combo count
+
+*Note: This mode requires external asset approval and is placeholder-enabled by configuration.*
+
 ## Game Over & Progression
 
 **Defeat:** Sasq touches you → Explosive squash anim, scores screen.
@@ -490,48 +542,195 @@ Max Combo: 7
 |-------------|--------|
 | 5km | Sasquatch Skins: Classic Yeti (white fur), Abominable (ice blue) |
 | 10km | Night Mode: Headlamp visibility, starfield sky |
-| 15km | Board Trail: Fire (orange/red particle trail) |
-| 20km | Board Trail: Rainbow (multicolor cycling trail) |
+| 15km | Board Trail: Fire (orange/red particle trail) + Avalanche Mode |
+| 20km | Board Trail: Rainbow (multicolor cycling trail) + Storm Mode |
 | 25km | Board Trail: Lightning (electric blue with sparks) |
 | 30km | Golden Sasquatch skin + all trails unlocked |
 
-**Endless Mode Variants (unlock via PB):**
+## Achievements
 
-| Mode | Unlock | Description |
-|------|--------|-------------|
-| **Avalanche** | 15km PB | Boulders roll down from above |
-| **Storm** | 20km PB | Blizzard with wind and low visibility |
-
-**Avalanche Mode Details:**
-- Boulders spawn every 5-10 seconds after 2km
-- Boulder speed: 60-80 km/h (slower than max player speed)
-- Boulder size: 2-4m diameter
-- Shadow warning appears 1.5 seconds before impact zone
-- Direct hit = instant ragdoll + 100m tumble
-- Boulders destroy trees on contact (creates clear paths)
-
-**Storm Mode Details:**
-- Visibility range: 50m (vs 200m normal)
-- Wind gusts every 8-15 seconds
-- Wind push: 10-20 km/h lateral force for 2-3 seconds
-- Wind direction shown by snow particle angle
-- Sasquatch visibility: 30m (harder to see coming)
-- Audio cues amplified (roars echo longer)
-
-## Technical Details (For Devs/Ports)
-
-- **Engine:** Unity 2023.2 (URP for performance).
-- **Assets:** ProBuilder terrain, custom shader for powder displacement.
-- **Physics:** Custom raycast carver (no wheels—slope normal snapping).
-- **Audio:** Unity AudioMixer for adaptive chase music (builds tension).
-- **Export:** WebGL (60fps target), Steam.
-
-## Credits
-
-- Inspired by SkiFree (Chris Pirih, 1991).
-- Art/SFX: CC0 + custom.
-- Code: Open-source MIT license.
+| Achievement | Description |
+|-------------|-------------|
+| First Run | Complete your first run |
+| 5K Club | Reach 5 kilometers |
+| 10K Legend | Reach 10 kilometers |
+| 20K Master | Reach 20 kilometers |
+| 30K Immortal | Reach 30 kilometers |
+| Trick Novice | Land 100 tricks |
+| Trick Master | Land 1,000 tricks |
+| Combo King | Achieve a 10-trick combo |
+| Rail Rider | Grind for 100 total meters |
+| Night Owl | Survive past 10km in Night Mode |
+| Avalanche Survivor | Survive 5km in Avalanche Mode |
+| Storm Chaser | Survive 5km in Storm Mode |
+| Speed Demon | Reach 120 km/h |
+| Close Call | Escape when proximity bar is pulsing red |
+| Old Friend | Unlock the Classic Yeti skin |
+| Golden Legend | Unlock the Golden Sasquatch |
 
 ---
 
-*Shred far. Squatch hard.* 🏂👹
+## Technical Documentation
+
+### Project Architecture
+
+Shredsquatch uses a modular architecture with assembly definitions for clean dependency management:
+
+```
+Assets/
+├── Scripts/
+│   ├── Core/              # GameManager, GameState, Constants, error handling
+│   ├── Player/            # PlayerController, physics, input, camera, crash handling
+│   ├── Tricks/            # TrickController, TrickData, RailGrindController
+│   ├── Terrain/           # TerrainGenerator, TerrainChunk, NoiseGenerator
+│   ├── Sasquatch/         # SasquatchAI, SasquatchSkin
+│   ├── Powerups/          # PowerupBase, individual powerups, spawner
+│   ├── UI/                # HUD, menus, game over, tutorials
+│   ├── Audio/             # AudioManager, placeholder generator
+│   ├── Progression/       # AchievementManager, LeaderboardManager
+│   ├── Challenger/        # ChallengerMode, CreatureMount, TrickSurvival
+│   ├── Configuration/     # PrefabRegistry, audio/visual configs
+│   ├── Procedural/        # ProceduralAssetFactory, mesh generation
+│   ├── Rendering/         # ShaderManager
+│   └── Editor/            # Editor tools, validators, scene wiring
+├── Shaders/               # 9 custom URP shaders
+├── Prefabs/               # 25+ reusable game objects
+├── Scenes/                # GameScene.unity
+├── Audio/                 # Music/ and SFX/ subdirectories
+├── Materials/             # 20+ materials
+├── Input/                 # Input action mappings
+└── Settings/              # Project configuration
+```
+
+### Assembly Definitions
+
+| Assembly | Purpose |
+|----------|---------|
+| Shredsquatch.Core | Core systems, state management, utilities |
+| Shredsquatch.Player | Player controller and movement systems |
+| Shredsquatch.Tricks | Trick system and rail grinding |
+| Shredsquatch.Terrain | Procedural terrain generation |
+| Shredsquatch.Sasquatch | Enemy AI and skins |
+| Shredsquatch.Powerups | Collectibles and power-up effects |
+| Shredsquatch.UI | All user interface components |
+| Shredsquatch.Audio | Audio management and generation |
+| Shredsquatch.Editor | Editor-only tools and utilities |
+| Shredsquatch | Main assembly (references all others) |
+
+### Custom Shaders
+
+9 custom URP shaders for enhanced visual effects:
+
+| Shader | Description |
+|--------|-------------|
+| SnowSparkle | Sparkle effect on snow, intensity varies with sun angle |
+| SnowTracks | Dynamic snow displacement for board trails |
+| SasquatchFur | Fur rendering with eye glow and frost effects |
+| CoinGlow | Animated glow effect for collectibles |
+| PowerupGlow | Pulsing glow for powerup items |
+| TrailFire | Fire particle trail effect |
+| TrailRainbow | Rainbow cycling color trail |
+| TrailLightning | Electric blue lightning trail with sparks |
+| AuroraBorealis | Northern lights sky effect for night mode |
+
+**Shader Features:**
+- Dynamic snow sparkle based on time of day
+- Sasquatch eye glow intensity controlled by distance/state
+- Frost accumulation during blizzard conditions
+- Aurora visibility tied to night phase
+
+### Key Systems
+
+**GameManager (`Core/GameManager.cs`)**
+- Central game controller and state machine
+- Handles game states: MainMenu, Playing, Paused, GameOver
+- Manages run statistics and progression
+- Singleton pattern for global access
+
+**PlayerController (`Player/PlayerController.cs`)**
+- Main player orchestrator
+- Coordinates SnowboardPhysics, JumpController, CrashHandler
+- Works with PlayerInput for control handling
+
+**TrickController (`Tricks/TrickController.cs`)**
+- Trick execution and combo tracking
+- Processes spin/grab/flip inputs
+- Manages repetition penalties and style bonuses
+
+**SasquatchAI (`Sasquatch/SasquatchAI.cs`)**
+- Chase AI with rubber-band mechanics
+- NavMesh-based pathfinding
+- Dynamic speed adjustment based on player distance
+
+**TerrainGenerator (`Terrain/TerrainGenerator.cs`)**
+- Infinite procedural terrain with chunking system
+- Perlin noise-based height generation
+- 2km load distance, 2.5km unload distance
+
+**ShaderManager (`Rendering/ShaderManager.cs`)**
+- Runtime shader property management
+- Time-of-day visual updates
+- Weather effect control (blizzard, frost)
+
+### Engine & Dependencies
+
+- **Engine:** Unity 2023.2
+- **Render Pipeline:** Universal Render Pipeline (URP) 16.0.4
+- **Input System:** Unity InputSystem 1.7.0
+- **AI Navigation:** com.unity.ai.navigation 1.1.5
+- **UI Text:** TextMeshPro 3.0.6
+- **Animation:** Timeline 1.8.5
+- **Language:** C# 9+ with namespace organization
+
+### Physics Implementation
+
+- Custom raycast-based carving (no Rigidbody wheels)
+- CharacterController + slope normal snapping
+- Terrain-following via raycast sampling
+- Ragdoll physics for crashes using configurable joints
+
+### Performance Optimizations
+
+- Dynamic LOD for terrain chunks
+- Object pooling for powerups and obstacles
+- Chunk-based terrain streaming
+- Shader property caching via PropertyToID
+- 60 FPS target for WebGL
+
+### Export Targets
+
+| Platform | Notes |
+|----------|-------|
+| WebGL | Primary target, 60fps, HTML5/WebGL 2.0 |
+| Windows | Standalone build |
+| macOS | Planned |
+| Linux | Planned |
+| Steam | With achievements and leaderboards |
+| itch.io | Free/Pay-What-You-Want |
+
+### Input Configuration
+
+Uses Unity's new Input System with `ShredsquatchControls.inputactions`:
+- Gameplay control scheme
+- Menu control scheme
+- Supports keyboard/mouse, Xbox, PlayStation, and generic gamepads
+- Configurable bindings
+
+### Save System
+
+- JSON-based progression save (local files)
+- Tracks best distance, trick scores, unlocks
+- Skin and trail unlock persistence
+- Achievement state tracking
+
+---
+
+## Credits
+
+- Inspired by SkiFree (Chris Pirih, 1991)
+- Art/SFX: CC0 + custom
+- Code: Open-source MIT license
+
+---
+
+*Shred far. Squatch hard.*
