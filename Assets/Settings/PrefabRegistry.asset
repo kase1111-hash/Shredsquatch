@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0, type: 3}
+  m_Name: PrefabRegistry
+  m_EditorClassIdentifier: Shredsquatch.Configuration.PrefabRegistry
+  PlayerPrefab: {fileID: 0}
+  SasquatchPrefab: {fileID: 0}
+  TerrainChunkPrefab: {fileID: 0}
+  PineTrees: []
+  BirchTrees: []
+  DeadTrees: []
+  FallenTrees: []
+  LargeRocks: []
+  SmallRocks: []
+  SmallRamp: {fileID: 0}
+  MediumRamp: {fileID: 0}
+  LargeRamp: {fileID: 0}
+  CliffRamp: {fileID: 0}
+  FenceRail: {fileID: 0}
+  PipeRail: {fileID: 0}
+  MetalRail: {fileID: 0}
+  CoinPrefab: {fileID: 0}
+  NitroPowerup: {fileID: 0}
+  GoldenBoardPowerup: {fileID: 0}
+  RepellentPowerup: {fileID: 0}
+  ChairliftTower: {fileID: 0}
+  ChairliftChair: {fileID: 0}
+  SnowSprayEffect: {fileID: 0}
+  CrashEffect: {fileID: 0}
+  CoinCollectEffect: {fileID: 0}
