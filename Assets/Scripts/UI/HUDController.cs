@@ -266,5 +266,62 @@ namespace Shredsquatch.UI
                 _proximityAnimator.SetBool("Pulsing", false);
             }
         }
+
+        #region Runtime Wiring
+
+        /// <summary>
+        /// Set the player reference at runtime.
+        /// </summary>
+        public void SetPlayer(PlayerController player)
+        {
+            _player = player;
+        }
+
+        /// <summary>
+        /// Set the trick controller reference at runtime.
+        /// </summary>
+        public void SetTrickController(TrickController trickController)
+        {
+            // Unsubscribe from old
+            if (_trickController != null)
+            {
+                _trickController.OnTrickCompleted -= ShowTrick;
+                _trickController.OnComboUpdated -= UpdateCombo;
+            }
+
+            _trickController = trickController;
+
+            // Subscribe to new
+            if (_trickController != null)
+            {
+                _trickController.OnTrickCompleted += ShowTrick;
+                _trickController.OnComboUpdated += UpdateCombo;
+            }
+        }
+
+        /// <summary>
+        /// Set the Sasquatch reference at runtime.
+        /// </summary>
+        public void SetSasquatch(SasquatchAI sasquatch)
+        {
+            // Unsubscribe from old
+            if (_sasquatch != null)
+            {
+                _sasquatch.OnDistanceChanged -= UpdateProximity;
+                _sasquatch.OnSpawn -= OnSasquatchSpawn;
+            }
+
+            _sasquatch = sasquatch;
+
+            // Subscribe to new
+            if (_sasquatch != null)
+            {
+                _sasquatch.OnDistanceChanged += UpdateProximity;
+                _sasquatch.OnSpawn += OnSasquatchSpawn;
+                ShowProximityBar();
+            }
+        }
+
+        #endregion
     }
 }

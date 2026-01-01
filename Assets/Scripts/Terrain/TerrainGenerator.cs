@@ -437,6 +437,26 @@ namespace Shredsquatch.Terrain
         }
 
         /// <summary>
+        /// Alias for SetPlayerReference for SceneInitializer compatibility.
+        /// </summary>
+        public void SetPlayer(Transform player)
+        {
+            SetPlayerReference(player);
+        }
+
+        /// <summary>
+        /// Set prefab arrays from PrefabRegistry.
+        /// </summary>
+        public void SetPrefabsFromRegistry(Configuration.PrefabRegistry registry)
+        {
+            if (registry == null) return;
+
+            _treePrefabs = registry.GetAllTrees();
+            _rockPrefabs = registry.GetAllRocks();
+            _rampPrefabs = registry.GetAllRamps();
+        }
+
+        /// <summary>
         /// IRecoverable implementation - clear bad chunks and reset generation state.
         /// </summary>
         public void AttemptRecovery()
