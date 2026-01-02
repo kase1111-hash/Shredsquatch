@@ -1,5 +1,9 @@
 # Shredsquatch
 
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue.svg)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Unity](https://img.shields.io/badge/Unity-2023.2-black.svg)](https://unity.com/)
+
 A modern homage to the classic SkiFree, reimagined as a tense, infinite 3D first-person snowboarding descent where a relentless Sasquatch pursues you down procedurally generated peaks. Shred the powder, nail tricks, and survive the chase—distance is king.
 
 ## Overview
