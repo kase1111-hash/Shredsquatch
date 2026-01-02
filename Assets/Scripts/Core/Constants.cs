@@ -2,6 +2,14 @@ namespace Shredsquatch.Core
 {
     public static class Constants
     {
+        // Version
+        public static class Version
+        {
+            public const string Number = "0.1.0-alpha";
+            public const string Name = "Shredsquatch";
+            public const string FullName = Name + " v" + Number;
+        }
+
         // Speed (km/h)
         public static class Speed
         {
