@@ -4,13 +4,13 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Unity](https://img.shields.io/badge/Unity-2023.2-black.svg)](https://unity.com/)
 
-A modern homage to the classic SkiFree, reimagined as a tense, infinite 3D first-person snowboarding descent where a relentless Sasquatch pursues you down procedurally generated peaks. Shred the powder, nail tricks, and survive the chase—distance is king.
+A 3D first-person snowboarding game and SkiFree spiritual successor—an infinite runner snowboard experience where a relentless Sasquatch pursues you down procedurally generated peaks. This winter sports game combines the nostalgia of the retro ski game with modern 3D graphics and a thrilling yeti chase mechanic. If you're looking for games like SkiFree or a snowboard endless runner, shred the powder, nail tricks, and survive the chase—distance is king.
 
 ## Overview
 
-Shredsquatch is an addictive, endless snowboarding game built in Unity (WebGL/HTML5 playable). You carve down an ever-unfurling, procedurally generated mountain in first-person view, dodging obstacles, chaining tricks, and racking up distance while a hulking Sasquatch emerges from the mist to hunt you.
+Shredsquatch is an addictive snowboarding infinite runner built in Unity (WebGL/HTML5 playable)—the 3D infinite winter runner you've been waiting for. You carve down an ever-unfurling, procedurally generated mountain in first-person view, dodging obstacles, chaining tricks, and racking up distance while a hulking Sasquatch emerges from the mist to hunt you.
 
-Unlike the top-down original, this is a full 3D experience with realistic physics, dynamic powder effects, and heart-pounding chase tension. It's not a clone—it's an evolution: snowboards replace skis, Sasquatch swaps in for the Yeti (with a nod via hidden Easter eggs), and rubber-banded pursuit ensures you're always on edge. Primary score is distance traveled (in kilometers), with a separate trick score for style points. Top speeds let you pull ahead, but one mistake and those glowing red eyes close in.
+Unlike the top-down original, this is a full 3D skiing game experience with realistic physics, dynamic powder effects, and heart-pounding chase tension. It's not a clone—it's a SkiFree remake evolved for modern players: snowboards replace skis, Sasquatch swaps in for the Yeti (with a nod via hidden Easter eggs), and rubber-banded pursuit ensures you're always on edge. Primary score is distance traveled (in kilometers), with a separate trick score for style points. Top speeds let you pull ahead, but one mistake and those glowing red eyes close in.
 
 **Core Loop:** Accelerate → Steer & trick → Survive → Outrun or get squatched. Never-ending until caught. High-score chases fuel replayability.
 
@@ -726,6 +726,33 @@ Uses Unity's new Input System with `ShredsquatchControls.inputactions`:
 - Tracks best distance, trick scores, unlocks
 - Skin and trail unlock persistence
 - Achievement state tracking
+
+---
+
+## Connected Repositories
+
+Shredsquatch is part of a broader ecosystem of projects. Explore related repositories:
+
+### NatLangChain Ecosystem
+- [NatLangChain](https://github.com/kase1111-hash/NatLangChain) - Prose-first, intent-native blockchain protocol for natural language smart contracts
+- [IntentLog](https://github.com/kase1111-hash/IntentLog) - Git for human reasoning, tracking "why" changes happen via prose commits
+- [RRA-Module](https://github.com/kase1111-hash/RRA-Module) - Revenant Repo Agent for abandoned repository monetization
+- [mediator-node](https://github.com/kase1111-hash/mediator-node) - LLM mediation layer for matching and negotiation
+- [ILR-module](https://github.com/kase1111-hash/ILR-module) - IP & Licensing Reconciliation for dispute resolution
+- [Finite-Intent-Executor](https://github.com/kase1111-hash/Finite-Intent-Executor) - Posthumous execution of predefined intent via smart contracts
+
+### Agent-OS Ecosystem
+- [Agent-OS](https://github.com/kase1111-hash/Agent-OS) - Natural-language native operating system for AI agents
+- [synth-mind](https://github.com/kase1111-hash/synth-mind) - NLOS-based agent with psychological modules for emergent continuity
+- [boundary-daemon-](https://github.com/kase1111-hash/boundary-daemon-) - Trust enforcement layer for Agent OS cognition boundaries
+- [memory-vault](https://github.com/kase1111-hash/memory-vault) - Secure, owner-sovereign storage for cognitive artifacts
+- [value-ledger](https://github.com/kase1111-hash/value-ledger) - Economic accounting layer for cognitive work
+- [learning-contracts](https://github.com/kase1111-hash/learning-contracts) - Safety protocols for AI learning and data management
+
+### Security & Games
+- [Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM) - Security Information and Event Management for AI systems
+- [Midnight-pulse](https://github.com/kase1111-hash/Midnight-pulse) - Procedurally generated night driving game
+- [Long-Home](https://github.com/kase1111-hash/Long-Home) - Atmospheric indie narrative game in Godot
 
 ---
 
