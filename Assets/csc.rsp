@@ -1,0 +1,15 @@
+# Unity C# Compiler Response File
+# Enables additional warnings and analyzer rules
+
+# Treat warnings as errors for specific important warnings
+-warnaserror:CS0219  # Variable is assigned but never used
+-warnaserror:CS0168  # Variable declared but never used
+
+# Enable nullable reference types analysis (Unity 2021+)
+# -nullable:enable
+
+# Additional warnings to enable
+-warn:4
+
+# Suppress specific warnings that are common in Unity
+-nowarn:CS0649  # Field is never assigned (common with SerializeField)
