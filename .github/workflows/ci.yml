@@ -1,0 +1,212 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  lint:
+    name: Code Style Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Check EditorConfig compliance
+        run: |
+          echo "Checking for EditorConfig file..."
+          if [ -f ".editorconfig" ]; then
+            echo "EditorConfig file found"
+          else
+            echo "Warning: No .editorconfig file found"
+          fi
+
+      - name: Check for common code issues
+        run: |
+          echo "=== Checking for TODO/FIXME comments ==="
+          grep -rn --include="*.cs" -E "(TODO|FIXME|HACK|XXX|BUG):" Assets/Scripts || echo "No TODO/FIXME comments found"
+
+          echo ""
+          echo "=== Checking for Debug.Log statements ==="
+          DEBUG_COUNT=$(grep -rn --include="*.cs" "Debug\.Log" Assets/Scripts | wc -l)
+          echo "Found $DEBUG_COUNT Debug.Log statements"
+          if [ "$DEBUG_COUNT" -gt 100 ]; then
+            echo "Warning: High number of Debug.Log statements. Consider reducing for production."
+          fi
+
+          echo ""
+          echo "=== Checking for empty catch blocks ==="
+          grep -rn --include="*.cs" -E "catch\s*\([^)]*\)\s*\{\s*\}" Assets/Scripts || echo "No empty catch blocks found"
+
+          echo ""
+          echo "=== Checking for hardcoded strings (potential localization issues) ==="
+          grep -rn --include="*.cs" -E '"\w{20,}"' Assets/Scripts/UI | head -10 || echo "No long hardcoded strings found in UI"
+
+  unity-validation:
+    name: Unity Project Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Validate Unity project structure
+        run: |
+          echo "=== Validating Unity project structure ==="
+
+          # Check for required Unity folders
+          REQUIRED_DIRS=("Assets" "ProjectSettings" "Packages")
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            if [ -d "$dir" ]; then
+              echo "Found: $dir"
+            else
+              echo "Error: Missing required directory: $dir"
+              exit 1
+            fi
+          done
+
+          # Check for ProjectSettings files
+          echo ""
+          echo "=== Checking ProjectSettings ==="
+          ls -la ProjectSettings/*.asset 2>/dev/null | head -5 || echo "Warning: No .asset files in ProjectSettings"
+
+          # Check manifest.json
+          echo ""
+          echo "=== Checking Packages/manifest.json ==="
+          if [ -f "Packages/manifest.json" ]; then
+            echo "manifest.json found"
+            cat Packages/manifest.json | head -20
+          else
+            echo "Warning: Packages/manifest.json not found"
+          fi
+
+      - name: Check for missing meta files
+        run: |
+          echo "=== Checking for missing .meta files ==="
+          MISSING_META=0
+
+          # Find all files in Assets that should have meta files
+          find Assets -type f ! -name "*.meta" ! -path "*/\.*" | while read file; do
+            if [ ! -f "${file}.meta" ]; then
+              echo "Missing meta: $file"
+              MISSING_META=$((MISSING_META + 1))
+            fi
+          done
+
+          # Find all directories in Assets that should have meta files
+          find Assets -type d ! -path "*/\.*" | while read dir; do
+            if [ "$dir" != "Assets" ] && [ ! -f "${dir}.meta" ]; then
+              echo "Missing meta: $dir"
+              MISSING_META=$((MISSING_META + 1))
+            fi
+          done
+
+          echo ""
+          if [ "$MISSING_META" -gt 0 ]; then
+            echo "Warning: Found files/directories without .meta files"
+          else
+            echo "All assets have corresponding .meta files"
+          fi
+
+      - name: Check assembly definitions
+        run: |
+          echo "=== Checking Assembly Definitions ==="
+          find Assets -name "*.asmdef" -exec echo "Found: {}" \;
+
+          ASMDEF_COUNT=$(find Assets -name "*.asmdef" | wc -l)
+          echo ""
+          echo "Total assembly definitions: $ASMDEF_COUNT"
+
+  code-analysis:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Count lines of code
+        run: |
+          echo "=== Code Statistics ==="
+
+          # Count C# files
+          CS_FILES=$(find Assets -name "*.cs" | wc -l)
+          echo "C# files: $CS_FILES"
+
+          # Count lines of C# code (excluding blank lines and comments)
+          CS_LINES=$(find Assets -name "*.cs" -exec cat {} \; | grep -v "^\s*$" | grep -v "^\s*//" | wc -l)
+          echo "Lines of C# code: $CS_LINES"
+
+          # Count test files
+          TEST_FILES=$(find Assets -path "*/Tests/*" -name "*.cs" | wc -l)
+          echo "Test files: $TEST_FILES"
+
+      - name: Check for potential issues
+        run: |
+          echo "=== Potential Code Issues ==="
+
+          # Check for FindObjectOfType (performance concern)
+          echo ""
+          echo "--- FindObjectOfType usage (performance consideration) ---"
+          grep -rn --include="*.cs" "FindObjectOfType" Assets/Scripts | grep -v "Editor" | head -10 || echo "None found outside Editor scripts"
+
+          # Check for Resources.Load (should use addressables in production)
+          echo ""
+          echo "--- Resources.Load usage ---"
+          grep -rn --include="*.cs" "Resources\.Load" Assets/Scripts | head -5 || echo "None found"
+
+          # Check for GetComponent in Update (performance concern)
+          echo ""
+          echo "--- GetComponent patterns to review ---"
+          grep -rn --include="*.cs" -A2 "void Update" Assets/Scripts | grep "GetComponent" | head -5 || echo "No GetComponent in Update found"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for sensitive data
+        run: |
+          echo "=== Security Scan ==="
+
+          # Check for potential API keys or secrets
+          echo "--- Checking for potential secrets ---"
+          grep -rn --include="*.cs" -iE "(apikey|api_key|secret|password|token)" Assets/Scripts | grep -v "// " | head -10 || echo "No obvious secrets found"
+
+          # Check for hardcoded URLs
+          echo ""
+          echo "--- Checking for hardcoded URLs ---"
+          grep -rn --include="*.cs" -E "https?://[^\s\"']+" Assets/Scripts | head -5 || echo "No hardcoded URLs found"
+
+      - name: Check .gitignore
+        run: |
+          echo "=== Checking .gitignore ==="
+          if [ -f ".gitignore" ]; then
+            echo ".gitignore exists"
+
+            # Check for common Unity ignores
+            REQUIRED_IGNORES=("Library/" "Temp/" "Obj/" "Build/" "Logs/" "*.csproj" "*.sln")
+            for ignore in "${REQUIRED_IGNORES[@]}"; do
+              if grep -q "$ignore" .gitignore; then
+                echo "Found ignore: $ignore"
+              else
+                echo "Warning: Missing ignore for: $ignore"
+              fi
+            done
+          else
+            echo "Error: No .gitignore file found"
+            exit 1
+          fi
