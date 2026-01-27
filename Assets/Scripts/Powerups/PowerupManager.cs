@@ -42,7 +42,7 @@ namespace Shredsquatch.Powerups
         {
             if (_boardRenderer != null)
             {
-                _originalBoardMaterial = _boardRenderer.material;
+                _originalBoardMaterial = _boardRenderer.sharedMaterial;
             }
         }
 

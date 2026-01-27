@@ -233,7 +233,7 @@ namespace Shredsquatch.Sasquatch
             if (_eyeGlowLeft != null)
             {
                 var renderer = _eyeGlowLeft.GetComponent<Renderer>();
-                if (renderer != null)
+                if (renderer != null && renderer.material.HasProperty("_EmissionIntensity"))
                 {
                     renderer.material.SetFloat("_EmissionIntensity", glowIntensity * 2f);
                 }
@@ -242,7 +242,7 @@ namespace Shredsquatch.Sasquatch
             if (_eyeGlowRight != null)
             {
                 var renderer = _eyeGlowRight.GetComponent<Renderer>();
-                if (renderer != null)
+                if (renderer != null && renderer.material.HasProperty("_EmissionIntensity"))
                 {
                     renderer.material.SetFloat("_EmissionIntensity", glowIntensity * 2f);
                 }

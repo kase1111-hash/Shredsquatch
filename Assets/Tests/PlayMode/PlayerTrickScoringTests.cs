@@ -138,7 +138,7 @@ namespace Shredsquatch.Tests.PlayMode
 
             if (_trickController != null)
             {
-                _trickController.OnTrickComplete += (trickData) => trickCompletedFired = true;
+                _trickController.OnTrickCompleted += (name, points) => trickCompletedFired = true;
             }
             yield return null;
 
