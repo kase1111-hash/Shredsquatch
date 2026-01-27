@@ -206,10 +206,25 @@ namespace Shredsquatch.Player
         private void OnTriggerExit(Collider other)
         {
             // Only clear if we're leaving the current ramp type
-            if (_currentRamp != RampType.None)
+            if (_currentRamp != RampType.None && DoesColliderMatchRamp(other, _currentRamp))
             {
                 _currentRamp = RampType.None;
             }
+        }
+
+        private bool DoesColliderMatchRamp(Collider other, RampType ramp)
+        {
+            return ramp switch
+            {
+                RampType.SmallBump => other.CompareTag("SmallBump"),
+                RampType.MediumRamp => other.CompareTag("MediumRamp"),
+                RampType.LargeKicker => other.CompareTag("LargeKicker"),
+                RampType.HalfpipeLip => other.CompareTag("HalfpipeLip"),
+                RampType.CabinAFrame => other.CompareTag("CabinAFrame"),
+                RampType.CliffJump => other.CompareTag("CliffJump"),
+                RampType.LogRamp => other.CompareTag("LogRamp"),
+                _ => false
+            };
         }
     }
 }

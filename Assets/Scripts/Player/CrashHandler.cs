@@ -15,6 +15,9 @@ namespace Shredsquatch.Player
         [SerializeField] private Rigidbody[] _ragdollBodies;
         [SerializeField] private Collider[] _ragdollColliders;
 
+        [Header("Effects")]
+        [SerializeField] private ParticleSystem _powderSprayPrefab;
+
         // State
         private bool _isInRagdoll;
         private bool _isRecovering;
@@ -221,8 +224,12 @@ namespace Shredsquatch.Player
         private void TriggerPowderSpray(Vector3 position)
         {
             // Spawn powder particle effect
-            // TODO: Implement particle effect
-            Debug.Log($"Powder spray at {position}");
+            if (_powderSprayPrefab != null)
+            {
+                ParticleSystem spray = Instantiate(_powderSprayPrefab, position, Quaternion.identity);
+                spray.Play();
+                Destroy(spray.gameObject, spray.main.duration + spray.main.startLifetime.constantMax);
+            }
 
             // Trigger near-miss feedback (screen shake + haptics)
             if (GameFeedback.Instance != null)
