@@ -169,16 +169,25 @@ namespace Shredsquatch.Tricks
         private void UpdateGrindSpeed()
         {
             // Accelerate while grinding (up to max)
-            float currentSpeed = _physics.CurrentSpeedKmh;
-            float targetSpeed = Mathf.Min(
-                currentSpeed + Constants.Rail.AccelerationRate * Time.deltaTime,
-                Constants.Rail.MaxGrindSpeed
-            );
+            float currentSpeedKmh = _physics.CurrentSpeedKmh;
+            float accelerationKmh = Constants.Rail.AccelerationRate * Time.deltaTime;
 
             // Metal barriers accelerate faster
             if (_currentRailType == RailType.MetalBarrier)
             {
-                targetSpeed += Constants.Rail.AccelerationRate * Time.deltaTime;
+                accelerationKmh *= 2f;
+            }
+
+            float targetSpeedKmh = Mathf.Min(
+                currentSpeedKmh + accelerationKmh,
+                Constants.Rail.MaxGrindSpeed
+            );
+
+            // Apply the speed boost (convert km/h delta to m/s)
+            float speedDeltaKmh = targetSpeedKmh - currentSpeedKmh;
+            if (speedDeltaKmh > 0)
+            {
+                _physics.ApplyBoost(speedDeltaKmh / 3.6f);
             }
         }
 

@@ -143,16 +143,16 @@ namespace Shredsquatch.Player
                 _boardTransform.localRotation = Quaternion.Euler(0, 0, -_currentLeanAngle);
             }
 
-            // Check for edge catch
+            // Check for edge catch (at or above threshold)
             float absLean = Mathf.Abs(_currentLeanAngle);
-            if (absLean > Constants.Carving.EdgeCatchAngle)
+            if (absLean >= Constants.Carving.EdgeCatchAngle)
             {
                 TriggerEdgeCatch();
                 return;
             }
 
-            // Apply carve boost
-            if (absLean >= Constants.Carving.CarveMinAngle && absLean < Constants.Carving.CarveMaxAngle)
+            // Apply carve boost (in the carve zone, up to and including max carve angle)
+            if (absLean >= Constants.Carving.CarveMinAngle && absLean <= Constants.Carving.CarveMaxAngle)
             {
                 _carveBoostAccumulator += Time.deltaTime;
                 if (_carveBoostAccumulator >= 1f)
