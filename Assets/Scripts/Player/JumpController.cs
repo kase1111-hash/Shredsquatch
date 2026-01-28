@@ -161,7 +161,9 @@ namespace Shredsquatch.Player
                 RampType.LargeKicker => 4f,
                 RampType.HalfpipeLip => 3f,
                 RampType.CabinAFrame => 3f,
-                RampType.CliffJump => Random.Range(5f, 8f),
+                // Use deterministic value (6.5m average) for leaderboard consistency
+                // Cliff jumps provide variable height based on terrain, not randomness
+                RampType.CliffJump => 6.5f,
                 RampType.LogRamp => 2f,
                 _ => 0f
             };

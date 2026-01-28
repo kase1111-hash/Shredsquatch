@@ -318,7 +318,12 @@ namespace Shredsquatch.UI
             {
                 _sasquatch.OnDistanceChanged += UpdateProximity;
                 _sasquatch.OnSpawn += OnSasquatchSpawn;
-                ShowProximityBar();
+                // Only show proximity bar if Sasquatch has already spawned (is active)
+                // Otherwise wait for OnSpawn event to be triggered
+                if (_sasquatch.IsActive)
+                {
+                    ShowProximityBar();
+                }
             }
         }
 

@@ -1,11 +1,15 @@
 using UnityEngine;
 using System.Collections;
 using Shredsquatch.Core;
+using Shredsquatch.Player;
 
 namespace Shredsquatch.Powerups
 {
     public class PowerupManager : MonoBehaviour
     {
+        [Header("References")]
+        [SerializeField] private SnowboardPhysics _physics;
+
         [Header("Visual Effects")]
         [SerializeField] private ParticleSystem _goldenBoardEffect;
         [SerializeField] private ParticleSystem _nitroEffect;
@@ -78,9 +82,21 @@ namespace Shredsquatch.Powerups
             _nitroActive = true;
             _nitroTimer = Constants.Powerup.NitroDuration;
 
+            // Apply the speed boost (convert km/h to m/s)
+            if (_physics != null)
+            {
+                _physics.ApplyBoost(Constants.Powerup.NitroBoost / 3.6f);
+            }
+
             if (_nitroEffect != null)
             {
                 _nitroEffect.Play();
+            }
+
+            // Trigger haptic feedback
+            if (GameFeedback.Instance != null)
+            {
+                GameFeedback.Instance.TriggerBoost();
             }
 
             OnPowerupActivated?.Invoke(PowerupType.NitroTuck);

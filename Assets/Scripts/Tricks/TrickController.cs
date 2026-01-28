@@ -19,6 +19,7 @@ namespace Shredsquatch.Tricks
         private ActiveTrick _currentTrick = new ActiveTrick();
         private bool _isAirborne;
         private float _airStartTime;
+        private bool _launchedFromRamp; // Cache ramp state at jump start for flip eligibility
 
         // Combo tracking
         private List<TrickType> _comboTricks = new List<TrickType>();
@@ -73,6 +74,9 @@ namespace Shredsquatch.Tricks
             _airStartTime = Time.time;
             _currentTrick.Reset();
             _currentTrick.StartTime = Time.time;
+            // Cache ramp state at jump start since JumpController resets it immediately
+            _launchedFromRamp = _jumpController != null &&
+                                _jumpController.CurrentRamp != JumpController.RampType.None;
         }
 
         private void ProcessSpinInput()
@@ -114,8 +118,8 @@ namespace Shredsquatch.Tricks
         {
             if (_currentTrick.IsFlipping) return;
 
-            // Can only flip if launched from a ramp
-            if (_jumpController.CurrentRamp == JumpController.RampType.None) return;
+            // Can only flip if launched from a ramp (use cached value since ramp is reset after jump)
+            if (!_launchedFromRamp) return;
 
             if (_input.FlipForward || _input.FlipBackward)
             {

@@ -23,12 +23,13 @@ namespace Shredsquatch.Core
         }
 
         // Carving
+        // Angle zones: 0-29° = normal turn, 30-44° = carve (boost), 45°+ = edge catch
         public static class Carving
         {
-            public const float NormalMaxAngle = 30f;
-            public const float CarveMinAngle = 30f;
-            public const float CarveMaxAngle = 45f;
-            public const float EdgeCatchAngle = 45f;
+            public const float NormalMaxAngle = 29f;   // Below this is normal turning
+            public const float CarveMinAngle = 30f;    // At or above this starts carving
+            public const float CarveMaxAngle = 44f;    // Up to this angle gives carve boost
+            public const float EdgeCatchAngle = 45f;   // At or above this triggers edge catch
         }
 
         // Jumping
