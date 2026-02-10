@@ -164,6 +164,13 @@ namespace Shredsquatch.Core
                 _hudController.SetSasquatch(sasquatchAI);
             }
 
+            // Wire AchievementManager to Sasquatch
+            var achievementManager = AchievementManager.Instance;
+            if (achievementManager != null && sasquatchAI != null)
+            {
+                achievementManager.SetSasquatch(sasquatchAI);
+            }
+
             Debug.Log("[SceneInitializer] Sasquatch spawned");
         }
 

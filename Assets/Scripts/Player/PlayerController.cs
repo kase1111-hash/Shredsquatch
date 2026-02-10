@@ -30,8 +30,6 @@ namespace Shredsquatch.Player
         // State
         private bool _isActive;
 
-        // Error recovery
-        private bool _updateHasErrored;
         private Vector3 _lastSafePosition;
         private Quaternion _lastSafeRotation;
 
@@ -91,11 +89,9 @@ namespace Shredsquatch.Player
         {
             if (!_isActive) return;
 
-            SafeExecution.TryUpdate(() => {
-                HandlePause();
-                UpdateEffects();
-                UpdateSafePosition();
-            }, ref _updateHasErrored, "PlayerController.Update");
+            HandlePause();
+            UpdateEffects();
+            UpdateSafePosition();
         }
 
         private void UpdateSafePosition()
@@ -211,9 +207,6 @@ namespace Shredsquatch.Player
         /// </summary>
         public void AttemptRecovery()
         {
-            // Clear error state
-            _updateHasErrored = false;
-
             // Reset to last safe position
             transform.position = _lastSafePosition;
             transform.rotation = _lastSafeRotation;

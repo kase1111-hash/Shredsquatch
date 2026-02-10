@@ -43,7 +43,8 @@ namespace Shredsquatch.Core
                 Log("Created GameManager");
             }
 
-            // Find player and set reference
+            // Find player and set reference (SceneInitializer also does this
+            // when spawning from prefab — this is a fallback for scene-placed players)
             if (_findPlayerAutomatically && GameManager.Instance != null)
             {
                 var player = GameObject.FindGameObjectWithTag("Player");
@@ -51,9 +52,6 @@ namespace Shredsquatch.Core
                 {
                     GameManager.Instance.SetPlayerReference(player.transform);
                     Log($"Found and set player reference: {player.name}");
-                    
-                    // Ensure player has required components
-                    EnsurePlayerComponents(player);
                 }
                 else
                 {
@@ -69,40 +67,6 @@ namespace Shredsquatch.Core
                 {
                     CreateTestGround();
                 }
-            }
-        }
-
-        private void EnsurePlayerComponents(GameObject player)
-        {
-            // Ensure CharacterController exists
-            if (player.GetComponent<CharacterController>() == null)
-            {
-                var cc = player.AddComponent<CharacterController>();
-                cc.height = 1.8f;
-                cc.radius = 0.5f;
-                cc.center = new Vector3(0, 0.9f, 0);
-                Log("Added CharacterController to player");
-            }
-
-            // Ensure PlayerInput exists
-            if (player.GetComponent<Player.PlayerInput>() == null)
-            {
-                player.AddComponent<Player.PlayerInput>();
-                Log("Added PlayerInput to player");
-            }
-
-            // Ensure SnowboardPhysics exists
-            if (player.GetComponent<Player.SnowboardPhysics>() == null)
-            {
-                player.AddComponent<Player.SnowboardPhysics>();
-                Log("Added SnowboardPhysics to player");
-            }
-
-            // Ensure PlayerController exists
-            if (player.GetComponent<Player.PlayerController>() == null)
-            {
-                player.AddComponent<Player.PlayerController>();
-                Log("Added PlayerController to player");
             }
         }
 
