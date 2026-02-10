@@ -2,7 +2,6 @@ using UnityEngine;
 using Shredsquatch.Configuration;
 using Shredsquatch.Terrain;
 using Shredsquatch.UI;
-using Shredsquatch.Rendering;
 using Shredsquatch.Progression;
 using Shredsquatch.Sasquatch;
 
@@ -190,22 +189,15 @@ namespace Shredsquatch.Core
 
         private void WireManagers()
         {
-            // Wire AchievementManager
+            // Wire AchievementManager to trick controller
             var achievementManager = FindObjectOfType<AchievementManager>();
             if (achievementManager != null && _playerInstance != null)
             {
-                var railController = _playerInstance.GetComponent<Tricks.RailGrindController>();
-                if (railController != null)
+                var trickController = _playerInstance.GetComponent<Tricks.TrickController>();
+                if (trickController != null)
                 {
-                    achievementManager.SetRailController(railController);
+                    achievementManager.SetTrickController(trickController);
                 }
-            }
-
-            // Wire ShaderManager
-            var shaderManager = FindObjectOfType<ShaderManager>();
-            if (shaderManager != null)
-            {
-                // ShaderManager is self-contained, just ensure it exists
             }
 
             Debug.Log("[SceneInitializer] Managers wired");
