@@ -34,6 +34,11 @@ namespace Shredsquatch.Player
         public event System.Action OnRagdollEnd;
         public event System.Action OnRecoveryComplete;
 
+        private void Awake()
+        {
+            if (_physics == null) _physics = GetComponent<SnowboardPhysics>();
+        }
+
         private void Start()
         {
             // Disable ragdoll at start

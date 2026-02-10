@@ -36,6 +36,12 @@ namespace Shredsquatch.Tricks
         public int ComboCount => _comboCount;
         public bool IsPerformingTrick => _currentTrick.Type != TrickType.None || _currentTrick.Grab != GrabType.None;
 
+        private void Awake()
+        {
+            if (_input == null) _input = GetComponent<PlayerInput>();
+            if (_jumpController == null) _jumpController = GetComponent<JumpController>();
+        }
+
         private void Start()
         {
             if (_jumpController != null)
