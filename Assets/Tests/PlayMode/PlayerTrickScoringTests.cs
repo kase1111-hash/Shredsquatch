@@ -77,16 +77,16 @@ namespace Shredsquatch.Tests.PlayMode
         public IEnumerator GameManager_StartRun_ResetsRunStats()
         {
             // Arrange - add some score first
-            GameManager.CurrentRun.TrickScore = 1000;
-            GameManager.CurrentRun.TrickCount = 5;
+            GameManager.Instance.CurrentRun.TrickScore = 1000;
+            GameManager.Instance.CurrentRun.TrickCount = 5;
 
             // Act
             _gameManager.StartRun(GameMode.Standard);
             yield return null;
 
             // Assert
-            Assert.AreEqual(0, GameManager.CurrentRun.TrickScore);
-            Assert.AreEqual(0, GameManager.CurrentRun.TrickCount);
+            Assert.AreEqual(0, GameManager.Instance.CurrentRun.TrickScore);
+            Assert.AreEqual(0, GameManager.Instance.CurrentRun.TrickCount);
         }
 
         [UnityTest]
@@ -96,7 +96,7 @@ namespace Shredsquatch.Tests.PlayMode
             _gameManager.StartRun(GameMode.Standard);
             yield return null;
 
-            int scoreBeforeTrick = GameManager.CurrentRun.TrickScore;
+            int scoreBeforeTrick = GameManager.Instance.CurrentRun.TrickScore;
 
             // Simulate being airborne
             // Note: In real tests, we'd use InputSystem.TestFramework to simulate input
@@ -105,8 +105,8 @@ namespace Shredsquatch.Tests.PlayMode
             yield return null;
 
             // Assert
-            Assert.Greater(GameManager.CurrentRun.TrickScore, scoreBeforeTrick);
-            Assert.AreEqual(1, GameManager.CurrentRun.TrickCount);
+            Assert.Greater(GameManager.Instance.CurrentRun.TrickScore, scoreBeforeTrick);
+            Assert.AreEqual(1, GameManager.Instance.CurrentRun.TrickCount);
         }
 
         [UnityTest]
@@ -125,8 +125,8 @@ namespace Shredsquatch.Tests.PlayMode
             yield return null;
 
             // Assert
-            Assert.AreEqual(600, GameManager.CurrentRun.TrickScore);
-            Assert.AreEqual(3, GameManager.CurrentRun.TrickCount);
+            Assert.AreEqual(600, GameManager.Instance.CurrentRun.TrickScore);
+            Assert.AreEqual(3, GameManager.Instance.CurrentRun.TrickCount);
         }
 
         [UnityTest]
@@ -190,14 +190,14 @@ namespace Shredsquatch.Tests.PlayMode
             _gameManager.StartRun(GameMode.Standard);
             yield return null;
 
-            float initialDistance = GameManager.CurrentRun.Distance;
+            float initialDistance = GameManager.Instance.CurrentRun.Distance;
 
             // Act - move player forward (positive Z)
             _playerObj.transform.position += new Vector3(0, 0, 100f);
             yield return new WaitForSeconds(0.1f); // Allow update to run
 
             // Assert
-            Assert.Greater(GameManager.CurrentRun.Distance, initialDistance);
+            Assert.Greater(GameManager.Instance.CurrentRun.Distance, initialDistance);
         }
 
         [UnityTest]

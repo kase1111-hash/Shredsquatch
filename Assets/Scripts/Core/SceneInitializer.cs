@@ -4,6 +4,7 @@ using Shredsquatch.Terrain;
 using Shredsquatch.UI;
 using Shredsquatch.Rendering;
 using Shredsquatch.Progression;
+using Shredsquatch.Sasquatch;
 
 namespace Shredsquatch.Core
 {
@@ -152,10 +153,10 @@ namespace Shredsquatch.Core
             _sasquatchInstance.name = "Sasquatch";
 
             // Wire Sasquatch to target player
-            var sasquatchAI = _sasquatchInstance.GetComponent<Enemy.SasquatchAI>();
+            var sasquatchAI = _sasquatchInstance.GetComponent<SasquatchAI>();
             if (sasquatchAI != null)
             {
-                sasquatchAI.SetTarget(_playerInstance.transform);
+                sasquatchAI.SetPlayerReference(_playerInstance.transform);
             }
 
             // Wire HUD to Sasquatch
