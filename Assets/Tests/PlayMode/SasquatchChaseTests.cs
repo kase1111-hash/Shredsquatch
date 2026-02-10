@@ -82,7 +82,7 @@ namespace Shredsquatch.Tests.PlayMode
 
             // Note: Sasquatch spawns when GameManager.OnDistanceChanged fires
             // This test verifies the event subscription is working
-            Assert.IsTrue(GameManager.CurrentRun.Distance >= Constants.Sasquatch.SpawnDistance ||
+            Assert.IsTrue(GameManager.Instance.CurrentRun.Distance >= Constants.Sasquatch.SpawnDistance ||
                           _sasquatch.IsActive || spawnEventFired);
         }
 

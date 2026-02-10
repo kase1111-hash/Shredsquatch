@@ -156,54 +156,10 @@ namespace Shredsquatch.Core
         {
             if (!IsWebGL) return;
 
-            // WebGL-specific settings
             Application.targetFrameRate = 60;
-
-            // Reduce GC pressure
             Application.lowMemory += OnLowMemory;
 
-            // Browser-specific optimizations
-            switch (DetectedBrowser)
-            {
-                case BrowserType.Safari:
-                    // Safari has issues with certain WebGL features
-                    ApplySafariOptimizations();
-                    break;
-
-                case BrowserType.Firefox:
-                    // Firefox handles memory differently
-                    ApplyFirefoxOptimizations();
-                    break;
-
-                case BrowserType.Chrome:
-                case BrowserType.Edge:
-                    // Chromium-based browsers - optimal settings
-                    ApplyChromiumOptimizations();
-                    break;
-            }
-        }
-
-        private void ApplySafariOptimizations()
-        {
-            // Safari has stricter memory limits and some WebGL quirks
-            QualitySettings.shadowDistance = 50f;
-            QualitySettings.shadowCascades = 1;
-
-            // Reduce particle counts
-            Debug.Log("[WebGL] Applied Safari optimizations");
-        }
-
-        private void ApplyFirefoxOptimizations()
-        {
-            // Firefox handles async operations differently
-            QualitySettings.asyncUploadTimeSlice = 4;
-            Debug.Log("[WebGL] Applied Firefox optimizations");
-        }
-
-        private void ApplyChromiumOptimizations()
-        {
-            // Chrome/Edge can handle more
-            Debug.Log("[WebGL] Applied Chromium optimizations");
+            Debug.Log($"[WebGL] Platform optimizations applied (Browser: {DetectedBrowser})");
         }
 
         private void ApplyWebGL1Fallback()

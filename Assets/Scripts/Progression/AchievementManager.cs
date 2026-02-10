@@ -188,24 +188,25 @@ namespace Shredsquatch.Progression
                 GameManager.Instance.OnGameOver += OnGameOver;
                 GameManager.Instance.OnDistanceChanged += OnDistanceChanged;
             }
+        }
 
-            // Find and subscribe to trick controller
-            var trickController = FindFirstObjectByType<TrickController>();
+        /// <summary>
+        /// Wire trick controller events. Call from SceneInitializer after player is spawned.
+        /// </summary>
+        public void SetTrickController(TrickController trickController)
+        {
             if (trickController != null)
             {
                 trickController.OnTrickCompleted += OnTrickCompleted;
                 trickController.OnComboUpdated += OnComboUpdated;
             }
+        }
 
-            // Find and subscribe to rail grind controller
-            var railController = FindFirstObjectByType<RailGrindController>();
-            if (railController != null)
-            {
-                railController.OnGrindDistanceComplete += OnGrindComplete;
-            }
-
-            // Find and subscribe to sasquatch
-            var sasquatch = FindFirstObjectByType<SasquatchAI>();
+        /// <summary>
+        /// Wire sasquatch events. Call from SceneInitializer after sasquatch is spawned.
+        /// </summary>
+        public void SetSasquatch(SasquatchAI sasquatch)
+        {
             if (sasquatch != null)
             {
                 sasquatch.OnDistanceChanged += OnSasquatchDistanceChanged;

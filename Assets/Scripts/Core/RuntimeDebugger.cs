@@ -91,8 +91,8 @@ namespace Shredsquatch.Core
                 _sb.AppendLine($"\n-- Game State --");
                 _sb.AppendLine($"State: {GameManager.Instance.CurrentState}");
                 _sb.AppendLine($"Mode: {GameManager.Instance.CurrentMode}");
-                _sb.AppendLine($"Distance: {GameManager.CurrentRun.Distance:F2} km");
-                _sb.AppendLine($"Score: {GameManager.CurrentRun.TrickScore}");
+                _sb.AppendLine($"Distance: {GameManager.Instance.CurrentRun.Distance:F2} km");
+                _sb.AppendLine($"Score: {GameManager.Instance.CurrentRun.TrickScore}");
                 _sb.AppendLine($"TimeScale: {Time.timeScale}");
             }
             

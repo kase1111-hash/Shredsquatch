@@ -1,12 +1,11 @@
 using UnityEngine;
-using UnityEngine.Rendering;
 using System.Collections.Generic;
 
 namespace Shredsquatch.Core
 {
     /// <summary>
-    /// Monitors game performance and dynamically adjusts quality settings to maintain target FPS.
-    /// Optimized for long runs with memory management and quality scaling.
+    /// Monitors game performance. FPS tracking and debug overlay only.
+    /// Dynamic quality scaling deferred until profiling data exists from real gameplay.
     /// </summary>
     public class PerformanceMonitor : MonoBehaviour
     {
@@ -16,15 +15,6 @@ namespace Shredsquatch.Core
         [SerializeField] private int _targetFPS = 60;
         [SerializeField] private int _minAcceptableFPS = 45;
         [SerializeField] private float _measureInterval = 2f;
-
-        [Header("Auto Quality Settings")]
-        [SerializeField] private bool _autoAdjustQuality = true;
-        [SerializeField] private float _qualityAdjustCooldown = 10f;
-        [SerializeField] private int _framesBeforeAdjust = 120; // ~2 seconds at 60fps
-
-        [Header("Memory Management")]
-        [SerializeField] private float _memoryCheckInterval = 30f;
-        [SerializeField] private float _gcTriggerThreshold = 0.8f; // 80% of budget
 
         [Header("Debug Display")]
         [SerializeField] private bool _showDebugOverlay = false;
@@ -39,26 +29,17 @@ namespace Shredsquatch.Core
         private Queue<float> _fpsHistory = new Queue<float>();
         private const int FPSHistorySize = 30;
 
-        // Quality adjustment
+        // Quality level
         private int _currentQualityLevel;
-        private float _lastQualityAdjustTime;
-        private int _lowFPSFrameCount;
-        private int _highFPSFrameCount;
-
-        // Memory tracking
-        private float _lastMemoryCheckTime;
-        private float _lastGCTime;
-        private long _peakMemoryUsage;
 
         // Frame time tracking for stutters
         private float _lastFrameTime;
         private int _stutterCount;
         private const float StutterThreshold = 0.05f; // 50ms = 20fps
 
-        // Long run optimizations
+        // Run tracking
         private float _runStartTime;
         private float _totalDistance;
-        private bool _hasReducedForLongRun;
 
         // Events
         public event System.Action<int> OnQualityChanged;
@@ -109,30 +90,17 @@ namespace Shredsquatch.Core
         {
             TrackFrameRate();
             TrackStutters();
-            CheckMemory();
-
-            if (_autoAdjustQuality)
-            {
-                EvaluateQualityAdjustment();
-            }
         }
 
         private void OnRunStarted()
         {
             ResetStats();
             _runStartTime = Time.time;
-            _hasReducedForLongRun = false;
         }
 
         private void OnDistanceChanged(float distance)
         {
             _totalDistance = distance;
-
-            // Long run optimizations kick in after 10km
-            if (distance > 10f && !_hasReducedForLongRun)
-            {
-                ApplyLongRunOptimizations();
-            }
         }
 
         private void TrackFrameRate()
@@ -188,142 +156,19 @@ namespace Shredsquatch.Core
             _lastFrameTime = frameTime;
         }
 
-        private void CheckMemory()
-        {
-            if (Time.time - _lastMemoryCheckTime < _memoryCheckInterval)
-                return;
-
-            _lastMemoryCheckTime = Time.time;
-
-            // Track memory usage
-            long currentMemory = System.GC.GetTotalMemory(false);
-            if (currentMemory > _peakMemoryUsage)
-            {
-                _peakMemoryUsage = currentMemory;
-            }
-
-            // Estimate memory pressure (Unity doesn't expose exact budgets)
-            float memoryMB = currentMemory / (1024f * 1024f);
-
-            // Trigger cleanup if we're using too much
-            // WebGL typically has ~2GB limit, trigger cleanup at lower threshold
-            float threshold = Application.platform == RuntimePlatform.WebGLPlayer ? 800f : 2000f;
-
-            if (memoryMB > threshold * _gcTriggerThreshold)
-            {
-                TriggerMemoryCleanup();
-            }
-
-            // Log memory stats periodically
-            Debug.Log($"[Performance] Memory: {memoryMB:F1}MB, Peak: {_peakMemoryUsage / (1024f * 1024f):F1}MB");
-        }
-
-        private void EvaluateQualityAdjustment()
-        {
-            if (Time.time - _lastQualityAdjustTime < _qualityAdjustCooldown)
-                return;
-
-            // Track consecutive low/high FPS frames
-            if (_currentFPS < _minAcceptableFPS)
-            {
-                _lowFPSFrameCount++;
-                _highFPSFrameCount = 0;
-            }
-            else if (_currentFPS >= _targetFPS)
-            {
-                _highFPSFrameCount++;
-                _lowFPSFrameCount = 0;
-            }
-            else
-            {
-                // Reset both if in acceptable range
-                _lowFPSFrameCount = Mathf.Max(0, _lowFPSFrameCount - 1);
-                _highFPSFrameCount = Mathf.Max(0, _highFPSFrameCount - 1);
-            }
-
-            // Reduce quality if sustained low FPS
-            if (_lowFPSFrameCount >= _framesBeforeAdjust)
-            {
-                ReduceQuality();
-                _lowFPSFrameCount = 0;
-            }
-            // Increase quality if sustained high FPS (and we're not at max)
-            else if (_highFPSFrameCount >= _framesBeforeAdjust * 2) // Slower to increase
-            {
-                IncreaseQuality();
-                _highFPSFrameCount = 0;
-            }
-        }
-
-        private void ReduceQuality()
-        {
-            int newLevel = _currentQualityLevel - 1;
-            if (newLevel < 0) return;
-
-            SetQualityLevel(newLevel);
-            Debug.Log($"[Performance] Reduced quality to {QualitySettings.names[newLevel]} due to low FPS ({_currentFPS:F1})");
-            OnPerformanceWarning?.Invoke();
-        }
-
-        private void IncreaseQuality()
-        {
-            int maxLevel = QualitySettings.names.Length - 1;
-            int newLevel = _currentQualityLevel + 1;
-            if (newLevel > maxLevel) return;
-
-            SetQualityLevel(newLevel);
-            Debug.Log($"[Performance] Increased quality to {QualitySettings.names[newLevel]} due to good FPS ({_currentFPS:F1})");
-        }
-
-        private void SetQualityLevel(int level)
-        {
-            _currentQualityLevel = level;
-            QualitySettings.SetQualityLevel(level, true);
-            _lastQualityAdjustTime = Time.time;
-            OnQualityChanged?.Invoke(level);
-        }
-
         /// <summary>
-        /// Force quality reduction (called by WebGL on low memory).
+        /// Force quality reduction (called by WebGLCompatibility on low memory).
         /// </summary>
         public void ForceQualityReduction()
         {
             if (_currentQualityLevel > 0)
             {
-                SetQualityLevel(0);
+                _currentQualityLevel = 0;
+                QualitySettings.SetQualityLevel(0, true);
+                OnQualityChanged?.Invoke(0);
+                OnPerformanceWarning?.Invoke();
                 Debug.LogWarning("[Performance] Forced quality to Low due to memory pressure");
             }
-        }
-
-        private void ApplyLongRunOptimizations()
-        {
-            _hasReducedForLongRun = true;
-
-            // Reduce shadow distance for long runs (less terrain to shadow)
-            QualitySettings.shadowDistance = Mathf.Min(QualitySettings.shadowDistance, 50f);
-
-            // More aggressive LOD bias
-            QualitySettings.lodBias = Mathf.Min(QualitySettings.lodBias, 0.7f);
-
-            // Trigger cleanup
-            TriggerMemoryCleanup();
-
-            Debug.Log("[Performance] Applied long run optimizations (10km+)");
-        }
-
-        private void TriggerMemoryCleanup()
-        {
-            if (Time.time - _lastGCTime < 30f) return; // Don't GC too often
-
-            _lastGCTime = Time.time;
-
-            // Unload unused assets
-            Resources.UnloadUnusedAssets();
-
-            // Force garbage collection (do this sparingly - causes frame spike)
-            System.GC.Collect();
-
-            Debug.Log("[Performance] Memory cleanup performed");
         }
 
         private void ResetStats()
@@ -332,8 +177,6 @@ namespace Shredsquatch.Core
             _maxFPS = 0f;
             _stutterCount = 0;
             _fpsHistory.Clear();
-            _lowFPSFrameCount = 0;
-            _highFPSFrameCount = 0;
         }
 
         /// <summary>
