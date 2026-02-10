@@ -557,10 +557,22 @@ namespace Shredsquatch.Procedural
                 renderer.material = CreateMaterial(new Color(0.3f, 0.15f, 0.05f));
             }
 
-            go.AddComponent<SasquatchAI>();
-
             // Audio source for roar
-            go.AddComponent<AudioSource>();
+            var roarAudio = go.AddComponent<AudioSource>();
+            roarAudio.playOnAwake = false;
+            roarAudio.spatialBlend = 1f;
+
+            // Audio source for proximity rumble (looping)
+            var proximityAudio = go.AddComponent<AudioSource>();
+            proximityAudio.playOnAwake = false;
+            proximityAudio.loop = true;
+            proximityAudio.spatialBlend = 1f;
+            proximityAudio.volume = 0f;
+
+            // SasquatchAI picks up its serialized AudioSource references via GetComponent;
+            // since it can't differentiate two AudioSources by serialized field, we wire
+            // the proximity source after AddComponent via the public field setter
+            var ai = go.AddComponent<SasquatchAI>();
 
             return go;
         }

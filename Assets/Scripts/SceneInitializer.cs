@@ -40,6 +40,13 @@ namespace Shredsquatch.Core
 
         private void Start()
         {
+            // Ensure GameFeedback singleton exists for wiring
+            if (GameFeedback.Instance == null)
+            {
+                var feedbackObj = new GameObject("GameFeedback");
+                feedbackObj.AddComponent<GameFeedback>();
+            }
+
             PopulateRegistryIfNeeded();
             WireTerrainGenerator();
 
@@ -144,6 +151,18 @@ namespace Shredsquatch.Core
                 _terrainGenerator.GenerateInitialChunks();
             }
 
+            // Wire GameFeedback to player components
+            if (GameFeedback.Instance != null)
+            {
+                var crashHandler = _playerInstance.GetComponent<Player.CrashHandler>();
+                if (crashHandler != null)
+                    GameFeedback.Instance.SetCrashHandler(crashHandler);
+
+                var cam = _playerInstance.GetComponentInChildren<Player.FirstPersonCamera>();
+                if (cam != null)
+                    GameFeedback.Instance.SetCamera(cam);
+            }
+
             Debug.Log("[SceneInitializer] Player spawned at " + spawnPos);
         }
 
@@ -177,6 +196,12 @@ namespace Shredsquatch.Core
             if (_hudController != null)
             {
                 _hudController.SetSasquatch(sasquatchAI);
+            }
+
+            // Wire GameFeedback to Sasquatch
+            if (GameFeedback.Instance != null && sasquatchAI != null)
+            {
+                GameFeedback.Instance.SetSasquatch(sasquatchAI);
             }
 
             // Wire AchievementManager to Sasquatch

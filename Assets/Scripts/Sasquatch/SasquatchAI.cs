@@ -25,6 +25,11 @@ namespace Shredsquatch.Sasquatch
         [SerializeField] private GameObject _eyeGlowRight;
         [SerializeField] private ParticleSystem _snowTrail;
 
+        [Header("Proximity Audio")]
+        [SerializeField] private AudioSource _proximityAudio;
+        [SerializeField] private float _proximityMaxDistance = 300f;
+        [SerializeField] private float _proximityFullVolume = 0.8f;
+
         // State
         private bool _isActive;
         private bool _hasSpawned;
@@ -46,6 +51,25 @@ namespace Shredsquatch.Sasquatch
         public event System.Action OnSpawn;
         public event System.Action OnCatchPlayer;
         public event System.Action<float> OnDistanceChanged;
+
+        private void Awake()
+        {
+            // Wire audio sources for procedural Sasquatch
+            var sources = GetComponents<AudioSource>();
+            if (_roarAudio == null && sources.Length > 0)
+                _roarAudio = sources[0];
+            if (_proximityAudio == null && sources.Length > 1)
+                _proximityAudio = sources[1];
+            // Create proximity source if missing
+            if (_proximityAudio == null)
+            {
+                _proximityAudio = gameObject.AddComponent<AudioSource>();
+                _proximityAudio.loop = true;
+                _proximityAudio.playOnAwake = false;
+                _proximityAudio.spatialBlend = 1f;
+                _proximityAudio.volume = 0f;
+            }
+        }
 
         private void Start()
         {
@@ -253,6 +277,22 @@ namespace Shredsquatch.Sasquatch
             {
                 var emission = _snowTrail.emission;
                 emission.enabled = _currentSpeed > _baseSpeed * 0.5f;
+            }
+
+            // Proximity audio: louder as distance decreases
+            if (_proximityAudio != null)
+            {
+                if (_currentDistance < _proximityMaxDistance)
+                {
+                    float t = Mathf.InverseLerp(_proximityMaxDistance, 30f, _currentDistance);
+                    _proximityAudio.volume = Mathf.Lerp(0.05f, _proximityFullVolume, t);
+                    if (!_proximityAudio.isPlaying) _proximityAudio.Play();
+                }
+                else
+                {
+                    _proximityAudio.volume = 0f;
+                    if (_proximityAudio.isPlaying) _proximityAudio.Pause();
+                }
             }
         }
 
