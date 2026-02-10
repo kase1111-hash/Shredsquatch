@@ -22,6 +22,17 @@ namespace Shredsquatch
             }
         }
 
+        private void Update()
+        {
+            // R to restart during Game Over (works without UI Canvas)
+            if (GameManager.Instance != null
+                && GameManager.Instance.CurrentState == GameState.GameOver
+                && UnityEngine.Input.GetKeyDown(KeyCode.R))
+            {
+                RestartGame();
+            }
+        }
+
         public void StartGame()
         {
             if (GameManager.Instance != null)

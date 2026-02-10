@@ -32,6 +32,8 @@ namespace Shredsquatch.Terrain
         [SerializeField] private GameObject[] _treePrefabs;
         [SerializeField] private GameObject[] _rockPrefabs;
         [SerializeField] private GameObject[] _rampPrefabs;
+        [SerializeField] private GameObject[] _railPrefabs;
+        [SerializeField] private GameObject _coinPrefab;
 
         [Header("References")]
         [SerializeField] private Transform _player;
@@ -51,6 +53,15 @@ namespace Shredsquatch.Terrain
         private void Start()
         {
             _chunkContainer = new GameObject("TerrainChunks").transform;
+
+            // Create default snow material if none assigned
+            if (_terrainMaterial == null)
+            {
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+                if (shader == null) shader = Shader.Find("Standard");
+                _terrainMaterial = new Material(shader);
+                _terrainMaterial.color = new Color(0.95f, 0.97f, 1f);
+            }
 
             // Use daily seed for leaderboards, or custom seed
             if (_seed == 0)
@@ -253,6 +264,12 @@ namespace Shredsquatch.Terrain
 
             // Ramps (less frequent)
             SpawnRamps(chunk, heightMap, zone);
+
+            // Coin lines along downhill paths
+            SpawnCoins(chunk, heightMap, zone);
+
+            // Rails (sparse, increase with zone)
+            SpawnRails(chunk, heightMap, zone);
         }
 
         // Helper methods for seeded random
@@ -357,6 +374,77 @@ namespace Shredsquatch.Terrain
             }
         }
 
+        private void SpawnCoins(TerrainChunk chunk, float[,] heightMap, TerrainZone zone)
+        {
+            if (_coinPrefab == null) return;
+
+            // Number of coin lines per chunk, increases with zone
+            int lineCount = zone switch
+            {
+                TerrainZone.Tutorial => 2,
+                TerrainZone.Forest => 3,
+                TerrainZone.Extreme => 2,
+                _ => 2
+            };
+
+            for (int line = 0; line < lineCount; line++)
+            {
+                if (_seededRandom.NextDouble() > 0.4) continue; // 40% chance per line
+
+                // Pick a random X lane, coins run downhill (Z)
+                float x = SeededRandomRange(_chunkSize * 0.15f, _chunkSize * 0.85f);
+                float zStart = SeededRandomRange(0f, _chunkSize * 0.3f);
+                int coinCount = SeededRandomRange(5, 10);
+                float spacing = SeededRandomRange(8f, 14f);
+
+                for (int i = 0; i < coinCount; i++)
+                {
+                    float z = zStart + i * spacing;
+                    if (z >= _chunkSize) break;
+
+                    int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
+                    int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
+                    float height = heightMap[mapX, mapZ] * _heightMultiplier + 1.5f; // Float above ground
+
+                    Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
+                    chunk.SpawnObject(_coinPrefab, localPos, Quaternion.identity, Vector3.one);
+                }
+            }
+        }
+
+        private void SpawnRails(TerrainChunk chunk, float[,] heightMap, TerrainZone zone)
+        {
+            if (_railPrefabs == null || _railPrefabs.Length == 0) return;
+
+            // Rails are sparse, appear after tutorial
+            int railCount = zone switch
+            {
+                TerrainZone.Tutorial => 0,
+                TerrainZone.Forest => 2,
+                TerrainZone.Extreme => 3,
+                _ => 1
+            };
+
+            for (int i = 0; i < railCount; i++)
+            {
+                if (_seededRandom.NextDouble() > 0.25) continue; // 25% chance per rail
+
+                float x = SeededRandomRange(_chunkSize * 0.2f, _chunkSize * 0.8f);
+                float z = SeededRandomRange(_chunkSize * 0.2f, _chunkSize * 0.8f);
+
+                int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
+                int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
+                float height = heightMap[mapX, mapZ] * _heightMultiplier;
+
+                Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
+                // Rails run roughly downhill with slight angle variation
+                Quaternion rotation = Quaternion.Euler(0, SeededRandomRange(-30, 30), 0);
+
+                GameObject prefab = _railPrefabs[SeededRandomRange(0, _railPrefabs.Length)];
+                chunk.SpawnObject(prefab, localPos, rotation, Vector3.one);
+            }
+        }
+
         private void UnloadChunk(Vector2Int coord)
         {
             if (_chunks.TryGetValue(coord, out TerrainChunk chunk))
@@ -450,6 +538,33 @@ namespace Shredsquatch.Terrain
             _treePrefabs = registry.GetAllTrees();
             _rockPrefabs = registry.GetAllRocks();
             _rampPrefabs = registry.GetAllRamps();
+            _railPrefabs = registry.GetAllRails();
+            _coinPrefab = registry.CoinPrefab;
+        }
+
+        /// <summary>
+        /// Generate terrain chunks immediately around the player.
+        /// Call after setting the player reference to ensure ground exists before gameplay starts.
+        /// </summary>
+        public void GenerateInitialChunks()
+        {
+            if (_player == null) return;
+
+            UpdateChunks();
+
+            // Process all queued chunks immediately (not frame-limited)
+            while (_chunksToGenerate.Count > 0)
+            {
+                Vector2Int coord = _chunksToGenerate.Dequeue();
+                _queuedChunks.Remove(coord);
+
+                if (!_chunks.ContainsKey(coord))
+                {
+                    GenerateChunk(coord);
+                }
+            }
+
+            Debug.Log($"[TerrainGenerator] Generated {_chunks.Count} initial chunks");
         }
 
         /// <summary>

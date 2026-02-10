@@ -33,6 +33,10 @@ namespace Shredsquatch.Core
         private float _lowFreqTarget;
         private float _highFreqTarget;
 
+        // Tracked references for proper unsubscription
+        private CrashHandler _crashHandler;
+        private SasquatchAI _sasquatch;
+
         // Near-miss tracking
         private float _lastNearMissTime;
         private const float NearMissCooldown = 0.5f;
@@ -49,20 +53,67 @@ namespace Shredsquatch.Core
 
         private void Start()
         {
-            // Find camera if not assigned
-            if (_camera == null)
+            // Subscribe to GameManager events (always available via AutoSetup)
+            if (GameManager.Instance != null)
             {
-                _camera = FindFirstObjectByType<FirstPersonCamera>();
+                GameManager.Instance.OnRunStarted += OnRunStarted;
             }
-
-            // Subscribe to events
-            SubscribeToEvents();
         }
 
         private void OnDestroy()
         {
             UnsubscribeFromEvents();
             StopAllRumble();
+        }
+
+        /// <summary>
+        /// Wire to the player's camera for screen shake. Called by SceneInitializer after spawn.
+        /// </summary>
+        public void SetCamera(FirstPersonCamera cam)
+        {
+            _camera = cam;
+        }
+
+        /// <summary>
+        /// Wire to the player's CrashHandler for crash/recovery feedback. Called by SceneInitializer.
+        /// </summary>
+        public void SetCrashHandler(CrashHandler handler)
+        {
+            // Unsub from previous if any
+            if (_crashHandler != null)
+            {
+                _crashHandler.OnRagdollStart -= OnPlayerCrash;
+                _crashHandler.OnRecoveryComplete -= OnPlayerRecovery;
+            }
+
+            _crashHandler = handler;
+
+            if (_crashHandler != null)
+            {
+                _crashHandler.OnRagdollStart += OnPlayerCrash;
+                _crashHandler.OnRecoveryComplete += OnPlayerRecovery;
+            }
+        }
+
+        /// <summary>
+        /// Wire to the Sasquatch for proximity/catch feedback. Called by SceneInitializer.
+        /// </summary>
+        public void SetSasquatch(SasquatchAI sasquatch)
+        {
+            // Unsub from previous if any
+            if (_sasquatch != null)
+            {
+                _sasquatch.OnDistanceChanged -= OnSasquatchDistanceChanged;
+                _sasquatch.OnCatchPlayer -= OnPlayerCaught;
+            }
+
+            _sasquatch = sasquatch;
+
+            if (_sasquatch != null)
+            {
+                _sasquatch.OnDistanceChanged += OnSasquatchDistanceChanged;
+                _sasquatch.OnCatchPlayer += OnPlayerCaught;
+            }
         }
 
         private void Update()
@@ -89,46 +140,10 @@ namespace Shredsquatch.Core
             }
         }
 
-        private void SubscribeToEvents()
-        {
-            // Find and subscribe to CrashHandler
-            var crashHandler = FindFirstObjectByType<CrashHandler>();
-            if (crashHandler != null)
-            {
-                crashHandler.OnRagdollStart += OnPlayerCrash;
-                crashHandler.OnRecoveryComplete += OnPlayerRecovery;
-            }
-
-            // Find and subscribe to SasquatchAI
-            var sasquatch = FindFirstObjectByType<SasquatchAI>();
-            if (sasquatch != null)
-            {
-                sasquatch.OnDistanceChanged += OnSasquatchDistanceChanged;
-                sasquatch.OnCatchPlayer += OnPlayerCaught;
-            }
-
-            // Subscribe to game events
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.OnRunStarted += OnRunStarted;
-            }
-        }
-
         private void UnsubscribeFromEvents()
         {
-            var crashHandler = FindFirstObjectByType<CrashHandler>();
-            if (crashHandler != null)
-            {
-                crashHandler.OnRagdollStart -= OnPlayerCrash;
-                crashHandler.OnRecoveryComplete -= OnPlayerRecovery;
-            }
-
-            var sasquatch = FindFirstObjectByType<SasquatchAI>();
-            if (sasquatch != null)
-            {
-                sasquatch.OnDistanceChanged -= OnSasquatchDistanceChanged;
-                sasquatch.OnCatchPlayer -= OnPlayerCaught;
-            }
+            SetCrashHandler(null);
+            SetSasquatch(null);
 
             if (GameManager.Instance != null)
             {

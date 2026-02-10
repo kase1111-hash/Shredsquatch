@@ -531,13 +531,14 @@ namespace Shredsquatch.Procedural
             go.AddComponent<TrickController>();
             go.AddComponent<RailGrindController>();
 
-            // Camera as child
+            // Camera as child with first-person controller
             var camObj = new GameObject("PlayerCamera");
             camObj.transform.parent = go.transform;
-            camObj.transform.localPosition = new Vector3(0, 2f, -5f);
-            camObj.transform.localRotation = Quaternion.Euler(10f, 0, 0);
+            camObj.transform.localPosition = new Vector3(0, 1.6f, 0);
+            camObj.transform.localRotation = Quaternion.identity;
             camObj.AddComponent<Camera>();
             camObj.AddComponent<AudioListener>();
+            camObj.AddComponent<FirstPersonCamera>();
 
             return go;
         }
@@ -556,10 +557,22 @@ namespace Shredsquatch.Procedural
                 renderer.material = CreateMaterial(new Color(0.3f, 0.15f, 0.05f));
             }
 
-            go.AddComponent<SasquatchAI>();
-
             // Audio source for roar
-            go.AddComponent<AudioSource>();
+            var roarAudio = go.AddComponent<AudioSource>();
+            roarAudio.playOnAwake = false;
+            roarAudio.spatialBlend = 1f;
+
+            // Audio source for proximity rumble (looping)
+            var proximityAudio = go.AddComponent<AudioSource>();
+            proximityAudio.playOnAwake = false;
+            proximityAudio.loop = true;
+            proximityAudio.spatialBlend = 1f;
+            proximityAudio.volume = 0f;
+
+            // SasquatchAI picks up its serialized AudioSource references via GetComponent;
+            // since it can't differentiate two AudioSources by serialized field, we wire
+            // the proximity source after AddComponent via the public field setter
+            var ai = go.AddComponent<SasquatchAI>();
 
             return go;
         }

@@ -26,6 +26,11 @@ namespace Shredsquatch.Terrain
             ChunkCoord = coord;
             Size = size;
 
+            // Wire component references if not assigned (procedural chunks)
+            if (_meshFilter == null) _meshFilter = GetComponent<MeshFilter>();
+            if (_meshCollider == null) _meshCollider = GetComponent<MeshCollider>();
+            if (_meshRenderer == null) _meshRenderer = GetComponent<MeshRenderer>();
+
             if (_meshRenderer != null && terrainMaterial != null)
             {
                 _meshRenderer.material = terrainMaterial;
