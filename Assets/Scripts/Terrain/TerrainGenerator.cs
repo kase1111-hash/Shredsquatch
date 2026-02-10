@@ -52,6 +52,15 @@ namespace Shredsquatch.Terrain
         {
             _chunkContainer = new GameObject("TerrainChunks").transform;
 
+            // Create default snow material if none assigned
+            if (_terrainMaterial == null)
+            {
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+                if (shader == null) shader = Shader.Find("Standard");
+                _terrainMaterial = new Material(shader);
+                _terrainMaterial.color = new Color(0.95f, 0.97f, 1f);
+            }
+
             // Use daily seed for leaderboards, or custom seed
             if (_seed == 0)
             {
@@ -450,6 +459,31 @@ namespace Shredsquatch.Terrain
             _treePrefabs = registry.GetAllTrees();
             _rockPrefabs = registry.GetAllRocks();
             _rampPrefabs = registry.GetAllRamps();
+        }
+
+        /// <summary>
+        /// Generate terrain chunks immediately around the player.
+        /// Call after setting the player reference to ensure ground exists before gameplay starts.
+        /// </summary>
+        public void GenerateInitialChunks()
+        {
+            if (_player == null) return;
+
+            UpdateChunks();
+
+            // Process all queued chunks immediately (not frame-limited)
+            while (_chunksToGenerate.Count > 0)
+            {
+                Vector2Int coord = _chunksToGenerate.Dequeue();
+                _queuedChunks.Remove(coord);
+
+                if (!_chunks.ContainsKey(coord))
+                {
+                    GenerateChunk(coord);
+                }
+            }
+
+            Debug.Log($"[TerrainGenerator] Generated {_chunks.Count} initial chunks");
         }
 
         /// <summary>

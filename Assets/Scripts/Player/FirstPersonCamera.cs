@@ -42,6 +42,12 @@ namespace Shredsquatch.Player
         private void Awake()
         {
             _camera = GetComponentInChildren<Camera>();
+
+            // Wire references if not Inspector-assigned (procedural player)
+            if (_playerBody == null) _playerBody = transform.parent;
+            if (_cameraHolder == null) _cameraHolder = transform;
+            if (_input == null) _input = GetComponentInParent<PlayerInput>();
+
             if (_camera != null)
             {
                 _targetFOV = _baseFOV;

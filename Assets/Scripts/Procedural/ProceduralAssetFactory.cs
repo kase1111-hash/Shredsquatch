@@ -531,13 +531,14 @@ namespace Shredsquatch.Procedural
             go.AddComponent<TrickController>();
             go.AddComponent<RailGrindController>();
 
-            // Camera as child
+            // Camera as child with first-person controller
             var camObj = new GameObject("PlayerCamera");
             camObj.transform.parent = go.transform;
-            camObj.transform.localPosition = new Vector3(0, 2f, -5f);
-            camObj.transform.localRotation = Quaternion.Euler(10f, 0, 0);
+            camObj.transform.localPosition = new Vector3(0, 1.6f, 0);
+            camObj.transform.localRotation = Quaternion.identity;
             camObj.AddComponent<Camera>();
             camObj.AddComponent<AudioListener>();
+            camObj.AddComponent<FirstPersonCamera>();
 
             return go;
         }

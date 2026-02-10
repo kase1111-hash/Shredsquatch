@@ -36,7 +36,6 @@ namespace Shredsquatch.Core
         private void Awake()
         {
             ValidateReferences();
-            InitializeSingletons();
         }
 
         private void Start()
@@ -64,7 +63,9 @@ namespace Shredsquatch.Core
         {
             if (_prefabRegistry == null)
             {
-                Debug.LogError("[SceneInitializer] PrefabRegistry not assigned!");
+                // Create a runtime PrefabRegistry so the game can boot without Inspector config
+                _prefabRegistry = ScriptableObject.CreateInstance<PrefabRegistry>();
+                Debug.LogWarning("[SceneInitializer] No PrefabRegistry assigned - created runtime instance");
             }
 
             if (_terrainGenerator == null)
@@ -75,15 +76,6 @@ namespace Shredsquatch.Core
             if (_hudController == null)
             {
                 _hudController = FindObjectOfType<HUDController>();
-            }
-        }
-
-        private void InitializeSingletons()
-        {
-            // Ensure PrefabRegistry is accessible as singleton
-            if (_prefabRegistry != null)
-            {
-                // The OnEnable of PrefabRegistry sets the Instance
             }
         }
 
@@ -145,10 +137,11 @@ namespace Shredsquatch.Core
                 GameManager.Instance.SetPlayer(_playerInstance.transform);
             }
 
-            // Wire to terrain generator
+            // Wire to terrain generator and generate initial terrain
             if (_terrainGenerator != null)
             {
                 _terrainGenerator.SetPlayer(_playerInstance.transform);
+                _terrainGenerator.GenerateInitialChunks();
             }
 
             Debug.Log("[SceneInitializer] Player spawned at " + spawnPos);
