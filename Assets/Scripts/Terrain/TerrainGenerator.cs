@@ -48,10 +48,6 @@ namespace Shredsquatch.Terrain
         // Object pooling
         private Transform _chunkContainer;
 
-        // Error recovery
-        private bool _updateHasErrored;
-        private bool _generationHasErrored;
-
         private void Start()
         {
             _chunkContainer = new GameObject("TerrainChunks").transform;
@@ -87,8 +83,8 @@ namespace Shredsquatch.Terrain
         {
             if (GameManager.Instance?.CurrentState == GameState.Playing)
             {
-                SafeExecution.TryUpdate(UpdateChunks, ref _updateHasErrored, "TerrainGenerator.UpdateChunks");
-                SafeExecution.TryUpdate(ProcessChunkQueue, ref _generationHasErrored, "TerrainGenerator.ProcessQueue");
+                UpdateChunks();
+                ProcessChunkQueue();
             }
         }
 
@@ -461,10 +457,6 @@ namespace Shredsquatch.Terrain
         /// </summary>
         public void AttemptRecovery()
         {
-            // Clear error states
-            _updateHasErrored = false;
-            _generationHasErrored = false;
-
             // Clear the generation queue
             _chunksToGenerate.Clear();
             _queuedChunks.Clear();

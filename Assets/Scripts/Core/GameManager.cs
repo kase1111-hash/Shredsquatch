@@ -29,9 +29,6 @@ namespace Shredsquatch.Core
         private Vector3 _startPosition;
         private float _lastDistanceUpdate;
 
-        // Error recovery
-        private bool _updateHasErrored;
-
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -66,7 +63,7 @@ namespace Shredsquatch.Core
         {
             if (_currentState == GameState.Playing)
             {
-                SafeExecution.TryUpdate(UpdateRunStats, ref _updateHasErrored, "GameManager.Update");
+                UpdateRunStats();
             }
         }
 
@@ -229,9 +226,6 @@ namespace Shredsquatch.Core
         {
             // Reset time scale
             Time.timeScale = 1f;
-
-            // Clear error state
-            _updateHasErrored = false;
 
             // If we were playing, end the run gracefully
             if (_currentState == GameState.Playing || _currentState == GameState.Paused)
