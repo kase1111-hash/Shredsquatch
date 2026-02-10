@@ -1,4 +1,8 @@
 using UnityEngine;
+using Shredsquatch.Configuration;
+using Shredsquatch.Player;
+using Shredsquatch.Tricks;
+using Shredsquatch.Sasquatch;
 
 namespace Shredsquatch.Procedural
 {
@@ -401,6 +405,161 @@ namespace Shredsquatch.Procedural
             var box = go.AddComponent<BoxCollider>();
             box.center = new Vector3(0, 0.3f, 0.3f);
             box.size = new Vector3(1.5f, 0.8f, 0.6f);
+
+            return go;
+        }
+
+        #endregion
+
+        #region Prefab Registry Population
+
+        /// <summary>
+        /// Populate a PrefabRegistry with procedural template GameObjects.
+        /// Creates deactivated templates that can be Instantiated by TerrainGenerator and SceneInitializer.
+        /// </summary>
+        public void PopulatePrefabRegistry(PrefabRegistry registry)
+        {
+            if (registry == null) return;
+
+            var container = new GameObject("_ProceduralTemplates");
+            container.SetActive(false);
+
+            // Trees
+            if (registry.PineTrees == null || registry.PineTrees.Length == 0)
+            {
+                registry.PineTrees = new GameObject[]
+                {
+                    CreatePineTree(Vector3.zero, container.transform)
+                };
+            }
+
+            if (registry.DeadTrees == null || registry.DeadTrees.Length == 0)
+            {
+                registry.DeadTrees = new GameObject[]
+                {
+                    CreateDeadTree(Vector3.zero, container.transform)
+                };
+            }
+
+            // Rocks
+            if (registry.LargeRocks == null || registry.LargeRocks.Length == 0)
+            {
+                registry.LargeRocks = new GameObject[]
+                {
+                    CreateBoulder(Vector3.zero, 1f, container.transform)
+                };
+            }
+
+            if (registry.SmallRocks == null || registry.SmallRocks.Length == 0)
+            {
+                registry.SmallRocks = new GameObject[]
+                {
+                    CreateRockOutcrop(Vector3.zero, 1f, container.transform)
+                };
+            }
+
+            // Ramps
+            if (registry.SmallRamp == null)
+            {
+                registry.SmallRamp = CreateRamp(Vector3.zero, 0f, container.transform);
+            }
+            if (registry.MediumRamp == null)
+            {
+                registry.MediumRamp = CreateRamp(Vector3.zero, 0f, container.transform);
+                registry.MediumRamp.name = "MediumRamp_Procedural";
+            }
+
+            // Rails
+            if (registry.FenceRail == null)
+            {
+                registry.FenceRail = CreateFenceRail(Vector3.zero, 0f, container.transform);
+            }
+            if (registry.PipeRail == null)
+            {
+                registry.PipeRail = CreatePipeRail(Vector3.zero, 0f, container.transform);
+            }
+
+            // Coins
+            if (registry.CoinPrefab == null)
+            {
+                registry.CoinPrefab = CreateCoin(Vector3.zero, container.transform);
+            }
+
+            // Player
+            if (registry.PlayerPrefab == null)
+            {
+                registry.PlayerPrefab = CreatePlayerTemplate(container.transform);
+            }
+
+            // Sasquatch
+            if (registry.SasquatchPrefab == null)
+            {
+                registry.SasquatchPrefab = CreateSasquatchTemplate(container.transform);
+            }
+
+            Debug.Log("[ProceduralAssetFactory] PrefabRegistry populated with procedural templates");
+        }
+
+        private GameObject CreatePlayerTemplate(Transform parent)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            go.name = "Player_Procedural";
+            go.transform.parent = parent;
+            go.tag = "Player";
+
+            // Color it blue
+            var renderer = go.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.material = CreateMaterial(new Color(0.2f, 0.4f, 0.8f));
+            }
+
+            // Replace primitive collider with CharacterController
+            var primitiveCollider = go.GetComponent<Collider>();
+            if (primitiveCollider != null) Destroy(primitiveCollider);
+
+            var cc = go.AddComponent<CharacterController>();
+            cc.height = 1.8f;
+            cc.radius = 0.3f;
+            cc.center = new Vector3(0, 0.9f, 0);
+
+            // Core player components (PlayerController's RequireComponent will auto-add
+            // PlayerInput, SnowboardPhysics, JumpController, CrashHandler)
+            go.AddComponent<PlayerController>();
+
+            // Trick components
+            go.AddComponent<TrickController>();
+            go.AddComponent<RailGrindController>();
+
+            // Camera as child
+            var camObj = new GameObject("PlayerCamera");
+            camObj.transform.parent = go.transform;
+            camObj.transform.localPosition = new Vector3(0, 2f, -5f);
+            camObj.transform.localRotation = Quaternion.Euler(10f, 0, 0);
+            camObj.AddComponent<Camera>();
+            camObj.AddComponent<AudioListener>();
+
+            return go;
+        }
+
+        private GameObject CreateSasquatchTemplate(Transform parent)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            go.name = "Sasquatch_Procedural";
+            go.transform.parent = parent;
+            go.transform.localScale = new Vector3(2f, 3f, 2f);
+
+            // Color it dark brown
+            var renderer = go.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.material = CreateMaterial(new Color(0.3f, 0.15f, 0.05f));
+            }
+
+            go.AddComponent<SasquatchAI>();
+
+            // Audio source for roar
+            go.AddComponent<AudioSource>();
 
             return go;
         }

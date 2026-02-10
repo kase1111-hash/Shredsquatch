@@ -52,6 +52,13 @@ namespace Shredsquatch.Tricks
         public event System.Action<string> OnGrindStart;         // rail name
         public event System.Action OnGrindFail;
 
+        private void Awake()
+        {
+            if (_physics == null) _physics = GetComponent<SnowboardPhysics>();
+            if (_input == null) _input = GetComponent<PlayerInput>();
+            if (_trickController == null) _trickController = GetComponent<TrickController>();
+        }
+
         private void Update()
         {
             if (!_isGrinding) return;

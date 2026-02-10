@@ -30,6 +30,12 @@ namespace Shredsquatch.Player
         public event System.Action<float, bool> OnLand;    // airtime, wasClean
         public event System.Action OnChargeStart;
 
+        private void Awake()
+        {
+            if (_physics == null) _physics = GetComponent<SnowboardPhysics>();
+            if (_input == null) _input = GetComponent<PlayerInput>();
+        }
+
         public enum RampType
         {
             None,

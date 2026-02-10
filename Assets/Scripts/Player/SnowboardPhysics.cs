@@ -43,6 +43,15 @@ namespace Shredsquatch.Player
         public event System.Action OnCrash;
         public event System.Action OnEdgeCatch;
 
+        private void Awake()
+        {
+            if (_controller == null) _controller = GetComponent<CharacterController>();
+            if (_input == null) _input = GetComponent<PlayerInput>();
+
+            // Default ground mask to Everything if not configured
+            if (_groundMask == 0) _groundMask = ~0;
+        }
+
         private void Update()
         {
             if (GameManager.Instance?.CurrentState != GameState.Playing)

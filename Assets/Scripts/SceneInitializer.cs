@@ -1,5 +1,6 @@
 using UnityEngine;
 using Shredsquatch.Configuration;
+using Shredsquatch.Procedural;
 using Shredsquatch.Terrain;
 using Shredsquatch.UI;
 using Shredsquatch.Progression;
@@ -40,6 +41,7 @@ namespace Shredsquatch.Core
 
         private void Start()
         {
+            PopulateRegistryIfNeeded();
             WireTerrainGenerator();
 
             if (_spawnPlayerOnStart)
@@ -83,6 +85,26 @@ namespace Shredsquatch.Core
             {
                 // The OnEnable of PrefabRegistry sets the Instance
             }
+        }
+
+        private void PopulateRegistryIfNeeded()
+        {
+            if (_prefabRegistry == null) return;
+
+            if (_prefabRegistry.Validate(out string[] missing))
+                return; // All required prefabs already assigned
+
+            // Find or create the procedural asset factory
+            var factory = ProceduralAssetFactory.Instance;
+            if (factory == null)
+            {
+                var factoryObj = new GameObject("ProceduralAssetFactory");
+                factory = factoryObj.AddComponent<ProceduralAssetFactory>();
+            }
+
+            factory.PopulatePrefabRegistry(_prefabRegistry);
+
+            Debug.Log($"[SceneInitializer] Auto-populated {missing.Length} missing prefabs from ProceduralAssetFactory");
         }
 
         private void WireTerrainGenerator()
