@@ -8,22 +8,12 @@ namespace Shredsquatch.Powerups
     {
         protected override void ApplyEffect(GameObject player)
         {
-            var physics = player.GetComponent<SnowboardPhysics>();
-            if (physics != null)
-            {
-                physics.ApplyBoost(Constants.Powerup.NitroBoost / 3.6f); // Convert to m/s
-            }
-
+            // ActivateNitro already applies the speed boost and triggers haptic feedback,
+            // so we only call the manager to avoid doubling the boost and feedback.
             var manager = player.GetComponent<PowerupManager>();
             if (manager != null)
             {
                 manager.ActivateNitro();
-            }
-
-            // Trigger boost feedback
-            if (GameFeedback.Instance != null)
-            {
-                GameFeedback.Instance.TriggerBoost();
             }
         }
     }

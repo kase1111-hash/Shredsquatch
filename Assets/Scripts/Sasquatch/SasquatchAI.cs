@@ -122,8 +122,10 @@ namespace Shredsquatch.Sasquatch
             _isActive = true;
             gameObject.SetActive(true);
 
-            // Spawn behind player
-            Vector3 spawnPos = _player.position - _player.forward * 800f;
+            // Spawn uphill from player (negative Z direction, since the player travels +Z downhill).
+            // Using the world Z-axis instead of _player.forward prevents the Sasquatch from
+            // spawning beside or in front of the player when they are mid-carve.
+            Vector3 spawnPos = _player.position - Vector3.forward * 800f;
             spawnPos.y = _player.position.y;
             transform.position = spawnPos;
             transform.LookAt(_player);

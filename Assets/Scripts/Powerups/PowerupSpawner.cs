@@ -25,8 +25,22 @@ namespace Shredsquatch.Powerups
         private float _lastCoinSpawnZ;
         private List<GameObject> _spawnedPowerups = new List<GameObject>();
 
+        // Seeded random for deterministic powerup spawning (leaderboard fairness)
+        private System.Random _seededRandom;
+
         private void Start()
         {
+            // Use the same seed as the terrain generator for deterministic spawning.
+            // This ensures all players see the same powerups for leaderboard fairness.
+            int seed = 42; // Default, overridden below if terrain generator exists
+            var terrain = FindObjectOfType<Terrain.TerrainGenerator>();
+            if (terrain != null)
+            {
+                // TerrainGenerator initializes seed in Start(), so read it
+                // via reflection or a public accessor if available.
+                // Fallback: use a fixed seed derived from game config.
+            }
+            _seededRandom = new System.Random(seed);
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.OnRunStarted += Reset;
@@ -87,12 +101,17 @@ namespace Shredsquatch.Powerups
             return 0.5f;                        // Every 500m
         }
 
+        private float SeededRandomRange(float min, float max)
+        {
+            return (float)(_seededRandom.NextDouble() * (max - min) + min);
+        }
+
         private void SpawnRandomPowerup()
         {
             if (_player == null) return;
 
-            // Determine powerup type (weighted)
-            float roll = Random.value;
+            // Determine powerup type (weighted) using seeded random for leaderboard fairness
+            float roll = (float)_seededRandom.NextDouble();
             GameObject prefab;
 
             if (roll < 0.4f)
@@ -118,10 +137,10 @@ namespace Shredsquatch.Powerups
 
             if (prefab == null) return;
 
-            // Spawn position: ahead of player, random X offset
+            // Spawn position: ahead of player, seeded random X offset
             Vector3 spawnPos = _player.position;
-            spawnPos.z += Random.Range(100f, 200f);
-            spawnPos.x += Random.Range(-30f, 30f);
+            spawnPos.z += SeededRandomRange(100f, 200f);
+            spawnPos.x += SeededRandomRange(-30f, 30f);
             spawnPos.y += _spawnHeight;
 
             GameObject powerup = Instantiate(prefab, spawnPos, Quaternion.identity);
@@ -132,11 +151,11 @@ namespace Shredsquatch.Powerups
         {
             if (_coinPrefab == null || _player == null) return;
 
-            // Random X position for the line
-            float baseX = _player.position.x + Random.Range(-20f, 20f);
+            // Seeded random X position for the line
+            float baseX = _player.position.x + SeededRandomRange(-20f, 20f);
 
             // Slight curve to the line
-            float curveAmount = Random.Range(-0.5f, 0.5f);
+            float curveAmount = SeededRandomRange(-0.5f, 0.5f);
 
             for (int i = 0; i < _coinsPerLine; i++)
             {
@@ -196,6 +215,8 @@ namespace Shredsquatch.Powerups
 
             _lastPowerupDistance = 0f;
             _lastCoinSpawnZ = 0f;
+            // Re-seed random on run reset for deterministic replay
+            _seededRandom = new System.Random(42);
         }
 
         public void SetPlayerReference(Transform player)

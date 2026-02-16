@@ -155,8 +155,11 @@ namespace Shredsquatch.Tricks
 
             if (totalPoints > 0)
             {
-                // Check combo chain
-                if (Time.time - _lastLandTime <= Constants.Combo.ChainWindow && _comboCount > 0)
+                // Check combo chain: window is measured from last landing to next JUMP start,
+                // not landing-to-landing, so use the air start time for the window check.
+                // Landing-to-landing would be impossible to chain since airtime alone exceeds
+                // the chain window for any meaningful trick.
+                if (_airStartTime - _lastLandTime <= Constants.Combo.ChainWindow && _comboCount > 0)
                 {
                     _comboCount++;
                 }

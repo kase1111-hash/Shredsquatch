@@ -28,8 +28,19 @@ namespace Shredsquatch.Terrain
 
             if (scale <= 0) scale = 0.0001f;
 
-            float maxNoiseHeight = float.MinValue;
-            float minNoiseHeight = float.MaxValue;
+            // Pre-calculate the theoretical max amplitude across all octaves so that
+            // normalization uses a global range instead of per-chunk min/max.
+            // Per-chunk normalization causes visible height seams at chunk borders because
+            // adjacent chunks have different local min/max ranges.
+            float theoreticalMaxHeight = 0f;
+            {
+                float amp = 1f;
+                for (int i = 0; i < octaves; i++)
+                {
+                    theoreticalMaxHeight += amp;
+                    amp *= persistence;
+                }
+            }
 
             float halfWidth = width / 2f;
             float halfHeight = height / 2f;
@@ -54,19 +65,18 @@ namespace Shredsquatch.Terrain
                         frequency *= lacunarity;
                     }
 
-                    if (noiseHeight > maxNoiseHeight) maxNoiseHeight = noiseHeight;
-                    if (noiseHeight < minNoiseHeight) minNoiseHeight = noiseHeight;
-
                     noiseMap[x, y] = noiseHeight;
                 }
             }
 
-            // Normalize
+            // Normalize using theoretical amplitude range so all chunks share the same
+            // mapping from noise values to [0,1]. This prevents height discontinuities
+            // at chunk borders.
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    noiseMap[x, y] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseMap[x, y]);
+                    noiseMap[x, y] = Mathf.InverseLerp(-theoreticalMaxHeight, theoreticalMaxHeight, noiseMap[x, y]);
                 }
             }
 

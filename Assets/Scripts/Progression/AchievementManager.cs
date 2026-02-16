@@ -203,6 +203,18 @@ namespace Shredsquatch.Progression
         }
 
         /// <summary>
+        /// Wire rail grind controller events. Call from SceneInitializer after player is spawned.
+        /// Without this wiring, the RailRider achievement can never be unlocked.
+        /// </summary>
+        public void SetRailGrindController(Tricks.RailGrindController railController)
+        {
+            if (railController != null)
+            {
+                railController.OnGrindDistanceComplete += OnGrindComplete;
+            }
+        }
+
+        /// <summary>
         /// Wire sasquatch events. Call from SceneInitializer after sasquatch is spawned.
         /// </summary>
         public void SetSasquatch(SasquatchAI sasquatch)
@@ -342,7 +354,7 @@ namespace Shredsquatch.Progression
                 return false;
 
             achievement.Unlock();
-            _saveData.UnlockedIds.Add(id);
+            _saveData.Add(id);
 
             Debug.Log($"[Achievement] Unlocked: {achievement.Name}");
             OnAchievementUnlocked?.Invoke(achievement);
@@ -556,12 +568,42 @@ namespace Shredsquatch.Progression
 
     /// <summary>
     /// Serializable save data for achievements.
+    /// JsonUtility cannot serialize List of enums directly, so we store them as ints.
     /// </summary>
     [Serializable]
     public class AchievementSaveData
     {
-        public List<AchievementId> UnlockedIds = new List<AchievementId>();
+        public List<int> UnlockedIdValues = new List<int>();
         public int TotalTricksLanded;
         public float TotalRailMeters;
+
+        [NonSerialized]
+        private List<AchievementId> _cachedIds;
+
+        public List<AchievementId> UnlockedIds
+        {
+            get
+            {
+                if (_cachedIds == null)
+                {
+                    _cachedIds = new List<AchievementId>();
+                    foreach (int val in UnlockedIdValues)
+                    {
+                        _cachedIds.Add((AchievementId)val);
+                    }
+                }
+                return _cachedIds;
+            }
+        }
+
+        public void Add(AchievementId id)
+        {
+            int val = (int)id;
+            if (!UnlockedIdValues.Contains(val))
+            {
+                UnlockedIdValues.Add(val);
+                _cachedIds?.Add(id);
+            }
+        }
     }
 }
