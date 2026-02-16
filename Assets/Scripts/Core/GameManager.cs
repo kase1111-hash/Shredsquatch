@@ -71,6 +71,7 @@ namespace Shredsquatch.Core
         {
             _currentMode = mode;
             CurrentRun.Reset();
+            _lastDistanceUpdate = 0f;
 
             if (_player != null)
             {

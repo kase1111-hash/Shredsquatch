@@ -238,8 +238,22 @@ namespace Shredsquatch.Progression
         public string PlayerName;
         public float Score;
         public int Rank;
-        public DateTime Timestamp;
+        // JsonUtility cannot serialize DateTime. Store as ticks (long) and reconstruct.
+        public long TimestampTicks;
         public GameMode GameMode;
+
+        [NonSerialized]
+        private DateTime? _timestamp;
+
+        public DateTime Timestamp
+        {
+            get => _timestamp ?? (_timestamp = new DateTime(TimestampTicks)).Value;
+            set
+            {
+                _timestamp = value;
+                TimestampTicks = value.Ticks;
+            }
+        }
     }
 
     /// <summary>

@@ -57,23 +57,24 @@ namespace Shredsquatch.Player
             if (_inputActions == null)
             {
                 CreateDefaultInputActions();
+                // CreateDefaultInputActions already subscribes to button events, so return
+                // early to avoid double-subscribing.
+                return;
             }
-            else
+
+            // Get actions from asset
+            var gameplay = _inputActions.FindActionMap("Gameplay");
+            if (gameplay != null)
             {
-                // Get actions from asset
-                var gameplay = _inputActions.FindActionMap("Gameplay");
-                if (gameplay != null)
-                {
-                    _steerAction = gameplay.FindAction("Steer");
-                    _tuckAction = gameplay.FindAction("Tuck");
-                    _brakeAction = gameplay.FindAction("Brake");
-                    _jumpAction = gameplay.FindAction("Jump");
-                    _spinAction = gameplay.FindAction("Spin");
-                    _grabAction = gameplay.FindAction("Grab");
-                    _flipAction = gameplay.FindAction("Flip");
-                    _lookAction = gameplay.FindAction("Look");
-                    _pauseAction = gameplay.FindAction("Pause");
-                }
+                _steerAction = gameplay.FindAction("Steer");
+                _tuckAction = gameplay.FindAction("Tuck");
+                _brakeAction = gameplay.FindAction("Brake");
+                _jumpAction = gameplay.FindAction("Jump");
+                _spinAction = gameplay.FindAction("Spin");
+                _grabAction = gameplay.FindAction("Grab");
+                _flipAction = gameplay.FindAction("Flip");
+                _lookAction = gameplay.FindAction("Look");
+                _pauseAction = gameplay.FindAction("Pause");
             }
 
             // Subscribe to button events

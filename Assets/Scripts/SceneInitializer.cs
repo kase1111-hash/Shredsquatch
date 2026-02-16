@@ -236,7 +236,7 @@ namespace Shredsquatch.Core
 
         private void WireManagers()
         {
-            // Wire AchievementManager to trick controller
+            // Wire AchievementManager to trick controller and rail grind controller
             var achievementManager = FindObjectOfType<AchievementManager>();
             if (achievementManager != null && _playerInstance != null)
             {
@@ -244,6 +244,12 @@ namespace Shredsquatch.Core
                 if (trickController != null)
                 {
                     achievementManager.SetTrickController(trickController);
+                }
+
+                var railController = _playerInstance.GetComponent<Tricks.RailGrindController>();
+                if (railController != null)
+                {
+                    achievementManager.SetRailGrindController(railController);
                 }
             }
 

@@ -104,18 +104,26 @@ namespace Shredsquatch.Powerups
 
         public void ActivateRepellent()
         {
-            // Repellent doesn't stack
-            if (_repellentActive) return;
-
+            bool wasActive = _repellentActive;
             _repellentActive = true;
             _repellentTimer = Constants.Powerup.RepellentDuration;
+
+            // Notify Sasquatch (single source of truth for repellent timing)
+            var sasquatch = FindObjectOfType<Sasquatch.SasquatchAI>();
+            if (sasquatch != null)
+            {
+                sasquatch.ApplyRepellent();
+            }
 
             if (_repellentEffect != null)
             {
                 _repellentEffect.Play();
             }
 
-            OnPowerupActivated?.Invoke(PowerupType.Repellent);
+            if (!wasActive)
+            {
+                OnPowerupActivated?.Invoke(PowerupType.Repellent);
+            }
         }
 
         private void UpdateGoldenBoard()
