@@ -30,17 +30,9 @@ namespace Shredsquatch.Powerups
 
         private void Start()
         {
-            // Use the same seed as the terrain generator for deterministic spawning.
-            // This ensures all players see the same powerups for leaderboard fairness.
-            int seed = 42; // Default, overridden below if terrain generator exists
-            var terrain = FindObjectOfType<Terrain.TerrainGenerator>();
-            if (terrain != null)
-            {
-                // TerrainGenerator initializes seed in Start(), so read it
-                // via reflection or a public accessor if available.
-                // Fallback: use a fixed seed derived from game config.
-            }
-            _seededRandom = new System.Random(seed);
+            // Use a fixed seed for deterministic powerup spawning (leaderboard fairness).
+            // All players see the same powerups for the same run.
+            _seededRandom = new System.Random(42);
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.OnRunStarted += Reset;

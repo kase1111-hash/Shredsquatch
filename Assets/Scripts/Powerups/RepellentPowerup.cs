@@ -1,5 +1,4 @@
 using UnityEngine;
-using Shredsquatch.Sasquatch;
 
 namespace Shredsquatch.Powerups
 {
