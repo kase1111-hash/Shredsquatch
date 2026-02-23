@@ -114,6 +114,7 @@ namespace Shredsquatch.UI
         {
             if (GameManager.Instance?.Progress.AvalancheModeUnlocked == true)
             {
+                // TODO: Avalanche mode plays identically to Standard — needs boulder spawning, shadow warnings, tree destruction
                 GameManager.Instance.StartRun(GameMode.Avalanche);
             }
         }
@@ -122,6 +123,7 @@ namespace Shredsquatch.UI
         {
             if (GameManager.Instance?.Progress.StormModeUnlocked == true)
             {
+                // TODO: Storm mode plays identically to Standard — needs wind gusts, reduced visibility, amplified audio
                 GameManager.Instance.StartRun(GameMode.Storm);
             }
         }

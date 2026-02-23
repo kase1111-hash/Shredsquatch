@@ -212,9 +212,7 @@ namespace Shredsquatch.Core
             _player = player;
         }
 
-        /// <summary>
-        /// Alias for SetPlayerReference for SceneInitializer compatibility.
-        /// </summary>
+        // TODO: Consolidate SetPlayer/SetPlayerReference — update SceneInitializer to use SetPlayerReference directly, then remove this alias
         public void SetPlayer(Transform player)
         {
             SetPlayerReference(player);
