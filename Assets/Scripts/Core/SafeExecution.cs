@@ -138,7 +138,7 @@ namespace Shredsquatch.Core
             {
                 return obj.GetComponent<T>();
             }
-            catch
+            catch (Exception) // TODO: Bare catch was swallowing all exceptions including OOM — narrowed to Exception
             {
                 return null;
             }
@@ -155,7 +155,7 @@ namespace Shredsquatch.Core
             {
                 return component.GetComponent<T>();
             }
-            catch
+            catch (Exception) // TODO: Bare catch was swallowing all exceptions including OOM — narrowed to Exception
             {
                 return null;
             }

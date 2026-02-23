@@ -42,12 +42,11 @@ namespace Shredsquatch.Terrain
         private Dictionary<Vector2Int, TerrainChunk> _chunks = new Dictionary<Vector2Int, TerrainChunk>();
         private Queue<Vector2Int> _chunksToGenerate = new Queue<Vector2Int>();
         private HashSet<Vector2Int> _queuedChunks = new HashSet<Vector2Int>(); // For O(1) lookup
-        private List<Vector2Int> _activeChunks = new List<Vector2Int>();
 
         // Seeded random for deterministic generation
         private System.Random _seededRandom;
 
-        // Object pooling
+        // TODO: Implement object pooling for terrain obstacles (trees, rocks, ramps, coins, rails) — currently uses Instantiate/Destroy
         private Transform _chunkContainer;
 
         private void Start()
@@ -87,6 +86,11 @@ namespace Shredsquatch.Terrain
             if (ErrorRecoveryManager.Instance != null)
             {
                 ErrorRecoveryManager.Instance.UnregisterRecoverable(this);
+            }
+
+            if (_chunkContainer != null)
+            {
+                Destroy(_chunkContainer.gameObject);
             }
         }
 
@@ -214,7 +218,6 @@ namespace Shredsquatch.Terrain
             SpawnObstacles(chunk, coord, heightMap);
 
             _chunks[coord] = chunk;
-            _activeChunks.Add(coord);
         }
 
         private float[,] GenerateHeightMap(Vector2Int coord, Vector2 offset)
@@ -452,7 +455,6 @@ namespace Shredsquatch.Terrain
                 chunk.Clear();
                 Destroy(chunk.gameObject);
                 _chunks.Remove(coord);
-                _activeChunks.Remove(coord);
             }
         }
 
@@ -521,14 +523,6 @@ namespace Shredsquatch.Terrain
         }
 
         /// <summary>
-        /// Alias for SetPlayerReference for SceneInitializer compatibility.
-        /// </summary>
-        public void SetPlayer(Transform player)
-        {
-            SetPlayerReference(player);
-        }
-
-        /// <summary>
         /// Set prefab arrays from PrefabRegistry.
         /// </summary>
         public void SetPrefabsFromRegistry(Configuration.PrefabRegistry registry)
@@ -586,9 +580,7 @@ namespace Shredsquatch.Terrain
             // Re-initialize seeded random
             _seededRandom = new System.Random(_seed);
 
-            // Clear tracking lists
             _chunks.Clear();
-            _activeChunks.Clear();
 
             Debug.Log("[TerrainGenerator] Recovery complete - terrain reset");
         }

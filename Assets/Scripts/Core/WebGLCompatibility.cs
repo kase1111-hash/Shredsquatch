@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Runtime.InteropServices;
 
@@ -88,7 +89,7 @@ namespace Shredsquatch.Core
                 IsMobile = IsMobileDevice();
                 HasWebGL2 = CheckWebGL2Support();
             }
-            catch
+            catch (Exception)
             {
                 // JavaScript interop failed, use fallback
                 DetectedBrowser = BrowserType.Unknown;

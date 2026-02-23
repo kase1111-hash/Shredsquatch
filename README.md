@@ -8,13 +8,37 @@ A 3D first-person snowboarding game and SkiFree spiritual successor—an infinit
 
 ## Overview
 
-Shredsquatch is an addictive snowboarding infinite runner built in Unity (WebGL/HTML5 playable)—the 3D infinite winter runner you've been waiting for. You carve down an ever-unfurling, procedurally generated mountain in first-person view, dodging obstacles, chaining tricks, and racking up distance while a hulking Sasquatch emerges from the mist to hunt you.
+Shredsquatch is an addictive snowboarding infinite runner built in Unity (WebGL/HTML5 playable). You carve down an ever-unfurling, procedurally generated mountain in first-person view, dodging obstacles, chaining tricks, and racking up distance while a hulking Sasquatch emerges from the mist to hunt you.
 
-Unlike the top-down original, this is a full 3D skiing game experience with realistic physics, dynamic powder effects, and heart-pounding chase tension. It's not a clone—it's a SkiFree remake evolved for modern players: snowboards replace skis, Sasquatch swaps in for the Yeti (with a nod via hidden Easter eggs), and rubber-banded pursuit ensures you're always on edge. Primary score is distance traveled (in kilometers), with a separate trick score for style points. Top speeds let you pull ahead, but one mistake and those glowing red eyes close in.
+Unlike the top-down original, this is a full 3D experience with arcade physics, dynamic powder effects, and heart-pounding chase tension. Snowboards replace skis, Sasquatch swaps in for the Yeti (with a nod via hidden Easter eggs), and rubber-banded pursuit ensures you're always on edge. Primary score is distance traveled (in kilometers), with a separate trick score for style points. Top speeds let you pull ahead, but one mistake and those glowing red eyes close in.
 
 **Core Loop:** Accelerate → Steer & trick → Survive → Outrun or get squatched. Never-ending until caught. High-score chases fuel replayability.
 
 **Playtime:** 2-10 minutes per run. Perfect for itch.io and browsers.
+
+## Current Status (v0.1.0-alpha)
+
+**What works:**
+- Snowboard physics with slope acceleration, carving, tuck, braking, powder drag
+- 14 trick types (6 spins, 4 grabs, 4 flips) with combo multipliers and repetition penalties
+- Procedural infinite terrain with seeded generation and chunk streaming
+- Sasquatch chase AI with rubber-band distance tracking
+- Rail grinding with 7 rail types and balance mechanics
+- HUD with distance/speed, trick display, combo counter, Sasquatch proximity bar
+- 17 achievements and local leaderboards
+- Crash/ragdoll system with recovery and invincibility frames
+- Screen shake and controller haptic feedback
+- Error recovery system with automatic reset
+- 9 custom URP shaders
+- Powerups (Golden Board, Nitro, Repellent) and coin collectibles
+
+**What doesn't work yet:**
+- Avalanche Mode (selectable in menu but plays identically to Standard — no boulders)
+- Storm Mode (selectable in menu but plays identically to Standard — no wind)
+- Platform leaderboard integration (Steam/itch.io — currently local-only)
+- Object pooling (terrain uses Instantiate/Destroy — planned optimization)
+- Moon phase cycling (night mode exists but moon is static)
+- Dynamic LOD for terrain chunks
 
 ### Homages to SkiFree
 
@@ -25,16 +49,15 @@ Unlike the top-down original, this is a full 3D skiing game experience with real
 
 ## Features
 
-- **Procedural Infinite World:** Seamless terrain generation using Perlin/Simplex noise for slopes, forests, jumps, and chutes. Chunks load 2km ahead, unload behind—zero loading screens.
+- **Procedural Infinite World:** Seamless terrain generation using Perlin noise for slopes, forests, jumps, and chutes. Chunks load 2km ahead, unload behind—zero loading screens.
 - **3D First-Person Physics:** Arcade-style snowboarding with momentum, carve turns, powder drag, and crash recovery.
 - **Dynamic Chase System:** Sasquatch rubber-bands to keep 200-800m behind at top speeds. Faster if you slow/crash; lags if you're flawless.
 - **Trick System:** 14 base tricks (6 spins, 4 grabs, 4 flips) with 50+ combinations, multipliers, and a dedicated score/counter.
 - **Rail Grinding:** 7 rail types including fallen pines, fences, log piles, metal barriers, cabin ridges, pipes, and chairlift cables.
-- **Visual/SFX Polish:** 9 custom URP shaders, volumetric fog, snow particles, dynamic lighting (dawn-to-dusk cycle), booming Sasquatch roars, and carve squeals.
+- **Visual/SFX Polish:** 9 custom URP shaders, snow particles, dynamic lighting (dawn-to-dusk cycle), and Sasquatch roars.
 - **Collectibles & Powerups:** Golden boards (trick multipliers), speed bursts, and "Yeti Repellent" (temp slow for beast).
 - **UI/Meters:** Clean HUD—distance/speed, trick combo/counter/score, Sasquatch proximity bar (green >600m, yellow 300-600m, red <300m, pulsing red <150m).
-- **Challenger Mode:** Alternate gameplay with trick-based survival mechanics (pending external assets).
-- **Achievements/Leaderboards:** Steam/itch.io integration for global distance/trick highs.
+- **Achievements/Leaderboards:** 17 achievements with local leaderboard tracking. Platform integration (Steam, itch.io) planned.
 
 ## Controls
 
@@ -245,12 +268,11 @@ The mountain transitions through lighting phases as you descend:
 - Tree shadows sweep across the slope as time progresses
 - Powder spray catches light differently based on sun position
 
-**Moonlight (Night Phase):**
+**Moonlight (Night Phase) — *Planned*:**
+Moon phase cycling is not yet implemented. Planned mechanics:
 - Full moon provides 40m ambient visibility (bluish tint)
 - Moon phases cycle daily: Full → Half → New → Half → Full
 - New moon nights = near-total darkness (20m visibility without headlamp)
-- Moonlight reflects off snow creating subtle glow on open slopes
-- Sasquatch silhouette visible against moonlit sky at 150m
 
 **Night Mode (10km unlock):**
 - Headlamp provides 40m cone of bright visibility
@@ -483,50 +505,17 @@ Repeating the same trick consecutively degrades its point value—variety is rew
 ### Standard Mode
 The default endless run experience. Survive as long as possible, rack up distance, and escape the Sasquatch.
 
-### Avalanche Mode (15km unlock)
-- Boulders spawn every 5-10 seconds after 2km
-- Boulder speed: 60-80 km/h (slower than max player speed)
-- Boulder size: 2-4m diameter
-- Shadow warning appears 1.5 seconds before impact zone
-- Direct hit = instant ragdoll + 100m tumble
-- Boulders destroy trees on contact (creates clear paths)
+### Avalanche Mode (15km unlock) — *Planned*
+Selectable in menu after unlocking, but currently plays identically to Standard Mode. Planned unique mechanics:
+- Boulders spawning every 5-10 seconds after 2km
+- Shadow warning before impact
+- Boulders destroying trees on contact
 
-### Storm Mode (20km unlock)
-- Visibility range: 50m (vs 200m normal)
-- Wind gusts every 8-15 seconds
-- Wind push: 10-20 km/h lateral force for 2-3 seconds
-- Wind direction shown by snow particle angle
-- Sasquatch visibility: 30m (harder to see coming)
-- Audio cues amplified (roars echo longer)
-
-### Challenger Mode (Hidden)
-An alternate gameplay mode featuring creature mounts and trick-based survival mechanics:
-
-**Gameplay:**
-- Ride a creature mount instead of a snowboard
-- No Sasquatch chase—purely skill-based survival
-- Energy constantly drains over time
-- Perform tricks to refill energy
-- 10-second grace period at start
-- Game ends when energy depletes ("poof")
-
-**Mount Types:**
-
-| Mount Style | Turn Speed | Max Speed | Jump | Description |
-|-------------|------------|-----------|------|-------------|
-| Waddle | 80% | 90% | 110% | Penguin-style movement |
-| Slide | 60% | 110% | 90% | Belly slide |
-| Hop | 100% | 80% | 130% | Bouncy movement |
-| Glide | 70% | 100% | 100% | Smooth glide |
-
-**Energy System:**
-- Starting energy: 100
-- Drain rate: 5 per second
-- Energy per trick point: 0.1
-- Minimum trick score for energy: 100 points
-- Combo bonuses: +2 energy per combo count
-
-*Note: This mode requires external asset approval and is placeholder-enabled by configuration.*
+### Storm Mode (20km unlock) — *Planned*
+Selectable in menu after unlocking, but currently plays identically to Standard Mode. Planned unique mechanics:
+- Reduced visibility (50m vs 200m)
+- Wind gusts with lateral push
+- Amplified audio cues
 
 ## Game Over & Progression
 
@@ -565,8 +554,8 @@ Max Combo: 7
 | Combo King | Achieve a 10-trick combo |
 | Rail Rider | Grind for 100 total meters |
 | Night Owl | Survive past 10km in Night Mode |
-| Avalanche Survivor | Survive 5km in Avalanche Mode |
-| Storm Chaser | Survive 5km in Storm Mode |
+| Avalanche Survivor | Survive 5km in Avalanche Mode *(requires Avalanche Mode implementation)* |
+| Storm Chaser | Survive 5km in Storm Mode *(requires Storm Mode implementation)* |
 | Speed Demon | Reach 120 km/h |
 | Close Call | Escape when proximity bar is pulsing red |
 | Old Friend | Unlock the Classic Yeti skin |
@@ -592,13 +581,12 @@ Assets/
 │   ├── UI/                # HUD, menus, game over, tutorials
 │   ├── Audio/             # AudioManager, placeholder generator
 │   ├── Progression/       # AchievementManager, LeaderboardManager
-│   ├── Challenger/        # ChallengerMode, CreatureMount, TrickSurvival
 │   ├── Configuration/     # PrefabRegistry, audio/visual configs
 │   ├── Procedural/        # ProceduralAssetFactory, mesh generation
 │   ├── Rendering/         # ShaderManager
 │   └── Editor/            # Editor tools, validators, scene wiring
 ├── Shaders/               # 9 custom URP shaders
-├── Prefabs/               # 25+ reusable game objects
+├── Prefabs/               # Procedural placeholder prefabs (generated at runtime via ProceduralAssetFactory)
 ├── Scenes/                # GameScene.unity
 ├── Audio/                 # Music/ and SFX/ subdirectories
 ├── Materials/             # 20+ materials
@@ -640,7 +628,6 @@ Assets/
 **Shader Features:**
 - Dynamic snow sparkle based on time of day
 - Sasquatch eye glow intensity controlled by distance/state
-- Frost accumulation during blizzard conditions
 - Aurora visibility tied to night phase
 
 ### Key Systems
@@ -695,22 +682,21 @@ Assets/
 
 ### Performance Optimizations
 
-- Dynamic LOD for terrain chunks
-- Object pooling for powerups and obstacles
-- Chunk-based terrain streaming
+- Chunk-based terrain streaming (load 2km ahead, unload 2.5km behind)
 - Shader property caching via PropertyToID
 - 60 FPS target for WebGL
+- Performance monitoring with quality scaling (PerformanceMonitor.cs)
 
 ### Export Targets
 
-| Platform | Notes |
-|----------|-------|
+| Platform | Status |
+|----------|--------|
 | WebGL | Primary target, 60fps, HTML5/WebGL 2.0 |
-| Windows | Standalone build |
+| Windows | Standalone build supported |
 | macOS | Planned |
 | Linux | Planned |
-| Steam | With achievements and leaderboards |
-| itch.io | Free/Pay-What-You-Want |
+| Steam | Planned (requires platform leaderboard integration) |
+| itch.io | Planned (Free/Pay-What-You-Want) |
 
 ### Input Configuration
 
@@ -726,33 +712,6 @@ Uses Unity's new Input System with `ShredsquatchControls.inputactions`:
 - Tracks best distance, trick scores, unlocks
 - Skin and trail unlock persistence
 - Achievement state tracking
-
----
-
-## Connected Repositories
-
-Shredsquatch is part of a broader ecosystem of projects. Explore related repositories:
-
-### NatLangChain Ecosystem
-- [NatLangChain](https://github.com/kase1111-hash/NatLangChain) - Prose-first, intent-native blockchain protocol for natural language smart contracts
-- [IntentLog](https://github.com/kase1111-hash/IntentLog) - Git for human reasoning, tracking "why" changes happen via prose commits
-- [RRA-Module](https://github.com/kase1111-hash/RRA-Module) - Revenant Repo Agent for abandoned repository monetization
-- [mediator-node](https://github.com/kase1111-hash/mediator-node) - LLM mediation layer for matching and negotiation
-- [ILR-module](https://github.com/kase1111-hash/ILR-module) - IP & Licensing Reconciliation for dispute resolution
-- [Finite-Intent-Executor](https://github.com/kase1111-hash/Finite-Intent-Executor) - Posthumous execution of predefined intent via smart contracts
-
-### Agent-OS Ecosystem
-- [Agent-OS](https://github.com/kase1111-hash/Agent-OS) - Natural-language native operating system for AI agents
-- [synth-mind](https://github.com/kase1111-hash/synth-mind) - NLOS-based agent with psychological modules for emergent continuity
-- [boundary-daemon-](https://github.com/kase1111-hash/boundary-daemon-) - Trust enforcement layer for Agent OS cognition boundaries
-- [memory-vault](https://github.com/kase1111-hash/memory-vault) - Secure, owner-sovereign storage for cognitive artifacts
-- [value-ledger](https://github.com/kase1111-hash/value-ledger) - Economic accounting layer for cognitive work
-- [learning-contracts](https://github.com/kase1111-hash/learning-contracts) - Safety protocols for AI learning and data management
-
-### Security & Games
-- [Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM) - Security Information and Event Management for AI systems
-- [Midnight-pulse](https://github.com/kase1111-hash/Midnight-pulse) - Procedurally generated night driving game
-- [Long-Home](https://github.com/kase1111-hash/Long-Home) - Atmospheric indie narrative game in Godot
 
 ---
 

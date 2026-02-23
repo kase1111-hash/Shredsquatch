@@ -213,14 +213,6 @@ namespace Shredsquatch.Core
         }
 
         /// <summary>
-        /// Alias for SetPlayerReference for SceneInitializer compatibility.
-        /// </summary>
-        public void SetPlayer(Transform player)
-        {
-            SetPlayerReference(player);
-        }
-
-        /// <summary>
         /// IRecoverable implementation - reset game to a safe state.
         /// </summary>
         public void AttemptRecovery()

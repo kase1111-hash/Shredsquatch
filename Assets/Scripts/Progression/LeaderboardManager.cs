@@ -7,8 +7,8 @@ namespace Shredsquatch.Progression
 {
     /// <summary>
     /// Manages local leaderboard submissions and retrieval.
-    /// Platform integration (Steam, itch.io) deferred until post-playable.
     /// </summary>
+    // TODO: Platform integration (Steam, itch.io) is not implemented — currently local-only via PlayerPrefs
     public class LeaderboardManager : MonoBehaviour
     {
         public static LeaderboardManager Instance { get; private set; }
