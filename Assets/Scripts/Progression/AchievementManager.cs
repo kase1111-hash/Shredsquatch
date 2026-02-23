@@ -485,16 +485,24 @@ namespace Shredsquatch.Progression
         {
             if (PlayerPrefs.HasKey("Achievements"))
             {
-                string json = PlayerPrefs.GetString("Achievements");
-                _saveData = JsonUtility.FromJson<AchievementSaveData>(json);
-
-                // Restore unlocked state
-                foreach (var id in _saveData.UnlockedIds)
+                try
                 {
-                    if (_achievements.TryGetValue(id, out var achievement))
+                    string json = PlayerPrefs.GetString("Achievements");
+                    _saveData = JsonUtility.FromJson<AchievementSaveData>(json) ?? new AchievementSaveData();
+
+                    // Restore unlocked state
+                    foreach (var id in _saveData.UnlockedIds)
                     {
-                        achievement.Unlock();
+                        if (_achievements.TryGetValue(id, out var achievement))
+                        {
+                            achievement.Unlock();
+                        }
                     }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[AchievementManager] Corrupt achievement data, resetting: {ex.Message}");
+                    _saveData = new AchievementSaveData();
                 }
             }
             else

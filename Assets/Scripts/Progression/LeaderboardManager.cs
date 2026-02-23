@@ -197,8 +197,16 @@ namespace Shredsquatch.Progression
         {
             if (PlayerPrefs.HasKey("LocalLeaderboard"))
             {
-                string json = PlayerPrefs.GetString("LocalLeaderboard");
-                _localData = JsonUtility.FromJson<LocalLeaderboardData>(json);
+                try
+                {
+                    string json = PlayerPrefs.GetString("LocalLeaderboard");
+                    _localData = JsonUtility.FromJson<LocalLeaderboardData>(json) ?? new LocalLeaderboardData();
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[LeaderboardManager] Corrupt leaderboard data, resetting: {ex.Message}");
+                    _localData = new LocalLeaderboardData();
+                }
             }
             else
             {

@@ -103,8 +103,27 @@ namespace Shredsquatch.Core
         public void EndRun()
         {
             Time.timeScale = 1f;
-            SafeExecution.Try(() => Progress.CheckUnlocks(CurrentRun.Distance), "CheckUnlocks");
-            SafeExecution.Try(SaveProgress, "SaveProgress");
+
+            // CheckUnlocks and SaveProgress should not be silently swallowed —
+            // failing here means the player loses earned progress
+            try
+            {
+                Progress.CheckUnlocks(CurrentRun.Distance);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[GameManager] CheckUnlocks failed — progress may be incomplete: {ex.Message}");
+            }
+
+            try
+            {
+                SaveProgress();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[GameManager] SaveProgress failed — run data may be lost: {ex.Message}");
+            }
+
             SetState(GameState.GameOver);
             SafeExecution.TryInvoke(OnGameOver, "OnGameOver");
         }
@@ -198,8 +217,16 @@ namespace Shredsquatch.Core
         {
             if (PlayerPrefs.HasKey("PlayerProgress"))
             {
-                string json = PlayerPrefs.GetString("PlayerProgress");
-                Progress = JsonUtility.FromJson<PlayerProgress>(json);
+                try
+                {
+                    string json = PlayerPrefs.GetString("PlayerProgress");
+                    Progress = JsonUtility.FromJson<PlayerProgress>(json) ?? new PlayerProgress();
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[GameManager] Corrupt save data, resetting progress: {ex.Message}");
+                    Progress = new PlayerProgress();
+                }
             }
             else
             {

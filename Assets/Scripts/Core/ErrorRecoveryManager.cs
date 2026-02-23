@@ -216,7 +216,6 @@ namespace Shredsquatch.Core
         /// <summary>
         /// Force a full game state reset (return to menu).
         /// </summary>
-        // TODO: Add user-visible feedback when error recovery triggers — currently resets silently
         public void ForceReset()
         {
             if (_logToConsole)

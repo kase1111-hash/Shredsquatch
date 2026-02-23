@@ -39,6 +39,7 @@ namespace Shredsquatch.UI
 
         private float _trickDisplayTimer;
         private bool _isPulsing;
+        private float _errorMessageTimer;
 
         private void Start()
         {
@@ -53,6 +54,12 @@ namespace Shredsquatch.UI
             {
                 _sasquatch.OnDistanceChanged += UpdateProximity;
                 _sasquatch.OnSpawn += OnSasquatchSpawn;
+            }
+
+            // Subscribe to error recovery events for user-visible feedback
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.OnRecoveryStarted += OnErrorRecoveryStarted;
             }
 
             // Initial state
@@ -72,6 +79,11 @@ namespace Shredsquatch.UI
             {
                 _sasquatch.OnDistanceChanged -= UpdateProximity;
                 _sasquatch.OnSpawn -= OnSasquatchSpawn;
+            }
+
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.OnRecoveryStarted -= OnErrorRecoveryStarted;
             }
         }
 
@@ -150,6 +162,17 @@ namespace Shredsquatch.UI
 
         private void UpdateTrickDisplay()
         {
+            // Error message takes priority over trick display
+            if (_errorMessageTimer > 0)
+            {
+                _errorMessageTimer -= Time.deltaTime;
+                if (_errorMessageTimer <= 0)
+                {
+                    HideTrickDisplay();
+                }
+                return;
+            }
+
             if (_trickDisplayTimer > 0)
             {
                 _trickDisplayTimer -= Time.deltaTime;
@@ -265,6 +288,29 @@ namespace Shredsquatch.UI
             {
                 _proximityAnimator.SetBool("Pulsing", false);
             }
+        }
+
+        private void OnErrorRecoveryStarted()
+        {
+            // Show a brief warning using the trick display text
+            if (_trickNameText != null)
+            {
+                _trickNameText.text = "Recovering...";
+                _trickNameText.gameObject.SetActive(true);
+            }
+
+            if (_trickScoreText != null)
+            {
+                _trickScoreText.gameObject.SetActive(false);
+            }
+
+            if (_comboText != null)
+            {
+                _comboText.gameObject.SetActive(false);
+            }
+
+            _errorMessageTimer = 2f;
+            _trickDisplayTimer = 0f;
         }
 
         #region Runtime Wiring
