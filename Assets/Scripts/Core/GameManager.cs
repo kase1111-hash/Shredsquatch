@@ -162,7 +162,12 @@ namespace Shredsquatch.Core
 
         public void AddTrickScore(int points, int comboLength)
         {
-            CurrentRun.TrickScore += points;
+            // Clamp to prevent integer overflow in long sessions
+            if (CurrentRun.TrickScore <= int.MaxValue - points)
+                CurrentRun.TrickScore += points;
+            else
+                CurrentRun.TrickScore = int.MaxValue;
+
             CurrentRun.TrickCount++;
 
             if (comboLength > CurrentRun.MaxCombo)
@@ -182,7 +187,9 @@ namespace Shredsquatch.Core
         public void CollectCoin()
         {
             CurrentRun.CoinsCollected++;
-            CurrentRun.TrickScore += 50; // 50 trick pts each
+            // Clamp to prevent integer overflow
+            if (CurrentRun.TrickScore <= int.MaxValue - 50)
+                CurrentRun.TrickScore += 50;
         }
 
         public TimeOfDay GetTimeOfDay()
