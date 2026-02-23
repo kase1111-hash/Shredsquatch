@@ -192,15 +192,20 @@ namespace Shredsquatch.Core
                    $"Run Time: {runTime:F0}s, Distance: {_totalDistance:F2}km";
         }
 
+        private GUIStyle _debugStyle;
+
         private void OnGUI()
         {
             if (!_showDebugOverlay) return;
 
-            GUIStyle style = new GUIStyle(GUI.skin.label);
-            style.fontSize = 14;
-            style.normal.textColor = _currentFPS >= _minAcceptableFPS ? Color.green : Color.red;
+            if (_debugStyle == null)
+            {
+                _debugStyle = new GUIStyle(GUI.skin.label);
+                _debugStyle.fontSize = 14;
+            }
+            _debugStyle.normal.textColor = _currentFPS >= _minAcceptableFPS ? Color.green : Color.red;
 
-            GUI.Label(new Rect(10, 10, 300, 150), GetPerformanceReport(), style);
+            GUI.Label(new Rect(10, 10, 300, 150), GetPerformanceReport(), _debugStyle);
         }
 
         /// <summary>

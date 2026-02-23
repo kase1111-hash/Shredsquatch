@@ -308,8 +308,8 @@ namespace Shredsquatch.UI
                 StopCoroutine(_currentPromptCoroutine);
             }
 
-            // Show final message
-            StartCoroutine(ShowFinalPrompt());
+            // Show final message (store reference so it can be stopped if object is destroyed)
+            _currentPromptCoroutine = StartCoroutine(ShowFinalPrompt());
         }
 
         private IEnumerator ShowFinalPrompt()
