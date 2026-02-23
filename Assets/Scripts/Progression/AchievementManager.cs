@@ -28,6 +28,11 @@ namespace Shredsquatch.Progression
         private float _maxSpeedReached;
         private bool _escapedPulsingRed;
 
+        // Wired references (for unsubscription)
+        private TrickController _trickController;
+        private Tricks.RailGrindController _railController;
+        private SasquatchAI _sasquatch;
+
         // Events
         public event Action<Achievement> OnAchievementUnlocked;
         public event Action<AchievementId, float> OnAchievementProgress;
@@ -195,6 +200,15 @@ namespace Shredsquatch.Progression
         /// </summary>
         public void SetTrickController(TrickController trickController)
         {
+            // Unsubscribe from previous controller if any
+            if (_trickController != null)
+            {
+                _trickController.OnTrickCompleted -= OnTrickCompleted;
+                _trickController.OnComboUpdated -= OnComboUpdated;
+            }
+
+            _trickController = trickController;
+
             if (trickController != null)
             {
                 trickController.OnTrickCompleted += OnTrickCompleted;
@@ -208,6 +222,13 @@ namespace Shredsquatch.Progression
         /// </summary>
         public void SetRailGrindController(Tricks.RailGrindController railController)
         {
+            if (_railController != null)
+            {
+                _railController.OnGrindDistanceComplete -= OnGrindComplete;
+            }
+
+            _railController = railController;
+
             if (railController != null)
             {
                 railController.OnGrindDistanceComplete += OnGrindComplete;
@@ -219,6 +240,13 @@ namespace Shredsquatch.Progression
         /// </summary>
         public void SetSasquatch(SasquatchAI sasquatch)
         {
+            if (_sasquatch != null)
+            {
+                _sasquatch.OnDistanceChanged -= OnSasquatchDistanceChanged;
+            }
+
+            _sasquatch = sasquatch;
+
             if (sasquatch != null)
             {
                 sasquatch.OnDistanceChanged += OnSasquatchDistanceChanged;
@@ -231,6 +259,22 @@ namespace Shredsquatch.Progression
             {
                 GameManager.Instance.OnGameOver -= OnGameOver;
                 GameManager.Instance.OnDistanceChanged -= OnDistanceChanged;
+            }
+
+            if (_trickController != null)
+            {
+                _trickController.OnTrickCompleted -= OnTrickCompleted;
+                _trickController.OnComboUpdated -= OnComboUpdated;
+            }
+
+            if (_railController != null)
+            {
+                _railController.OnGrindDistanceComplete -= OnGrindComplete;
+            }
+
+            if (_sasquatch != null)
+            {
+                _sasquatch.OnDistanceChanged -= OnSasquatchDistanceChanged;
             }
         }
 
@@ -441,16 +485,24 @@ namespace Shredsquatch.Progression
         {
             if (PlayerPrefs.HasKey("Achievements"))
             {
-                string json = PlayerPrefs.GetString("Achievements");
-                _saveData = JsonUtility.FromJson<AchievementSaveData>(json);
-
-                // Restore unlocked state
-                foreach (var id in _saveData.UnlockedIds)
+                try
                 {
-                    if (_achievements.TryGetValue(id, out var achievement))
+                    string json = PlayerPrefs.GetString("Achievements");
+                    _saveData = JsonUtility.FromJson<AchievementSaveData>(json) ?? new AchievementSaveData();
+
+                    // Restore unlocked state
+                    foreach (var id in _saveData.UnlockedIds)
                     {
-                        achievement.Unlock();
+                        if (_achievements.TryGetValue(id, out var achievement))
+                        {
+                            achievement.Unlock();
+                        }
                     }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[AchievementManager] Corrupt achievement data, resetting: {ex.Message}");
+                    _saveData = new AchievementSaveData();
                 }
             }
             else
