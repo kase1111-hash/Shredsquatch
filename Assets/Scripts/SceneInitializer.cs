@@ -141,13 +141,13 @@ namespace Shredsquatch.Core
             // Notify GameManager
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.SetPlayer(_playerInstance.transform);
+                GameManager.Instance.SetPlayerReference(_playerInstance.transform);
             }
 
             // Wire to terrain generator and generate initial terrain
             if (_terrainGenerator != null)
             {
-                _terrainGenerator.SetPlayer(_playerInstance.transform);
+                _terrainGenerator.SetPlayerReference(_playerInstance.transform);
                 _terrainGenerator.GenerateInitialChunks();
             }
 

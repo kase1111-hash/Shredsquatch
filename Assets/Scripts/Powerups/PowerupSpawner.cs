@@ -151,7 +151,7 @@ namespace Shredsquatch.Powerups
 
             for (int i = 0; i < _coinsPerLine; i++)
             {
-                float t = i / (float)(_coinsPerLine - 1);
+                float t = _coinsPerLine > 1 ? i / (float)(_coinsPerLine - 1) : 0f;
                 float x = baseX + Mathf.Sin(t * Mathf.PI) * curveAmount * 20f;
                 float z = zPosition + t * _coinLineLength;
 

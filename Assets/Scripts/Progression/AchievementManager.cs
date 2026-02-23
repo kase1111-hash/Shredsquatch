@@ -287,7 +287,6 @@ namespace Shredsquatch.Progression
             UpdateProgress(AchievementId.RailRider, _saveData.TotalRailMeters);
         }
 
-        private float _lastSasquatchDistance = float.MaxValue;
         private bool _wasInPulsingRed;
 
         private void OnSasquatchDistanceChanged(float distance)
@@ -302,8 +301,6 @@ namespace Shredsquatch.Progression
                 TryUnlock(AchievementId.CloseCall);
                 _wasInPulsingRed = false;
             }
-
-            _lastSasquatchDistance = distance;
         }
 
         private void CheckDistanceAchievements(float distance)
