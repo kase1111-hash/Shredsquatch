@@ -68,7 +68,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1000000000000000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0, type: 0}
+  m_Script: {fileID: 11500000, guid: 145079c947277cedb5f555087d2447fd, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Shredsquatch.Powerups.NitroPowerup
 --- !u!81 &81000000000000000
@@ -159,7 +159,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0, type: 0}
+  - {fileID: 2100000, guid: 833e96fc182c98afbbb9cf3b6d3990e0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

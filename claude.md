@@ -78,16 +78,16 @@ Key test files:
 ## Architecture
 
 ### Assembly Definitions
-The codebase uses 10 modular assemblies:
-- `Shredsquatch.Core` - No dependencies, foundation
-- `Shredsquatch.Player` - Depends on Core, Tricks
-- `Shredsquatch.Tricks` - Depends on Core
-- `Shredsquatch.Terrain` - Depends on Core
-- `Shredsquatch.Sasquatch` - Depends on Core, Player
-- `Shredsquatch.Powerups` - Depends on Core, Player, Tricks, Sasquatch
-- `Shredsquatch.UI` - Depends on Core, Player, Tricks
-- `Shredsquatch.Audio` - Depends on Core
-- `Shredsquatch.Editor` - Editor-only, depends on all
+The codebase uses a small set of assemblies:
+- `Shredsquatch` - All runtime code (namespaces still separate the modules:
+  Core, Player, Tricks, Terrain, Sasquatch, Powerups, UI, Audio,
+  Configuration, Procedural, Progression, Rendering)
+- `Shredsquatch.Editor` - Editor-only tools, depends on Shredsquatch
+- `Shredsquatch.Tests.PlayMode` / `Shredsquatch.Tests.Editor` - Tests
+
+Runtime code is deliberately one assembly because the gameplay systems are
+mutually dependent (GameFeedback <-> Player/Tricks/Powerups, Player <->
+Tricks), which per-feature assemblies cannot express.
 
 ### Key Systems
 | Class | Purpose |

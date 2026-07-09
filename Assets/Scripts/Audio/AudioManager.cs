@@ -48,6 +48,47 @@ namespace Shredsquatch.Audio
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            ConfigurePlaceholderAudio();
+        }
+
+        /// <summary>
+        /// Creates any missing audio sources and fills unassigned clips with
+        /// procedurally generated placeholders so the game has sound without
+        /// imported audio assets.
+        /// </summary>
+        private void ConfigurePlaceholderAudio()
+        {
+            if (_menuMusic == null)
+                _menuMusic = CreateSource("MenuMusic", AudioPlaceholderGenerator.GenerateMenuMusic(), loop: true);
+            if (_gameplayMusic == null)
+                _gameplayMusic = CreateSource("GameplayMusic", AudioPlaceholderGenerator.GenerateGameplayMusic(), loop: true);
+            if (_chaseMusic == null)
+                _chaseMusic = CreateSource("ChaseMusic", AudioPlaceholderGenerator.GenerateChaseMusic(), loop: true);
+            if (_windAmbient == null)
+                _windAmbient = CreateSource("WindAmbient", AudioPlaceholderGenerator.GenerateWindAmbience(), loop: true, volume: 0.4f);
+            if (_sfxSource == null)
+                _sfxSource = CreateSource("SFX", null, loop: false);
+
+            if (_trickCompleteClip == null) _trickCompleteClip = AudioPlaceholderGenerator.GenerateTrickSound();
+            if (_comboClip == null) _comboClip = AudioPlaceholderGenerator.GenerateTrickSound();
+            if (_crashClip == null) _crashClip = AudioPlaceholderGenerator.GenerateCrashSound();
+            if (_coinCollectClip == null) _coinCollectClip = AudioPlaceholderGenerator.GenerateCoinSound();
+            if (_powerupCollectClip == null) _powerupCollectClip = AudioPlaceholderGenerator.GeneratePowerupSound();
+            if (_sasquatchRoarClip == null) _sasquatchRoarClip = AudioPlaceholderGenerator.GenerateSasquatchRoar();
+            if (_sasquatchNearClip == null) _sasquatchNearClip = AudioPlaceholderGenerator.GenerateSasquatchRoar();
+        }
+
+        private AudioSource CreateSource(string name, AudioClip clip, bool loop, float volume = 1f)
+        {
+            var sourceObj = new GameObject(name);
+            sourceObj.transform.SetParent(transform);
+            var source = sourceObj.AddComponent<AudioSource>();
+            source.clip = clip;
+            source.loop = loop;
+            source.volume = volume;
+            source.playOnAwake = false;
+            return source;
         }
 
         private void Start()

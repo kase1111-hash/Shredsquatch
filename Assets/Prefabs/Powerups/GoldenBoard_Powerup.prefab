@@ -66,7 +66,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1000000000000000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0, type: 0}
+  m_Script: {fileID: 11500000, guid: 9605317830ad0d478b0a126cb81400cd, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Shredsquatch.Powerups.GoldenBoardPowerup
 --- !u!81 &81000000000000000
@@ -157,7 +157,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0, type: 0}
+  - {fileID: 2100000, guid: b8d6ca159c4949a51722bca6e6396ccc, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

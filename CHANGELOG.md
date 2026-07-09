@@ -5,6 +5,35 @@ All notable changes to Shredsquatch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Project now imports cleanly: added the 66 missing `.meta` files (scene,
+  shaders, scripts, asmdefs, materials, WebGL plugin, folders) so GUID
+  references no longer break on first import
+- Added `EditorBuildSettings.asset` (GameScene was missing from the build
+  list), `ProjectVersion.txt`, and renamed `Physics.asset` to Unity's
+  expected `DynamicsManager.asset`
+- Consolidated runtime code into a single `Shredsquatch` assembly; the
+  previous per-feature asmdefs had circular type dependencies
+  (Player<->Tricks, GameFeedback<->Player/Powerups, UI->Progression) and
+  could not compile
+- Repaired `guid: 0` references: Aurora/Trail materials now point at their
+  shaders, PrefabRegistry.asset at its script, powerup/coin prefabs at
+  their pickup scripts, and obstacle/rail/ramp/chairlift renderers at real
+  materials (previously magenta)
+- Populated PrefabRegistry.asset with the existing prefabs (player,
+  sasquatch, terrain chunk, trees, rocks, ramps, rails, collectibles)
+- Wired the game to actually boot: SceneInitializer, AutoSetup,
+  PowerupSpawner, and AudioManager are now in GameScene; SceneInitializer
+  adopts the scene-placed player instead of requiring a prefab spawn
+- HUD text now renders: switched HUD to built-in UI Text (no TextMeshPro
+  font assets exist in the project); AudioManager self-configures with
+  generated placeholder audio; scene uses the procedural skybox
+- Removed the orphaned `Prefabs/UI.meta` and the dead duplicate
+  `Assets/InputSystem` input actions asset
+
 ## [0.1.0-alpha] - 2025-01-02
 
 ### Added
