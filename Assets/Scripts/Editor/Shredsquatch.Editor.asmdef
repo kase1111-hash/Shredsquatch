@@ -2,14 +2,7 @@
     "name": "Shredsquatch.Editor",
     "rootNamespace": "Shredsquatch.Editor",
     "references": [
-        "Shredsquatch.Core",
-        "Shredsquatch.Player",
-        "Shredsquatch.Terrain",
-        "Shredsquatch.Tricks",
-        "Shredsquatch.Sasquatch",
-        "Shredsquatch.UI",
-        "Shredsquatch.Powerups",
-        "Shredsquatch.Audio"
+        "Shredsquatch"
     ],
     "includePlatforms": [
         "Editor"
