@@ -5,12 +5,6 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Shredsquatch",
-        "Shredsquatch.Core",
-        "Shredsquatch.Player",
-        "Shredsquatch.Terrain",
-        "Shredsquatch.Tricks",
-        "Shredsquatch.Sasquatch",
-        "Shredsquatch.Powerups",
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework"
     ],

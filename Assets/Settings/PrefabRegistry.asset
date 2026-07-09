@@ -9,31 +9,38 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d1ecb663d8745ef914a013ef2a3bdcd, type: 3}
   m_Name: PrefabRegistry
   m_EditorClassIdentifier: Shredsquatch.Configuration.PrefabRegistry
-  PlayerPrefab: {fileID: 0}
-  SasquatchPrefab: {fileID: 0}
-  TerrainChunkPrefab: {fileID: 0}
-  PineTrees: []
-  BirchTrees: []
-  DeadTrees: []
-  FallenTrees: []
-  LargeRocks: []
-  SmallRocks: []
-  SmallRamp: {fileID: 0}
-  MediumRamp: {fileID: 0}
-  LargeRamp: {fileID: 0}
-  CliffRamp: {fileID: 0}
-  FenceRail: {fileID: 0}
-  PipeRail: {fileID: 0}
-  MetalRail: {fileID: 0}
-  CoinPrefab: {fileID: 0}
-  NitroPowerup: {fileID: 0}
-  GoldenBoardPowerup: {fileID: 0}
-  RepellentPowerup: {fileID: 0}
-  ChairliftTower: {fileID: 0}
-  ChairliftChair: {fileID: 0}
+  PlayerPrefab: {fileID: 1000000000000000, guid: 2da8934798c1f636e3003fefa6d95769, type: 3}
+  SasquatchPrefab: {fileID: 1000000000000000, guid: fb1d6db851c6c048e71bce877029ddcc, type: 3}
+  TerrainChunkPrefab: {fileID: 1000000000000000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20031, type: 3}
+  PineTrees:
+  - {fileID: 1000000000000000, guid: 674e4b0b190fee6a51180ff55ba39918, type: 3}
+  - {fileID: 1000000000000000, guid: 6aa70b6fefd007f42ae4af21e3f6a3ad, type: 3}
+  BirchTrees:
+  - {fileID: 1000000000000000, guid: b9d3f449084798f64c9951cd7eee933c, type: 3}
+  DeadTrees:
+  - {fileID: 1000000000000000, guid: 303a2302840d845fb5bdc427b803d823, type: 3}
+  FallenTrees:
+  - {fileID: 1000000000000000, guid: d881caf144a7202896a3cd2c640272d5, type: 3}
+  LargeRocks:
+  - {fileID: 1000000000000000, guid: f598c390aa54fd5a20f0631f73210f03, type: 3}
+  SmallRocks:
+  - {fileID: 1000000000000000, guid: d7ff4f0362ff794c70661c62e61ce9d7, type: 3}
+  SmallRamp: {fileID: 1000000000000000, guid: 91dd6993409d3434d3f10b02a65f6e77, type: 3}
+  MediumRamp: {fileID: 1000000000000000, guid: de525f07e2069df2bb06600b0e47194a, type: 3}
+  LargeRamp: {fileID: 1000000000000000, guid: dd348d86be1b8c87a39d798fad356451, type: 3}
+  CliffRamp: {fileID: 1000000000000000, guid: b5edaff42e02372d629495e39994612b, type: 3}
+  FenceRail: {fileID: 1000000000000000, guid: ac9dd7ff7d013780fee41db31033e9e1, type: 3}
+  PipeRail: {fileID: 1000000000000000, guid: ca85d709498c844c474aad26c94c0640, type: 3}
+  MetalRail: {fileID: 1000000000000000, guid: f0fa8770a55270ff7b2104058c2e2b2b, type: 3}
+  CoinPrefab: {fileID: 1000000000000000, guid: dd882f46e60f57423a30915de3e25c18, type: 3}
+  NitroPowerup: {fileID: 1000000000000000, guid: 656f581a05fccf919829dc65d65e5079, type: 3}
+  GoldenBoardPowerup: {fileID: 1000000000000000, guid: 8bbdf6568cfa3acb9226eac7c82a192d, type: 3}
+  RepellentPowerup: {fileID: 1000000000000000, guid: 3a61bf47a13780230d8c5027aa0a4e23, type: 3}
+  ChairliftTower: {fileID: 1000000000000000, guid: 00211258abb3bf253670c18e9ef99db8, type: 3}
+  ChairliftChair: {fileID: 1000000000000000, guid: c3e6fc8e49c0762041a8809a7006afd9, type: 3}
   SnowSprayEffect: {fileID: 0}
   CrashEffect: {fileID: 0}
   CoinCollectEffect: {fileID: 0}

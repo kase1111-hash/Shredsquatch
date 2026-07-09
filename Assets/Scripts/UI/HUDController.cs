@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using Shredsquatch.Core;
 using Shredsquatch.Player;
 using Shredsquatch.Tricks;
@@ -11,15 +10,15 @@ namespace Shredsquatch.UI
     public class HUDController : MonoBehaviour
     {
         [Header("Distance/Speed Panel")]
-        [SerializeField] private TextMeshProUGUI _distanceText;
-        [SerializeField] private TextMeshProUGUI _speedText;
+        [SerializeField] private Text _distanceText;
+        [SerializeField] private Text _speedText;
         [SerializeField] private Image _speedGauge;
 
         [Header("Trick Panel")]
-        [SerializeField] private TextMeshProUGUI _trickNameText;
-        [SerializeField] private TextMeshProUGUI _trickScoreText;
-        [SerializeField] private TextMeshProUGUI _comboText;
-        [SerializeField] private TextMeshProUGUI _totalTrickScoreText;
+        [SerializeField] private Text _trickNameText;
+        [SerializeField] private Text _trickScoreText;
+        [SerializeField] private Text _comboText;
+        [SerializeField] private Text _totalTrickScoreText;
         [SerializeField] private Animator _trickAnimator;
 
         [Header("Sasquatch Proximity")]

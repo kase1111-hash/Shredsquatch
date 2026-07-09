@@ -598,16 +598,15 @@ Assets/
 
 | Assembly | Purpose |
 |----------|---------|
-| Shredsquatch.Core | Core systems, state management, utilities |
-| Shredsquatch.Player | Player controller and movement systems |
-| Shredsquatch.Tricks | Trick system and rail grinding |
-| Shredsquatch.Terrain | Procedural terrain generation |
-| Shredsquatch.Sasquatch | Enemy AI and skins |
-| Shredsquatch.Powerups | Collectibles and power-up effects |
-| Shredsquatch.UI | All user interface components |
-| Shredsquatch.Audio | Audio management and generation |
+| Shredsquatch | All runtime code (Core, Player, Tricks, Terrain, Sasquatch, Powerups, UI, Audio namespaces) |
 | Shredsquatch.Editor | Editor-only tools and utilities |
-| Shredsquatch | Main assembly (references all others) |
+| Shredsquatch.Tests.PlayMode | Play mode tests |
+| Shredsquatch.Tests.Editor | Editor tests |
+
+Runtime code is intentionally a single assembly: the gameplay systems are
+tightly interconnected (e.g. GameFeedback is called from Player, Tricks, and
+Powerups while itself referencing Player types), so per-feature assemblies
+would create circular references. Namespaces still separate the modules.
 
 ### Custom Shaders
 

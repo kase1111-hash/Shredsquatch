@@ -121,6 +121,16 @@ namespace Shredsquatch.Core
 
         private void SpawnPlayer()
         {
+            // Adopt a scene-placed player if one exists instead of spawning a duplicate
+            var scenePlayer = GameObject.FindGameObjectWithTag("Player");
+            if (scenePlayer != null)
+            {
+                _playerInstance = scenePlayer;
+                WirePlayerInstance();
+                Debug.Log("[SceneInitializer] Adopted scene-placed player");
+                return;
+            }
+
             if (_prefabRegistry == null || _prefabRegistry.PlayerPrefab == null)
             {
                 Debug.LogWarning("[SceneInitializer] Cannot spawn player - prefab not assigned");
@@ -137,6 +147,14 @@ namespace Shredsquatch.Core
 
             _playerInstance = Instantiate(_prefabRegistry.PlayerPrefab, spawnPos, spawnRot);
             _playerInstance.name = "Player";
+            WirePlayerInstance();
+
+            Debug.Log("[SceneInitializer] Player spawned at " + spawnPos);
+        }
+
+        private void WirePlayerInstance()
+        {
+            if (_playerInstance == null) return;
 
             // Notify GameManager
             if (GameManager.Instance != null)
@@ -162,8 +180,6 @@ namespace Shredsquatch.Core
                 if (cam != null)
                     GameFeedback.Instance.SetCamera(cam);
             }
-
-            Debug.Log("[SceneInitializer] Player spawned at " + spawnPos);
         }
 
         private void SpawnSasquatch()
