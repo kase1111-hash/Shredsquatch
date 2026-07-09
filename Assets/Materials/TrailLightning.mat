@@ -8,8 +8,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: TrailLightning
-  m_Shader: {fileID: 4800000, guid: 0, type: 3}
-  m_ShaderKeywords: Shredsquatch/Trail Lightning
+  m_Shader: {fileID: 4800000, guid: ebedbe81f1d8457e916e6f3b9676ede3, type: 3}
+  m_ShaderKeywords: 
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
