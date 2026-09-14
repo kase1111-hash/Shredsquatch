@@ -129,11 +129,11 @@ namespace Shredsquatch.Powerups
 
             if (prefab == null) return;
 
-            // Spawn position: ahead of player, seeded random X offset
+            // Spawn position: ahead of player, seeded random X offset, resting on the terrain
             Vector3 spawnPos = _player.position;
             spawnPos.z += SeededRandomRange(100f, 200f);
             spawnPos.x += SeededRandomRange(-30f, 30f);
-            spawnPos.y += _spawnHeight;
+            spawnPos.y = GroundHeightAt(spawnPos) + _spawnHeight;
 
             GameObject powerup = Instantiate(prefab, spawnPos, Quaternion.identity);
             _spawnedPowerups.Add(powerup);
@@ -155,16 +155,34 @@ namespace Shredsquatch.Powerups
                 float x = baseX + Mathf.Sin(t * Mathf.PI) * curveAmount * 20f;
                 float z = zPosition + t * _coinLineLength;
 
-                Vector3 spawnPos = new Vector3(x, _spawnHeight, z);
-
-                // Raycast to find ground
-                if (Physics.Raycast(spawnPos + Vector3.up * 10f, Vector3.down, out RaycastHit hit, 20f))
-                {
-                    spawnPos.y = hit.point.y + _spawnHeight;
-                }
+                Vector3 spawnPos = new Vector3(x, 0f, z);
+                spawnPos.y = GroundHeightAt(spawnPos) + _spawnHeight;
 
                 GameObject coin = Instantiate(_coinPrefab, spawnPos, Quaternion.identity);
                 _spawnedPowerups.Add(coin);
+            }
+        }
+
+        /// <summary>
+        /// Terrain height at an XZ position. The generated mountain spans hundreds of
+        /// metres vertically, so cast from far above. Falls back to the player's height.
+        /// </summary>
+        private float GroundHeightAt(Vector3 position)
+        {
+            Vector3 origin = new Vector3(position.x, _player.position.y + 300f, position.z);
+            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 900f, GroundMask))
+            {
+                return hit.point.y;
+            }
+            return _player.position.y;
+        }
+
+        private static int GroundMask
+        {
+            get
+            {
+                int mask = LayerMask.GetMask("Ground");
+                return mask != 0 ? mask : ~0;
             }
         }
 

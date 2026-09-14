@@ -73,13 +73,14 @@ namespace Shredsquatch.Core
             CurrentRun.Reset();
             _lastDistanceUpdate = 0f;
 
+            SetState(GameState.Playing);
+            SafeExecution.TryInvoke(OnRunStarted, "OnRunStarted");
+
+            // OnRunStarted handlers move the rider back to the spawn point, so measure from there
             if (_player != null)
             {
                 _startPosition = _player.position;
             }
-
-            SetState(GameState.Playing);
-            SafeExecution.TryInvoke(OnRunStarted, "OnRunStarted");
         }
 
         public void PauseGame()

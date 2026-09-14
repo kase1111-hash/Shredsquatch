@@ -42,6 +42,11 @@ namespace Shredsquatch.Powerups
         public event System.Action<PowerupType> OnPowerupActivated;
         public event System.Action<PowerupType> OnPowerupExpired;
 
+        private void Awake()
+        {
+            if (_physics == null) _physics = GetComponent<SnowboardPhysics>();
+        }
+
         private void Start()
         {
             if (_boardRenderer != null)

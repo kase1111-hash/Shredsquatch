@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 65000000000000000}
   m_Layer: 0
   m_Name: Rail_Metal
-  m_TagString: Rail_Metal
+  m_TagString: Rail
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Project compiles again in the Editor: `ProjectSetupValidator` caught an
+  unqualified `Exception` with no `using System;`, and the PlayMode tests had
+  an ambiguous `Object` reference plus `SafeExecution.Try` calls that resolved
+  to the `Func<T>` overload. Added `com.unity.test-framework` to the manifest,
+  which the test asmdefs already referenced
+- Runs no longer start in the void: `PlayerController` reset the rider to the
+  world origin (below the start plane and inside the terrain). Runs now start
+  from a spawn point that `SceneInitializer` snaps onto the generated terrain,
+  and restarts regenerate the terrain around it first
+- Terrain chunks now line up: noise offsets were in metres but sampled by
+  vertex index, so every chunk border was a cliff. The mesh row index also ran
+  toward -Z while the slope bias and obstacle placement assumed +Z, leaving
+  trees and rails floating or buried. The mountain now descends continuously
+  (`_slopeBias` is the drop per metre) instead of flattening to zero after
+  ~2.5 km
+- `TerrainGenerator` no longer throws when `SceneInitializer` generates the
+  first chunks before its own `Start` has run
+- Jumping works: the ground check re-grounded the rider on the frame after a
+  jump and wiped the vertical velocity, so no airtime, landing, or trick score
+  ever happened
+- Crashes work: `CrashHandler` only listened for `OnCollisionEnter`, which a
+  CharacterController never sends. Obstacle hits now come through
+  `OnControllerColliderHit`, stop the board, and lock movement during ragdoll
+- Speed constants (km/h) were compared directly against metres-per-second
+  speeds, giving a 180 km/h cruise cap and a 108 km/h post-crash speed
+- Pausing could never be undone because pause input was ignored while paused
+- Steering did nothing to the first-person view: the camera holder was given
+  a world-space rotation that cancelled the rider's yaw
+- Rail prefabs were tagged `Rail_Fence`/`Rail_Metal`/`Rail_Pipe`/
+  `Rail_FallenPine`, none of which exist; grinding only checks for `Rail`
+- Nitro had no effect on the scene player (`PowerupManager` had no physics
+  reference fallback); coins and powerups are now placed on the terrain
+  surface instead of at a fixed world height
+- Sasquatch follows the terrain surface and no longer carries a NavMeshAgent
+  that logged errors on every enable (no NavMesh exists on procedural terrain)
+
+### Added
+
+- Minimal in-game overlay for Game Over ("press R"), Paused, and the reset
+  state error recovery returns to; the scene has no menu or game-over canvas
+
 - Project now imports cleanly: added the 66 missing `.meta` files (scene,
   shaders, scripts, asmdefs, materials, WebGL plugin, folders) so GUID
   references no longer break on first import

@@ -276,7 +276,7 @@ namespace Shredsquatch.Editor
                     // This will throw if tag doesn't exist
                     GameObject.FindGameObjectsWithTag(tag);
                 }
-                catch (Exception)
+                catch (System.Exception)
                 {
                     _issues.Add(new SetupIssue
                     {

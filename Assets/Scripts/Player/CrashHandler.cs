@@ -23,6 +23,9 @@ namespace Shredsquatch.Player
         private bool _isRecovering;
         private bool _isInvincible;
         private float _tumbleDistance;
+        private float _lastGrazeTime = -10f;
+
+        private const float GrazeCooldown = 0.75f;
 
         // Properties
         public bool IsInRagdoll => _isInRagdoll;
@@ -62,25 +65,44 @@ namespace Shredsquatch.Player
 
         public void HandleCollision(Collision collision, float currentSpeed)
         {
+            if (collision == null || collision.contactCount == 0) return;
+            HandleObstacleHit(collision.gameObject, collision.GetContact(0).point, currentSpeed);
+        }
+
+        /// <summary>
+        /// Shared obstacle-impact logic for rigidbody collisions and CharacterController hits.
+        /// </summary>
+        public void HandleObstacleHit(GameObject obstacle, Vector3 contactPoint, float currentSpeed)
+        {
             if (_isInvincible || _isInRagdoll || _isRecovering) return;
+            if (obstacle == null || !IsObstacle(obstacle)) return;
 
             float speedKmh = currentSpeed * 3.6f;
 
-            // Check collision type
-            if (collision.gameObject.CompareTag("Tree") || collision.gameObject.CompareTag("Rock"))
+            if (speedKmh > Constants.Speed.CrashThreshold)
             {
-                if (speedKmh > Constants.Speed.CrashThreshold)
-                {
-                    // Full ragdoll
-                    StartCoroutine(RagdollSequence(speedKmh, collision.contacts[0].point));
-                }
-                else
-                {
-                    // Powder spray, minor slow
-                    TriggerPowderSpray(collision.contacts[0].point);
-                    _physics.ApplyBoost(-20f / 3.6f); // -20 km/h
-                }
+                // Full ragdoll, then stop the board (OnCrash also ends the trick combo)
+                StartCoroutine(RagdollSequence(speedKmh, contactPoint));
+                _physics.TriggerCrash(contactPoint, currentSpeed);
             }
+            else
+            {
+                // Powder spray, minor slow (rate-limited: controller hits repeat every frame)
+                if (Time.time - _lastGrazeTime < GrazeCooldown) return;
+                _lastGrazeTime = Time.time;
+
+                TriggerPowderSpray(contactPoint);
+                _physics.ApplyBoost(-20f / 3.6f); // -20 km/h
+            }
+        }
+
+        private static bool IsObstacle(GameObject obj)
+        {
+            if (obj.CompareTag("Tree") || obj.CompareTag("Rock")) return true;
+
+            // Colliders are sometimes on a child of the tagged prefab root
+            Transform parent = obj.transform.parent;
+            return parent != null && (parent.CompareTag("Tree") || parent.CompareTag("Rock"));
         }
 
         public void HandleBadLanding(float angleOff)
@@ -120,6 +142,7 @@ namespace Shredsquatch.Player
         private IEnumerator RagdollSequence(float speedKmh, Vector3 impactPoint, bool isEdgeCatch = false)
         {
             _isInRagdoll = true;
+            if (_physics != null) _physics.MovementLocked = true;
             OnRagdollStart?.Invoke();
 
             // Disable normal controls
@@ -135,11 +158,14 @@ namespace Shredsquatch.Player
             Vector3 impactDirection = (transform.position - impactPoint).normalized + Vector3.up * 0.5f;
             float impactForce = speedKmh * 10f;
 
-            foreach (var rb in _ragdollBodies)
+            if (_ragdollBodies != null)
             {
-                if (rb != null)
+                foreach (var rb in _ragdollBodies)
                 {
-                    rb.AddForce(impactDirection * impactForce, ForceMode.Impulse);
+                    if (rb != null)
+                    {
+                        rb.AddForce(impactDirection * impactForce, ForceMode.Impulse);
+                    }
                 }
             }
 
@@ -188,6 +214,7 @@ namespace Shredsquatch.Player
             yield return new WaitForSeconds(Constants.Crash.RecoveryTime);
 
             _isRecovering = false;
+            _physics.MovementLocked = false;
             _physics.SetSpeedAfterRecovery();
 
             // Grant invincibility
@@ -211,11 +238,14 @@ namespace Shredsquatch.Player
                 }
             }
 
-            foreach (var col in _ragdollColliders)
+            if (_ragdollColliders != null)
             {
-                if (col != null)
+                foreach (var col in _ragdollColliders)
                 {
-                    col.enabled = active;
+                    if (col != null)
+                    {
+                        col.enabled = active;
+                    }
                 }
             }
 
@@ -254,6 +284,14 @@ namespace Shredsquatch.Player
         private void OnCollisionEnter(Collision collision)
         {
             HandleCollision(collision, _physics.CurrentSpeed);
+        }
+
+        // The rider moves with a CharacterController, which reports contacts here
+        // rather than through OnCollisionEnter.
+        private void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            if (_physics == null || hit.gameObject == null) return;
+            HandleObstacleHit(hit.gameObject, hit.point, _physics.CurrentSpeed);
         }
     }
 }

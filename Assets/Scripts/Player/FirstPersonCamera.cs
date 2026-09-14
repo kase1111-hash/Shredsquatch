@@ -166,7 +166,9 @@ namespace Shredsquatch.Player
                 rotation.y += Random.Range(-_shakeIntensity, _shakeIntensity);
             }
 
-            _cameraHolder.rotation = Quaternion.Euler(rotation);
+            // Local rotation: the holder is a child of the player body, whose yaw is driven by
+            // SnowboardPhysics steering. A world-space assignment would cancel that yaw.
+            _cameraHolder.localRotation = Quaternion.Euler(rotation);
         }
 
         public void AddShake(float intensity)

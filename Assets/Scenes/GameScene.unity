@@ -245,7 +245,7 @@ MonoBehaviour:
   _octaves: 4
   _persistence: 0.5
   _lacunarity: 2
-  _slopeBias: 0.4
+  _slopeBias: 0.15
   _chunkPrefab: {fileID: 1000000000000000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20031, type: 3}
   _terrainMaterial: {fileID: 2100000, guid: b1c2d3e4f5a6b1c2d3e4f5a6b1c20032, type: 2}
   _treePrefabs: []

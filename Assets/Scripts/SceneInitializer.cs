@@ -28,6 +28,7 @@ namespace Shredsquatch.Core
         [SerializeField] private bool _spawnPlayerOnStart = true;
         [SerializeField] private bool _initializeSasquatch = true;
         [SerializeField] private float _sasquatchSpawnDelay = 30f;
+        [SerializeField] private float _spawnHeightOffset = 0.5f;
 
         // Runtime references
         private GameObject _playerInstance;
@@ -63,7 +64,79 @@ namespace Shredsquatch.Core
             WireHUD();
             WireManagers();
 
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.OnRunStarted += HandleRunStarted;
+            }
+
             Debug.Log("[SceneInitializer] Scene initialization complete");
+        }
+
+        private void OnDestroy()
+        {
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.OnRunStarted -= HandleRunStarted;
+            }
+        }
+
+        /// <summary>
+        /// Every run (including restarts after a long descent) begins at the spawn point,
+        /// so make sure terrain exists there and the rider stands on it.
+        /// </summary>
+        private void HandleRunStarted()
+        {
+            if (_playerInstance == null) return;
+
+            var playerController = _playerInstance.GetComponent<Player.PlayerController>();
+            if (playerController != null)
+            {
+                playerController.TeleportTo(playerController.SpawnPosition, playerController.SpawnRotation);
+            }
+
+            if (_terrainGenerator != null)
+            {
+                _terrainGenerator.GenerateInitialChunks();
+            }
+
+            PlacePlayerOnTerrain();
+        }
+
+        /// <summary>
+        /// Drop the rider onto the terrain surface below/above their current XZ position.
+        /// The scene places the player at a fixed height that rarely matches the generated ground.
+        /// </summary>
+        private void PlacePlayerOnTerrain()
+        {
+            if (_playerInstance == null) return;
+
+            // Freshly generated chunk colliders must be pushed to the physics scene before querying
+            Physics.SyncTransforms();
+
+            Vector3 current = _playerInstance.transform.position;
+            int groundLayer = LayerMask.NameToLayer("Ground");
+            int mask = groundLayer >= 0 ? 1 << groundLayer : ~0;
+            Vector3 origin = new Vector3(current.x, current.y + 500f, current.z);
+
+            if (!Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 1500f, mask))
+            {
+                Debug.LogWarning("[SceneInitializer] No ground found under the spawn point; leaving player where it is");
+                return;
+            }
+
+            Vector3 spawn = hit.point + Vector3.up * _spawnHeightOffset;
+            Quaternion rotation = _playerInstance.transform.rotation;
+
+            var playerController = _playerInstance.GetComponent<Player.PlayerController>();
+            if (playerController != null)
+            {
+                playerController.TeleportTo(spawn, rotation);
+                playerController.SetSpawnPoint(spawn, rotation);
+            }
+            else
+            {
+                _playerInstance.transform.position = spawn;
+            }
         }
 
         private void ValidateReferences()
@@ -168,6 +241,9 @@ namespace Shredsquatch.Core
                 _terrainGenerator.SetPlayerReference(_playerInstance.transform);
                 _terrainGenerator.GenerateInitialChunks();
             }
+
+            // Stand the rider on the generated surface
+            PlacePlayerOnTerrain();
 
             // Wire GameFeedback to player components
             if (GameFeedback.Instance != null)
