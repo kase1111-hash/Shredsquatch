@@ -42,6 +42,9 @@ namespace Shredsquatch.Sasquatch
         private float _rubberBandMultiplier = 1f;
         private float _smoothedPlayerSpeed;
 
+        // Ground following for the direct-movement fallback (no NavMesh on procedural terrain)
+        private int _groundMask;
+
         // Properties
         public bool IsActive => _isActive;
         public float DistanceToPlayer => _currentDistance;
@@ -54,6 +57,9 @@ namespace Shredsquatch.Sasquatch
 
         private void Awake()
         {
+            _groundMask = LayerMask.GetMask("Ground");
+            if (_groundMask == 0) _groundMask = ~0;
+
             // Wire audio sources for procedural Sasquatch
             var sources = GetComponents<AudioSource>();
             if (_roarAudio == null && sources.Length > 0)
@@ -126,9 +132,9 @@ namespace Shredsquatch.Sasquatch
             // Using the world Z-axis instead of _player.forward prevents the Sasquatch from
             // spawning beside or in front of the player when they are mid-carve.
             Vector3 spawnPos = _player.position - Vector3.forward * 800f;
-            spawnPos.y = _player.position.y;
+            spawnPos.y = SampleGroundHeight(spawnPos, _player.position.y);
             transform.position = spawnPos;
-            transform.LookAt(_player);
+            LookAtPlayerHorizontally();
 
             // Dramatic entrance
             PlayRoar();
@@ -212,10 +218,14 @@ namespace Shredsquatch.Sasquatch
             }
             else
             {
-                // Fallback: direct movement
-                Vector3 direction = (_player.position - transform.position).normalized;
-                transform.position += direction * _currentSpeed * Time.deltaTime;
-                transform.LookAt(_player);
+                // Fallback: direct movement along the ground toward the player
+                Vector3 toPlayer = _player.position - transform.position;
+                toPlayer.y = 0f;
+                Vector3 direction = toPlayer.sqrMagnitude > 0.0001f ? toPlayer.normalized : Vector3.forward;
+                Vector3 next = transform.position + direction * _currentSpeed * Time.deltaTime;
+                next.y = SampleGroundHeight(next, transform.position.y);
+                transform.position = next;
+                LookAtPlayerHorizontally();
             }
 
             // Animation
@@ -344,6 +354,27 @@ namespace Shredsquatch.Sasquatch
         {
             _player = player;
             _playerPhysics = null; // Clear cached reference so it gets re-fetched
+        }
+
+        private float SampleGroundHeight(Vector3 position, float fallback)
+        {
+            Vector3 origin = new Vector3(position.x, position.y + 200f, position.z);
+            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 600f, _groundMask))
+            {
+                return hit.point.y;
+            }
+            return fallback;
+        }
+
+        private void LookAtPlayerHorizontally()
+        {
+            if (_player == null) return;
+            Vector3 target = _player.position;
+            target.y = transform.position.y;
+            if ((target - transform.position).sqrMagnitude > 0.0001f)
+            {
+                transform.LookAt(target);
+            }
         }
 
         // Called when destroying trees

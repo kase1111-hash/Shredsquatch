@@ -13,21 +13,25 @@ namespace Shredsquatch.Player
         [Header("Movement Settings")]
         [SerializeField] private float _gravity = 20f;
         [SerializeField] private float _slopeAcceleration = 15f;
-        [SerializeField] private float _maxSpeed = 120f;
+        [SerializeField] private float _maxSpeed = 120f;            // km/h
         [SerializeField] private float _turnSpeed = 100f;
         [SerializeField] private float _tuckSpeedBonus = 1.5f;
         [SerializeField] private float _brakeStrength = 0.5f;
+        [SerializeField] private float _groundStickSpeed = 5f;      // m/s pressed into the slope while grounded
 
         [Header("Ground Detection")]
         [SerializeField] private float _groundCheckDistance = 0.5f;
         [SerializeField] private LayerMask _groundMask;
 
-        // State
+        private const float KmhToMs = 1f / 3.6f;
+
+        // State (speeds are metres per second; Constants.Speed values are km/h)
         private Vector3 _velocity;
         private float _currentSpeed;
         private float _currentLeanAngle;
         private bool _isGrounded;
         private bool _isInPowder;
+        private bool _isJumping;
         private Vector3 _groundNormal = Vector3.up;
         private float _carveBoostAccumulator;
 
@@ -39,9 +43,17 @@ namespace Shredsquatch.Player
         public float LeanAngle => _currentLeanAngle;
         public Vector3 Velocity => _velocity;
 
+        /// <summary>
+        /// While true (ragdoll / recovery) no acceleration or steering is applied.
+        /// Gravity and ground contact keep running so the rider stays on the slope.
+        /// </summary>
+        public bool MovementLocked { get; set; }
+
         // Events
         public event System.Action OnCrash;
         public event System.Action OnEdgeCatch;
+
+        private float MaxSpeedMs => _maxSpeed * KmhToMs;
 
         private void Awake()
         {
@@ -58,8 +70,13 @@ namespace Shredsquatch.Player
                 return;
 
             CheckGround();
-            HandleMovement();
-            HandleCarving();
+
+            if (!MovementLocked)
+            {
+                HandleMovement();
+                HandleCarving();
+            }
+
             ApplyGravity();
             MovePlayer();
 
@@ -69,6 +86,19 @@ namespace Shredsquatch.Player
 
         private void CheckGround()
         {
+            // While still rising from a jump, don't re-ground: the ray would catch the
+            // slope we just left and cancel the jump on the very next frame.
+            if (_isJumping)
+            {
+                if (_velocity.y > 0f)
+                {
+                    _isGrounded = false;
+                    _groundNormal = Vector3.up;
+                    return;
+                }
+                _isJumping = false;
+            }
+
             RaycastHit hit;
             _isGrounded = Physics.Raycast(
                 transform.position + Vector3.up * 0.1f,
@@ -95,11 +125,8 @@ namespace Shredsquatch.Player
         {
             if (!_isGrounded) return;
 
-            // Calculate slope influence
+            // Base acceleration from slope steepness
             float slopeAngle = Vector3.Angle(_groundNormal, Vector3.up);
-            Vector3 slopeDirection = Vector3.Cross(Vector3.Cross(Vector3.up, _groundNormal), _groundNormal).normalized;
-
-            // Base acceleration from slope
             float slopeAccel = slopeAngle * _slopeAcceleration * 0.01f;
 
             // Apply tuck bonus
@@ -122,10 +149,10 @@ namespace Shredsquatch.Player
 
             // Update speed
             _currentSpeed += slopeAccel * Time.deltaTime;
-            _currentSpeed = Mathf.Clamp(_currentSpeed, 0, _maxSpeed);
+            _currentSpeed = Mathf.Clamp(_currentSpeed, 0, MaxSpeedMs);
 
-            // Determine target speed range based on state
-            float targetMaxSpeed = _input.IsTucking ? Constants.Speed.TuckMax : Constants.Speed.Cruise;
+            // Determine target speed range based on state (constants are km/h)
+            float targetMaxSpeed = (_input.IsTucking ? Constants.Speed.TuckMax : Constants.Speed.Cruise) * KmhToMs;
             if (_currentSpeed > targetMaxSpeed && !_input.IsTucking)
             {
                 _currentSpeed = Mathf.Lerp(_currentSpeed, targetMaxSpeed, Time.deltaTime * 0.5f);
@@ -166,7 +193,7 @@ namespace Shredsquatch.Player
                 _carveBoostAccumulator += Time.deltaTime;
                 if (_carveBoostAccumulator >= 1f)
                 {
-                    _currentSpeed += Constants.Speed.CarveBoost;
+                    _currentSpeed += Constants.Speed.CarveBoost * KmhToMs;
                     _carveBoostAccumulator = 0f;
                 }
             }
@@ -180,8 +207,9 @@ namespace Shredsquatch.Player
         {
             if (_isGrounded)
             {
-                // Project velocity onto ground plane
+                // Follow the slope, and press into it so the controller stays in contact
                 _velocity = Vector3.ProjectOnPlane(transform.forward * _currentSpeed, _groundNormal);
+                _velocity.y -= _groundStickSpeed;
             }
             else
             {
@@ -192,7 +220,7 @@ namespace Shredsquatch.Player
 
         private void MovePlayer()
         {
-            if (_controller != null)
+            if (_controller != null && _controller.enabled)
             {
                 _controller.Move(_velocity * Time.deltaTime);
             }
@@ -205,18 +233,20 @@ namespace Shredsquatch.Player
         public void ApplyJumpForce(float force)
         {
             _isGrounded = false;
+            _isJumping = true;
             _velocity.y = force;
         }
 
         public void ApplyBoost(float speedBoost)
         {
-            _currentSpeed = Mathf.Min(_currentSpeed + speedBoost, _maxSpeed * 1.5f);
+            _currentSpeed = Mathf.Clamp(_currentSpeed + speedBoost, 0f, MaxSpeedMs * 1.5f);
         }
 
         public void TriggerCrash(Vector3 impactPoint, float impactSpeed)
         {
             _currentSpeed = 0;
             _velocity = Vector3.zero;
+            _isJumping = false;
             OnCrash?.Invoke();
         }
 
@@ -229,7 +259,22 @@ namespace Shredsquatch.Player
 
         public void SetSpeedAfterRecovery()
         {
-            _currentSpeed = Constants.Speed.WipeoutRecovery;
+            _currentSpeed = Constants.Speed.WipeoutRecovery * KmhToMs;
+        }
+
+        /// <summary>
+        /// Zero all motion state (used when the rider is teleported, e.g. at run start).
+        /// </summary>
+        public void ResetMotion()
+        {
+            _velocity = Vector3.zero;
+            _currentSpeed = 0f;
+            _currentLeanAngle = 0f;
+            _carveBoostAccumulator = 0f;
+            _isJumping = false;
+            _isGrounded = false;
+            _groundNormal = Vector3.up;
+            MovementLocked = false;
         }
     }
 }

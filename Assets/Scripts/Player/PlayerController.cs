@@ -33,6 +33,14 @@ namespace Shredsquatch.Player
         private Vector3 _lastSafePosition;
         private Quaternion _lastSafeRotation;
 
+        // Where a run begins. Defaults to the scene placement; SceneInitializer moves it
+        // onto the generated terrain surface.
+        private Vector3 _spawnPosition;
+        private Quaternion _spawnRotation = Quaternion.identity;
+
+        public Vector3 SpawnPosition => _spawnPosition;
+        public Quaternion SpawnRotation => _spawnRotation;
+
         private void Awake()
         {
             // Get components if not assigned
@@ -42,6 +50,9 @@ namespace Shredsquatch.Player
             if (_crashHandler == null) _crashHandler = GetComponent<CrashHandler>();
             if (_trickController == null) _trickController = GetComponent<TrickController>();
             if (_railController == null) _railController = GetComponent<RailGrindController>();
+
+            _spawnPosition = transform.position;
+            _spawnRotation = transform.rotation;
         }
 
         private void Start()
@@ -87,9 +98,11 @@ namespace Shredsquatch.Player
 
         private void Update()
         {
+            // Pause input must be read while paused too, otherwise the game can never resume
+            HandlePause();
+
             if (!_isActive) return;
 
-            HandlePause();
             UpdateEffects();
             UpdateSafePosition();
         }
@@ -107,6 +120,8 @@ namespace Shredsquatch.Player
 
         private void HandlePause()
         {
+            if (_input == null || GameManager.Instance == null) return;
+
             if (_input.PausePressed)
             {
                 if (GameManager.Instance.CurrentState == GameState.Playing)
@@ -189,9 +204,39 @@ namespace Shredsquatch.Player
 
         private void ResetPlayer()
         {
-            // Reset position/rotation as needed
-            transform.position = Vector3.zero;
-            transform.rotation = Quaternion.identity;
+            // Back to the spawn point (never the world origin, which may be under the terrain)
+            TeleportTo(_spawnPosition, _spawnRotation);
+        }
+
+        /// <summary>
+        /// Define where runs start. Also becomes the current "last safe" position.
+        /// </summary>
+        public void SetSpawnPoint(Vector3 position, Quaternion rotation)
+        {
+            _spawnPosition = position;
+            _spawnRotation = rotation;
+            _lastSafePosition = position;
+            _lastSafeRotation = rotation;
+        }
+
+        /// <summary>
+        /// Move the rider instantly. The CharacterController is toggled so the
+        /// teleport is not swallowed by its internal position, and motion is cleared.
+        /// </summary>
+        public void TeleportTo(Vector3 position, Quaternion rotation)
+        {
+            var controller = GetComponent<CharacterController>();
+            bool controllerWasEnabled = controller != null && controller.enabled;
+            if (controllerWasEnabled) controller.enabled = false;
+
+            transform.SetPositionAndRotation(position, rotation);
+
+            if (controllerWasEnabled) controller.enabled = true;
+
+            if (_physics != null)
+            {
+                _physics.ResetMotion();
+            }
         }
 
         // Public getters for other systems
@@ -208,8 +253,7 @@ namespace Shredsquatch.Player
         public void AttemptRecovery()
         {
             // Reset to last safe position
-            transform.position = _lastSafePosition;
-            transform.rotation = _lastSafeRotation;
+            TeleportTo(_lastSafePosition, _lastSafeRotation);
 
             // Reset physics state
             if (_physics != null)

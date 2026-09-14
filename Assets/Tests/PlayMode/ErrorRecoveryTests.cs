@@ -62,10 +62,10 @@ namespace Shredsquatch.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            if (_terrainGeneratorObj != null) Object.Destroy(_terrainGeneratorObj);
-            if (_playerObj != null) Object.Destroy(_playerObj);
-            if (_gameManagerObj != null) Object.Destroy(_gameManagerObj);
-            if (_errorManagerObj != null) Object.Destroy(_errorManagerObj);
+            if (_terrainGeneratorObj != null) UnityEngine.Object.Destroy(_terrainGeneratorObj);
+            if (_playerObj != null) UnityEngine.Object.Destroy(_playerObj);
+            if (_gameManagerObj != null) UnityEngine.Object.Destroy(_gameManagerObj);
+            if (_errorManagerObj != null) UnityEngine.Object.Destroy(_errorManagerObj);
             yield return null;
         }
 
@@ -82,7 +82,7 @@ namespace Shredsquatch.Tests.PlayMode
             bool result = SafeExecution.Try(() =>
             {
                 throw new Exception("Test exception");
-            }, "TestContext");
+            }, context: "TestContext");
 
             yield return null;
 
@@ -96,7 +96,7 @@ namespace Shredsquatch.Tests.PlayMode
             bool result = SafeExecution.Try(() =>
             {
                 actionExecuted = true;
-            }, "TestContext");
+            }, context: "TestContext");
 
             yield return null;
 
@@ -248,7 +248,7 @@ namespace Shredsquatch.Tests.PlayMode
             bool result = _errorManager.TryExecute(() =>
             {
                 executed = true;
-            }, "TestExecution");
+            }, context: "TestExecution");
 
             yield return null;
 
@@ -262,7 +262,7 @@ namespace Shredsquatch.Tests.PlayMode
             bool result = _errorManager.TryExecute(() =>
             {
                 throw new Exception("Test failure");
-            }, "TestExecution");
+            }, context: "TestExecution");
 
             yield return null;
 

@@ -22,7 +22,8 @@ namespace Shredsquatch.Terrain
         [SerializeField] private int _octaves = 4;
         [SerializeField] private float _persistence = 0.5f;
         [SerializeField] private float _lacunarity = 2f;
-        [SerializeField] private float _slopeBias = 0.3f;
+        [Tooltip("Vertical drop per metre travelled downhill (+Z). 0.15 is roughly an 8.5 degree average grade.")]
+        [SerializeField] private float _slopeBias = 0.15f;
 
         [Header("Prefabs")]
         [SerializeField] private GameObject _chunkPrefab;
@@ -48,9 +49,33 @@ namespace Shredsquatch.Terrain
 
         // TODO: Implement object pooling for terrain obstacles (trees, rocks, ramps, coins, rails) — currently uses Instantiate/Destroy
         private Transform _chunkContainer;
+        private bool _initialized;
+
+        private float VertexSpacing => _chunkSize / Mathf.Max(1, _chunkResolution - 1);
 
         private void Start()
         {
+            EnsureInitialized();
+
+            // Register with error recovery system
+            if (ErrorRecoveryManager.Instance != null)
+            {
+                ErrorRecoveryManager.Instance.RegisterRecoverable(this);
+            }
+
+            // Initial chunk generation around player
+            SafeExecution.Try(UpdateChunks, "TerrainGenerator.InitialUpdate");
+        }
+
+        /// <summary>
+        /// Set up the container, material and seeded random. Safe to call more than once;
+        /// GenerateInitialChunks may run from SceneInitializer before this component's Start.
+        /// </summary>
+        private void EnsureInitialized()
+        {
+            if (_initialized) return;
+            _initialized = true;
+
             _chunkContainer = new GameObject("TerrainChunks").transform;
 
             // Create default snow material if none assigned
@@ -70,15 +95,6 @@ namespace Shredsquatch.Terrain
 
             // Initialize seeded random for deterministic procedural generation
             _seededRandom = new System.Random(_seed);
-
-            // Register with error recovery system
-            if (ErrorRecoveryManager.Instance != null)
-            {
-                ErrorRecoveryManager.Instance.RegisterRecoverable(this);
-            }
-
-            // Initial chunk generation around player
-            SafeExecution.Try(UpdateChunks, "TerrainGenerator.InitialUpdate");
         }
 
         private void OnDestroy()
@@ -181,6 +197,8 @@ namespace Shredsquatch.Terrain
 
         private void GenerateChunk(Vector2Int coord)
         {
+            EnsureInitialized();
+
             // Instantiate chunk
             GameObject chunkObj;
             if (_chunkPrefab != null)
@@ -208,11 +226,14 @@ namespace Shredsquatch.Terrain
             Vector3 worldPos = GetChunkWorldPosition(coord);
             chunkObj.transform.position = worldPos;
 
-            // Generate heightmap with downhill slope bias
-            Vector2 noiseOffset = new Vector2(coord.x * _chunkSize, coord.y * _chunkSize);
+            // Generate heightmap with downhill slope bias. NoiseGenerator samples by vertex
+            // index, so the offset must advance by (resolution - 1) vertices per chunk for
+            // neighbouring chunks to line up seamlessly.
+            Vector2 noiseOffset = new Vector2(coord.x, coord.y) * (_chunkResolution - 1);
             float[,] heightMap = GenerateHeightMap(coord, noiseOffset);
 
-            chunk.GenerateMesh(heightMap, _heightMultiplier, _heightCurve);
+            // Height curve is already applied in GenerateHeightMap (before the slope bias)
+            chunk.GenerateMesh(heightMap, _heightMultiplier, null);
 
             // Spawn obstacles based on distance/zone
             SpawnObstacles(chunk, coord, heightMap);
@@ -233,17 +254,22 @@ namespace Shredsquatch.Terrain
                 offset
             );
 
-            // Apply downhill slope bias
+            // Shape the noise, then subtract a constant downhill grade so the mountain keeps
+            // descending toward +Z. Values are in normalized units (multiplied by _heightMultiplier
+            // in the chunk), so the grade is divided by the multiplier here.
+            float gradePerMetre = _heightMultiplier > 0f ? _slopeBias / _heightMultiplier : 0f;
+            float vertexSpacing = VertexSpacing;
+            bool useCurve = _heightCurve != null && _heightCurve.length > 0;
+
             for (int y = 0; y < _chunkResolution; y++)
             {
+                // Row y sits at chunk-local Z = -chunkSize/2 + y * spacing
+                float globalZ = coord.y * _chunkSize - _chunkSize / 2f + y * vertexSpacing;
+
                 for (int x = 0; x < _chunkResolution; x++)
                 {
-                    // Slope increases with Z (further down mountain)
-                    float globalZ = coord.y * _chunkSize + y * (_chunkSize / _chunkResolution);
-                    float slopeFactor = globalZ * _slopeBias * 0.001f;
-
-                    heightMap[x, y] -= slopeFactor;
-                    heightMap[x, y] = Mathf.Max(0, heightMap[x, y]);
+                    float shaped = useCurve ? _heightCurve.Evaluate(heightMap[x, y]) : heightMap[x, y];
+                    heightMap[x, y] = shaped - globalZ * gradePerMetre;
                 }
             }
 
@@ -299,9 +325,7 @@ namespace Shredsquatch.Terrain
                 float z = SeededRandomRange(0f, _chunkSize);
 
                 // Sample height at this position
-                int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                float height = heightMap[mapX, mapZ] * _heightMultiplier;
+                float height = chunk.SampleHeight(x - _chunkSize / 2, z - _chunkSize / 2);
 
                 // Cluster trees using noise
                 float clusterNoise = Mathf.PerlinNoise(x * 0.05f + _seed, z * 0.05f + _seed);
@@ -327,9 +351,7 @@ namespace Shredsquatch.Terrain
                 float x = SeededRandomRange(0f, _chunkSize);
                 float z = SeededRandomRange(0f, _chunkSize);
 
-                int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                float height = heightMap[mapX, mapZ] * _heightMultiplier;
+                float height = chunk.SampleHeight(x - _chunkSize / 2, z - _chunkSize / 2);
 
                 Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
                 Quaternion rotation = Quaternion.Euler(
@@ -364,9 +386,7 @@ namespace Shredsquatch.Terrain
                 float x = SeededRandomRange(_chunkSize * 0.2f, _chunkSize * 0.8f);
                 float z = SeededRandomRange(_chunkSize * 0.2f, _chunkSize * 0.8f);
 
-                int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                float height = heightMap[mapX, mapZ] * _heightMultiplier;
+                float height = chunk.SampleHeight(x - _chunkSize / 2, z - _chunkSize / 2);
 
                 Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
                 // Ramps face downhill (positive Z)
@@ -405,9 +425,7 @@ namespace Shredsquatch.Terrain
                     float z = zStart + i * spacing;
                     if (z >= _chunkSize) break;
 
-                    int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                    int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                    float height = heightMap[mapX, mapZ] * _heightMultiplier + 1.5f; // Float above ground
+                    float height = chunk.SampleHeight(x - _chunkSize / 2, z - _chunkSize / 2) + 1.5f; // Float above ground
 
                     Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
                     chunk.SpawnObject(_coinPrefab, localPos, Quaternion.identity, Vector3.one);
@@ -435,9 +453,7 @@ namespace Shredsquatch.Terrain
                 float x = SeededRandomRange(_chunkSize * 0.2f, _chunkSize * 0.8f);
                 float z = SeededRandomRange(_chunkSize * 0.2f, _chunkSize * 0.8f);
 
-                int mapX = Mathf.Clamp(Mathf.RoundToInt(x / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                int mapZ = Mathf.Clamp(Mathf.RoundToInt(z / _chunkSize * _chunkResolution), 0, _chunkResolution - 1);
-                float height = heightMap[mapX, mapZ] * _heightMultiplier;
+                float height = chunk.SampleHeight(x - _chunkSize / 2, z - _chunkSize / 2);
 
                 Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
                 // Rails run roughly downhill with slight angle variation
@@ -544,6 +560,7 @@ namespace Shredsquatch.Terrain
         {
             if (_player == null) return;
 
+            EnsureInitialized();
             UpdateChunks();
 
             // Process all queued chunks immediately (not frame-limited)
@@ -581,6 +598,12 @@ namespace Shredsquatch.Terrain
             _seededRandom = new System.Random(_seed);
 
             _chunks.Clear();
+
+            // Rebuild the ground under the player immediately so they aren't left over a void
+            if (_player != null)
+            {
+                SafeExecution.Try(GenerateInitialChunks, "RecoveryRegenerate");
+            }
 
             Debug.Log("[TerrainGenerator] Recovery complete - terrain reset");
         }

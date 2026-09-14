@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 65000000000000000}
   m_Layer: 0
   m_Name: Tree_Fallen
-  m_TagString: Rail_FallenPine
+  m_TagString: Rail
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -149,8 +149,8 @@ GameObject:
   - component: {fileID: 4000000000000002}
   - component: {fileID: 65000000000000001}
   m_Layer: 0
-  m_Name: GrindTrigger
-  m_TagString: Rail_FallenPine
+  m_Name: FallenPine_GrindTrigger
+  m_TagString: Rail
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
