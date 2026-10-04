@@ -686,8 +686,14 @@ namespace Shredsquatch.Terrain
                 return false;
             }
 
-            // Snow rising toward the lip would swallow it
-            if (lipSnow > h0 + yLip - 0.6f) return false;
+            // Snow rising toward the lip would swallow it; on a cross-slope that happens at a corner first
+            float lipClear = h0 + yLip - 0.6f;
+            if (lipSnow > lipClear
+                || Height(chunk, lip + right * halfWidth) > lipClear
+                || Height(chunk, lip - right * halfWidth) > lipClear)
+            {
+                return false;
+            }
 
             GameObject root = BuildKicker(piece, ctx.Materials);
             chunk.AdoptObject(root, new Vector3(entry.x, h0, entry.y), Quaternion.Euler(0f, yaw, 0f));
