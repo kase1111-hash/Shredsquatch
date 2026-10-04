@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The ground check counted trigger volumes as ground, so any trigger inside
+  the ground mask acted as an invisible floor
+- Leaving one of two overlapping same-type ramp triggers cancelled the ramp
+  bonus; `JumpController` now reference-counts ramp triggers
+- Grinds did not end on crash, teleport, run reset or game over, so a stale
+  grind could carry into the next run
+- Grind score lost points to per-frame rounding (a 150 pts/s rail scored
+  about 120 pts/s at 60 fps)
+- The jump force used a hard-coded gravity of 20 instead of the
+  `SnowboardPhysics` gravity
 - Project compiles again in the Editor: `ProjectSetupValidator` caught an
   unqualified `Exception` with no `using System;`, and the PlayMode tests had
   an ambiguous `Object` reference plus `SafeExecution.Try` calls that resolved
@@ -47,6 +57,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Terrain features (`TerrainFeatures`), pure world-space height terms so
+  chunk seams stay exact. None of them appear within 320 m of the spawn:
+  - Rolling "whoops" fields: 60 m swells across the fall line on about a
+    third of the slope
+  - Meandering halfpipe chutes, 4.5-6.5 m deep with walls of at most 34°,
+    with `HalfpipeLip` zones on the upper walls
+  - Cornice drops from 2 km: 5-7 m tables with a knuckle and a steep
+    landing, which auto-launch as `CliffJump`
+- Park lines down the fall line (`ParkFeatureBuilder`), with their landing
+  zones cleared of trees, rocks, rails and coins. Lines mix small, medium
+  and large snow kickers (with flared, rideable sides) and Fun, Flat and
+  Down boxes. Tutorial lines start at about 0.2 km, beginning with a kicker
+  and a fun box straight ahead
+- Kickers and drops pop the rider at the lip without a button press
+  (`RampZone`). Holding jump through the lip adds the charge. Releasing
+  jump within 0.12 s of leaving the ground still jumps
+- Boxes are ridden on top (`GrindSurface`): the heading locks to the box,
+  the rider is kept centred, and the slide scores 400/450/500 pts/s plus a
+  +300 clear bonus and the +200 ollie bonus. Box slides and rail grinds now
+  show a HUD popup
+- EditMode tests for the terrain features and the park builders
 - Minimal in-game overlay for Game Over ("press R"), Paused, and the reset
   state error recovery returns to; the scene has no menu or game-over canvas
 
@@ -74,6 +105,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   generated placeholder audio; scene uses the procedural skybox
 - Removed the orphaned `Prefabs/UI.meta` and the dead duplicate
   `Assets/InputSystem` input actions asset
+
+### Changed
+
+- The registry ramp prefabs no longer spawn
+  (`TerrainGenerator._spawnLegacyRamps`, off by default): Ramp_Medium
+  spawned as a blocking cube, Ramp_Large's bonus trigger was unreachable,
+  and Ramp_Cliff was a Rock-tagged crash wall. Park kickers replace them
+- Jumps leave the ground at full heading speed instead of the
+  slope-projected speed
+- The grind grab bonus pays once per grind instead of on every grab press
+- The grind tutorial prompt now covers riding onto boxes
 
 ## [0.1.0-alpha] - 2025-01-02
 
