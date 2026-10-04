@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using Shredsquatch.Core;
 
 namespace Shredsquatch.Player
@@ -12,6 +13,8 @@ namespace Shredsquatch.Player
         [Header("Jump Settings")]
         [SerializeField] private float _baseJumpForce = 8f;
         [SerializeField] private float _chargeRate = 1f;
+        [Tooltip("Ramp zones marked AutoLaunch throw the rider at their lip without a button press.")]
+        [SerializeField] private bool _autoLaunchOffLips = true;
 
         // State
         private float _chargeTime;
@@ -19,6 +22,14 @@ namespace Shredsquatch.Player
         private float _airTime;
         private bool _wasGrounded;
         private RampType _currentRamp = RampType.None;
+        private float _rampMemoryUntil = -1f;
+        private float _lastGroundedTime = -999f;
+        private float _lastLaunchTime = -999f;
+
+        // Ramp triggers currently overlapped, reference-counted so overlapping zones don't cancel each other
+        private readonly List<Collider> _rampColliders = new List<Collider>();
+        private readonly List<RampType> _rampTypes = new List<RampType>();
+        private readonly List<RampZone> _rampZones = new List<RampZone>();   // null entries for legacy tag triggers
 
         // Properties
         public float AirTime => _airTime;
@@ -34,6 +45,25 @@ namespace Shredsquatch.Player
         {
             if (_physics == null) _physics = GetComponent<SnowboardPhysics>();
             if (_input == null) _input = GetComponent<PlayerInput>();
+        }
+
+        private void Start()
+        {
+            if (_physics != null)
+            {
+                // Lip launches run inside the physics step, after the ground check and before the move
+                _physics.BeforeMove += CheckAutoLaunch;
+                _physics.OnMotionReset += HandleMotionReset;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_physics != null)
+            {
+                _physics.BeforeMove -= CheckAutoLaunch;
+                _physics.OnMotionReset -= HandleMotionReset;
+            }
         }
 
         public enum RampType
@@ -53,6 +83,9 @@ namespace Shredsquatch.Player
             if (GameManager.Instance?.CurrentState != GameState.Playing)
                 return;
 
+            if (_physics.IsGrounded) _lastGroundedTime = Time.time;
+            RefreshCurrentRamp();
+
             HandleJumpInput();
             TrackAirTime();
             CheckLanding();
@@ -60,73 +93,130 @@ namespace Shredsquatch.Player
 
         private void HandleJumpInput()
         {
-            if (_physics.IsGrounded)
+            // Start charging
+            if (_physics.IsGrounded && _input.JumpPressed)
             {
-                // Start charging
-                if (_input.JumpPressed)
-                {
-                    _isCharging = true;
-                    _chargeTime = 0f;
-                    OnChargeStart?.Invoke();
-                }
+                _isCharging = true;
+                _chargeTime = 0f;
+                OnChargeStart?.Invoke();
+            }
 
-                // Continue charging
-                if (_isCharging && _input.JumpHeld)
-                {
-                    _chargeTime += Time.deltaTime * _chargeRate;
-                    _chargeTime = Mathf.Min(_chargeTime, Constants.Jump.ChargeTimeMax);
-                }
+            // Continue charging (also through a lip, where an auto-launch uses the charge)
+            if (_isCharging && _input.JumpHeld)
+            {
+                _chargeTime = Mathf.Min(_chargeTime + Time.deltaTime * _chargeRate, Constants.Jump.ChargeTimeMax);
+            }
 
-                // Release jump
-                if (_isCharging && _input.JumpReleased)
+            // Release jump
+            if (_isCharging && _input.JumpReleased)
+            {
+                if (CanJumpNow())
                 {
                     ExecuteJump();
+                }
+                else
+                {
+                    // Released in the air: the charge is dropped
                     _isCharging = false;
                 }
             }
         }
 
+        /// <summary>
+        /// Grounded, or just left the ground (coyote time) without having launched or still rising.
+        /// </summary>
+        private bool CanJumpNow()
+        {
+            if (_physics.IsGrounded) return true;
+
+            float now = Time.time;
+            return !_physics.IsRising
+                && now - _lastGroundedTime <= Constants.Launch.CoyoteTime
+                && now - _lastLaunchTime > Constants.Launch.CoyoteTime;
+        }
+
         private void ExecuteJump()
         {
-            // Calculate charge bonus (0 to 50%)
-            float chargePercent = _chargeTime / Constants.Jump.ChargeTimeMax;
-            float chargeBonus = chargePercent * Constants.Jump.ChargeBonus;
+            RampType ramp = _currentRamp;
 
-            // Base height from flat ground
-            float jumpHeight = Constants.Jump.BaseHeight;
-
-            // Add ramp bonus
-            float rampBonus = GetRampBonus(_currentRamp);
-            jumpHeight += rampBonus;
-
-            // Apply charge bonus
-            jumpHeight *= (1f + chargeBonus);
-
-            // Convert height to force (simplified physics)
-            float jumpForce = Mathf.Sqrt(2f * 20f * jumpHeight); // sqrt(2gh)
-
-            // Check for flip input
-            bool attemptingFlip = _input.FlipForward || _input.FlipBackward;
-            if (attemptingFlip && _currentRamp == RampType.None)
+            // Ollie off a box: counts as a small bump so flips are allowed
+            if (ramp == RampType.None && _physics.CurrentGrindSurface != null)
             {
-                // Can't flip without a ramp
-                attemptingFlip = false;
+                ramp = RampType.SmallBump;
             }
 
-            _physics.ApplyJumpForce(jumpForce);
-            _airTime = 0f;
+            Launch(ramp, _chargeTime / Constants.Jump.ChargeTimeMax);
+        }
 
-            // Apply speed boost from certain ramps
-            float speedBoost = GetRampSpeedBoost(_currentRamp);
-            if (speedBoost > 0)
+        /// <summary>
+        /// The single launch path for button jumps and lip auto-launches.
+        /// </summary>
+        private void Launch(RampType ramp, float charge01)
+        {
+            float gravity = _physics.Gravity > 0f ? _physics.Gravity : 20f;
+
+            // Base height from flat ground plus the ramp bonus, then the charge bonus (0 to 50%)
+            float jumpHeight = (Constants.Jump.BaseHeight + GetRampBonus(ramp))
+                * (1f + Mathf.Clamp01(charge01) * Constants.Jump.ChargeBonus);
+
+            // Speed boost goes first so the flight carries it
+            float speedBoost = GetRampSpeedBoost(ramp);
+            if (speedBoost > 0f)
             {
                 _physics.ApplyBoost(speedBoost / 3.6f); // Convert km/h to m/s
             }
 
-            OnJump?.Invoke(EstimateAirTime(jumpHeight));
+            _physics.ApplyJumpForce(Mathf.Sqrt(2f * gravity * jumpHeight)); // sqrt(2gh)
 
-            // Reset ramp
-            _currentRamp = RampType.None;
+            _airTime = 0f;
+            _isCharging = false;
+            _chargeTime = 0f;
+            _lastLaunchTime = Time.time;
+
+            // TrickController reads CurrentRamp inside OnJump
+            _currentRamp = ramp;
+            OnJump?.Invoke(EstimateAirTime(jumpHeight, gravity));
+
+            ClearRampState();
+        }
+
+        /// <summary>
+        /// BeforeMove handler. Runs inside SnowboardPhysics.Update after the ground check, so the
+        /// grounded state is fresh, and before gravity and the move.
+        /// </summary>
+        private void CheckAutoLaunch()
+        {
+            if (!_autoLaunchOffLips || _rampZones.Count == 0) return;
+            if (_physics.MovementLocked || _physics.IsRising) return;
+
+            float now = Time.time;
+            if (_physics.IsGrounded) _lastGroundedTime = now;
+            if (now - _lastGroundedTime > Constants.Launch.GroundedGrace) return;
+            if (now - _lastLaunchTime < Constants.Launch.Cooldown) return;
+
+            float speed = _physics.CurrentSpeed;
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 1e-6f) return;
+            forward.Normalize();
+
+            for (int i = 0; i < _rampZones.Count; i++)
+            {
+                RampZone zone = _rampZones[i];
+                if (zone == null || !zone.AutoLaunch || speed < zone.MinSpeed) continue;
+
+                Vector3 zoneForward = zone.transform.forward;
+                zoneForward.y = 0f;
+                if (zoneForward.sqrMagnitude < 1e-6f || Vector3.Angle(forward, zoneForward) > zone.MaxEntryAngle) continue;
+
+                // Lip not reached this frame
+                float toLip = zone.LipLocalZ - zone.transform.InverseTransformPoint(transform.position).z;
+                if (toLip > speed * Time.deltaTime) continue;
+
+                // Holding jump through the lip adds the charge
+                Launch(zone.Ramp, _isCharging ? _chargeTime / Constants.Jump.ChargeTimeMax : 0f);
+                return; // Launch cleared the lists
+            }
         }
 
         private void TrackAirTime()
@@ -188,51 +278,109 @@ namespace Shredsquatch.Player
             };
         }
 
-        private float EstimateAirTime(float height)
+        private static float EstimateAirTime(float height, float gravity)
         {
-            // Time = sqrt(2h/g)
-            return Mathf.Sqrt(2f * height / 20f) * 2f; // Up + down
+            // Time = sqrt(2h/g), up + down
+            return Mathf.Sqrt(2f * height / gravity) * 2f;
         }
 
         public void SetCurrentRamp(RampType ramp)
         {
             _currentRamp = ramp;
+            _rampMemoryUntil = Time.time + Constants.Launch.RampMemory;
         }
 
         private void OnTriggerEnter(Collider other)
         {
-            // Detect ramp types
-            if (other.CompareTag("SmallBump")) SetCurrentRamp(RampType.SmallBump);
-            else if (other.CompareTag("MediumRamp")) SetCurrentRamp(RampType.MediumRamp);
-            else if (other.CompareTag("LargeKicker")) SetCurrentRamp(RampType.LargeKicker);
-            else if (other.CompareTag("HalfpipeLip")) SetCurrentRamp(RampType.HalfpipeLip);
-            else if (other.CompareTag("CabinAFrame")) SetCurrentRamp(RampType.CabinAFrame);
-            else if (other.CompareTag("CliffJump")) SetCurrentRamp(RampType.CliffJump);
-            else if (other.CompareTag("LogRamp")) SetCurrentRamp(RampType.LogRamp);
+            // Park and terrain zones carry a RampZone; older ramps are recognised by tag
+            RampZone zone = other.GetComponent<RampZone>();
+            RampType type = zone != null ? zone.Ramp : RampTypeFromTag(other);
+            if (type == RampType.None || _rampColliders.Contains(other)) return;
+
+            _rampColliders.Add(other);
+            _rampTypes.Add(type);
+            _rampZones.Add(zone);
+            RefreshCurrentRamp();
         }
 
         private void OnTriggerExit(Collider other)
         {
-            // Only clear if we're leaving the current ramp type
-            if (_currentRamp != RampType.None && DoesColliderMatchRamp(other, _currentRamp))
+            int index = _rampColliders.IndexOf(other);
+            if (index >= 0) RemoveRampAt(index);
+            RefreshCurrentRamp();
+        }
+
+        private static RampType RampTypeFromTag(Collider other)
+        {
+            if (other.CompareTag("SmallBump")) return RampType.SmallBump;
+            if (other.CompareTag("MediumRamp")) return RampType.MediumRamp;
+            if (other.CompareTag("LargeKicker")) return RampType.LargeKicker;
+            if (other.CompareTag("HalfpipeLip")) return RampType.HalfpipeLip;
+            if (other.CompareTag("CabinAFrame")) return RampType.CabinAFrame;
+            if (other.CompareTag("CliffJump")) return RampType.CliffJump;
+            if (other.CompareTag("LogRamp")) return RampType.LogRamp;
+            return RampType.None;
+        }
+
+        private void RemoveRampAt(int index)
+        {
+            _rampColliders.RemoveAt(index);
+            _rampTypes.RemoveAt(index);
+            _rampZones.RemoveAt(index);
+        }
+
+        /// <summary>
+        /// The best ramp among the triggers still overlapped; after leaving the last one the type
+        /// is remembered briefly so a jump released just past the lip still gets it.
+        /// </summary>
+        private void RefreshCurrentRamp()
+        {
+            RampType best = RampType.None;
+
+            for (int i = _rampColliders.Count - 1; i >= 0; i--)
+            {
+                Collider c = _rampColliders[i];
+
+                // Chunk unloads destroy triggers without OnTriggerExit
+                if (c == null || !c.enabled || !c.gameObject.activeInHierarchy)
+                {
+                    RemoveRampAt(i);
+                    continue;
+                }
+
+                if (GetRampBonus(_rampTypes[i]) > GetRampBonus(best)) best = _rampTypes[i];
+            }
+
+            if (best != RampType.None)
+            {
+                _currentRamp = best;
+                _rampMemoryUntil = Time.time + Constants.Launch.RampMemory;
+            }
+            else if (Time.time > _rampMemoryUntil)
             {
                 _currentRamp = RampType.None;
             }
         }
 
-        private bool DoesColliderMatchRamp(Collider other, RampType ramp)
+        private void ClearRampState()
         {
-            return ramp switch
-            {
-                RampType.SmallBump => other.CompareTag("SmallBump"),
-                RampType.MediumRamp => other.CompareTag("MediumRamp"),
-                RampType.LargeKicker => other.CompareTag("LargeKicker"),
-                RampType.HalfpipeLip => other.CompareTag("HalfpipeLip"),
-                RampType.CabinAFrame => other.CompareTag("CabinAFrame"),
-                RampType.CliffJump => other.CompareTag("CliffJump"),
-                RampType.LogRamp => other.CompareTag("LogRamp"),
-                _ => false
-            };
+            _rampColliders.Clear();
+            _rampTypes.Clear();
+            _rampZones.Clear();
+            _currentRamp = RampType.None;
+            _rampMemoryUntil = -1f;
+        }
+
+        /// <summary>
+        /// Teleport, run start or recovery: forget ramps, charge and airtime from before.
+        /// </summary>
+        private void HandleMotionReset()
+        {
+            ClearRampState();
+            _isCharging = false;
+            _chargeTime = 0f;
+            _airTime = 0f;
+            _lastGroundedTime = -999f;
         }
     }
 }
