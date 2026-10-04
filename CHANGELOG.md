@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Terrain streaming no longer regenerates chunks every frame: chunks loaded
+  in a square but unloaded by radius, so the corners were rebuilt and
+  destroyed nonstop. Loading and unloading now share a circular distance
+  (512 m load, 768 m unload) with a chunk of hysteresis
+- Landing a 180 no longer sends the rider back uphill at full speed into
+  the Sasquatch: a rider landing facing uphill rides away switch, and the
+  heading stays within 80° of straight downhill
+- A rider who drops 150 m below their last grounded spot is put back on the
+  slope instead of falling for the rest of the run
+- Terrain chunk borders no longer show a lighting seam: normals come from a
+  one-vertex apron of the neighbouring heights instead of each chunk's own
+  triangles
 - The ground check counted trigger volumes as ground, so any trigger inside
   the ground mask acted as an invisible floor
 - Leaving one of two overlapping same-type ramp triggers cancelled the ramp
@@ -66,13 +78,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cornice drops from 2 km: 5-7 m tables with a knuckle and a steep
     landing, which auto-launch as `CliffJump`
 - Park lines down the fall line (`ParkFeatureBuilder`), with their landing
-  zones cleared of trees, rocks, rails and coins. Lines mix small, medium
+  zones cleared of trees, rocks, rails and terrain-placed coins (sized for a
+  fully charged launch at 120 km/h; drop landings fan out at 45°). Lines
+  mix small, medium
   and large snow kickers (with flared, rideable sides) and Fun, Flat and
   Down boxes. Tutorial lines start at about 0.2 km, beginning with a kicker
   and a fun box straight ahead
 - Kickers and drops pop the rider at the lip without a button press
-  (`RampZone`). Holding jump through the lip adds the charge. Releasing
-  jump within 0.12 s of leaving the ground still jumps
+  (`RampZone`). Holding jump through the lip adds the charge, and a hop
+  just before a kicker still pops at its lip. Releasing jump within 0.12 s
+  of leaving the ground still jumps
 - Boxes are ridden on top (`GrindSurface`): the heading locks to the box,
   the rider is kept centred, and the slide scores 400/450/500 pts/s plus a
   +300 clear bonus and the +200 ollie bonus. Box slides and rail grinds now

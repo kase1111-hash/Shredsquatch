@@ -164,7 +164,8 @@ Unlike the top-down original, this is a full 3D experience with arcade physics, 
 - Small: 4m wide, 16° deck, lip about 1.8m above the snow
 - Medium: 5m wide, 20° deck, lip about 3m above the snow
 - Large: 6m wide, 24° deck, lip about 4.5m above the snow
-- An orange stripe marks each lip; the landing zone beyond is kept clear of trees, rocks, rails and coins
+- An orange stripe marks each lip; the landing zone beyond (long enough for a fully charged launch at top tuck speed, fanning out to cover 30° off-axis takeoffs) is kept clear of trees, rocks, rails and terrain-placed coins
+- Kickers pop you even if you hopped just before the ramp: as long as the deck carries you up to the lip, it launches you
 
 **Cabin A-Frames (planned):**
 - Spawn in 3km+ zone near ruins
@@ -177,7 +178,7 @@ Unlike the top-down original, this is a full 3D experience with arcade physics, 
 - 5m tall (7m from 5km), full height across 24m and shouldering off over 22m either side
 - Each 224x320m cell has a 35% chance of holding one (50% from 5km), unless a chute runs close by
 - Auto-launch as a Cliff Jump (+6.5m, +25 km/h) when you cross the lip heading within 45° of straight downhill; hold jump through the lip to add your charge
-- Orange marker poles stand either side of the lip, and the run-up and landing are kept clear of trees, rocks, rails and coins
+- Orange marker poles stand either side of the lip, and the run-up and landing (out to about 130m past the lip, fanning out at 45° to cover angled takeoffs) are kept clear of trees, rocks, rails and terrain-placed coins
 
 ### Rails & Grinds
 
@@ -247,12 +248,12 @@ Park lines carry three box types. They have solid decks you ride on top of, rath
 | Down Box | 18m | 500 | 2km+ | Ramp up onto a 14m deck that drops 0.8m more than the slope |
 
 - **Entry:** Ride straight on from the lead-in ramp; no jump needed. The slide starts once you are on the deck heading within 50° of the box.
-- **Heading Lock:** Within 1.3m of the box's centre line your heading follows the box and you are pulled back to the middle, so A/D only works the balance meter.
+- **Heading Lock:** Within 1.3m of the box's centre line your heading follows the box and you are pulled back to the middle, so A/D only adjusts your grind balance. There is no on-screen meter: keep making small A/D corrections, because 2s without input starts a wobble.
 - **Balance:** A/D balances as on rails, but at half the rail sensitivity, so boxes are more forgiving.
-- **Clear Bonus:** +300 for riding at least 90% of the deck.
-- **Ollie Bonus:** +200 for an ollie off the last 20% of the deck. The ollie counts as a Small Bump ramp launch, so air tricks off it score.
+- **Clear Bonus:** +300 for riding at least 90% of the deck's length (landing near the end and riding off doesn't count).
+- **Ollie Bonus:** +200 for an ollie off the last 20% of the deck. The ollie counts as a Small Bump ramp launch (+1m of pop, and flips are allowed), including a release just after the board leaves the end of the deck.
 - **Grab Bonus:** One +300 grab bonus per grind.
-- **Exit:** The slide ends 0.1s after you leave the deck, and slides shorter than 1.5m don't count. Losing your balance forfeits the slide's points.
+- **Exit:** The slide ends 0.1s after you leave the deck, and slides shorter than 1.5m of deck don't count. Losing your balance forfeits the slide's points.
 - Box slides and rail grinds show a HUD popup with the points scored.
 
 ### Crash & Recovery
@@ -271,7 +272,7 @@ Park lines carry three box types. They have solid decks you ride on top of, rath
 | Tree/Rock (<50 km/h) | Powder spray, -20 km/h |
 | Edge catch (over-lean) | Tumble forward, half ragdoll time |
 | Bad landing (>30° off) | Stumble, -30 km/h |
-| Cliff drop (no jump) | Full ragdoll + extra 50m tumble |
+| Cornice drop | No crash: auto-launches at the lip (Cliff Jump); too slow or too sideways and you roll down the landing |
 
 ### Collision System
 
@@ -343,7 +344,7 @@ Fog dynamically limits visibility, creating tension and preventing players from 
 - **Chutes:** Meandering halfpipe channels in lanes every 288m (55% of lanes, along about half their length), 32m wide and 4.5-6.5m deep, with walls no steeper than 34°
 - **Drops:** Cornice tables from 2km (see Cornice Drops above)
 
-**Park Lines:** Kickers and boxes laid down the fall line (`ParkFeatureBuilder`), planned per chunk and deterministic for a given seed and chunk coordinate. Every chunk below the spawn row has 1/2/3 line slots (Tutorial/Forest/Extreme), each filled 70% of the time; the first line straight ahead of the spawn (a small kicker, then a fun box, from about 0.2km) always appears where the terrain allows. Lines steer clear of rollers, chutes and drops. Trees, rocks, rails and coins are kept out of chutes, drops and park landing zones.
+**Park Lines:** Kickers and boxes laid down the fall line (`ParkFeatureBuilder`), planned per chunk and deterministic for a given seed and chunk coordinate. Every chunk below the spawn row has 1/2/3 line slots (Tutorial/Forest/Extreme), each filled 70% of the time; the first line straight ahead of the spawn (a small kicker, then a fun box, from about 0.2km) always appears where the terrain allows. Lines steer clear of rollers, chutes and drops. Trees, rocks, rails and terrain-placed coin trails are kept out of chutes, drops and park landing zones (the rider-following coin lines from `PowerupSpawner` can still cross them).
 
 **Variety Over Distance:**
 - 0-2km: Tutorial slopes, sparse trees
@@ -449,10 +450,10 @@ Grab points are based on timing—waiting longer before initiating the grab scor
 
 | Trick | Points | Requirement |
 |-------|--------|-------------|
-| Frontflip | 2,000 | Medium ramp or larger |
-| Backflip | 2,000 | Medium ramp or larger |
-| Double Front | 5,000 | Large kicker only |
-| Double Back | 5,000 | Large kicker only |
+| Frontflip | 2,000 | Any ramp launch (park kicker, cornice drop, chute-wall lip, box ollie) |
+| Backflip | 2,000 | Any ramp launch (park kicker, cornice drop, chute-wall lip, box ollie) |
+| Double Front | 5,000 | Any ramp launch with enough air for two rotations (large kicker or cornice drop) |
+| Double Back | 5,000 | Any ramp launch with enough air for two rotations (large kicker or cornice drop) |
 
 ### Combo System
 

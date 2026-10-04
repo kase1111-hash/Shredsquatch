@@ -56,7 +56,7 @@ Key test files:
 - `ErrorRecoveryTests.cs` - Safe execution and recovery
 - `SasquatchChaseTests.cs` - Chase AI behavior
 - `PlayerTrickScoringTests.cs` - Trick and combo system
-- `TerrainFeaturesTests.cs` (Edit Mode) - Terrain feature math: spawn area, determinism, slopes, seams
+- `TerrainFeaturesTests.cs` (Edit Mode) - Terrain feature math: spawn area, determinism, slopes, drop/chute footprints stay inside their cell/lane
 - `ParkFeatureBuilderTests.cs` (Edit Mode) - Kicker/box builders, grind surface math, reservations
 
 ### Validation

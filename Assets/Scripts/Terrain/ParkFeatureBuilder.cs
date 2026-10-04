@@ -107,14 +107,14 @@ namespace Shredsquatch.Terrain
         private const float MaxBoxPitch = 16f;
 
         // Line tables (index = (int)ParkPiece; declared after the kicker table they read)
-        // Footprint: along-line length. After: room needed past it inside the chunk (a landing
-        // at 25 m/s with a full charge). Gap: footprint end to the next entry. BodyHalfWidth
-        // includes the kicker flare.
+        // Footprint: along-line length. After: room needed past it inside the chunk, kept clear of
+        // trees and rocks (a landing at top tuck speed, 120 km/h, with a full charge, plus ~8 m).
+        // Gap: footprint end to the next entry. BodyHalfWidth includes the kicker flare.
         private static readonly float[] Footprint =
         {
             KickerDeckLength(0), KickerDeckLength(1), KickerDeckLength(2), 18f, 16.5f, 18f
         };
-        private static readonly float[] After = { 50f, 62f, 80f, 14f, 14f, 14f };
+        private static readonly float[] After = { 72f, 88f, 110f, 14f, 14f, 14f };
         private static readonly float[] Gap = { 46f, 58f, 74f, 22f, 22f, 22f };
         private static readonly float[] BodyHalfWidth =
         {

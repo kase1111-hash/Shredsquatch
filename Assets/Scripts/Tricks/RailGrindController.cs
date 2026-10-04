@@ -52,9 +52,11 @@ namespace Shredsquatch.Tricks
         private GrindSurface _boxSurface;
         private GrindSurface _bailedSurface; // Box just fallen off; no re-grind until the rider leaves it
         private float _offBoxTimer;
+        private float _boxEntryProgress;     // Deck progress where the slide began
 
         // Properties
         public bool IsGrinding => _isGrinding;
+        public bool IsBoxGrinding => _isGrinding && _isBoxGrind;
         public float Balance => _balance;
         public float GrindDuration => _grindDuration;
 
@@ -134,6 +136,7 @@ namespace Shredsquatch.Tricks
             _isBoxGrind = false;
             _boxSurface = null;
             _offBoxTimer = 0f;
+            _boxEntryProgress = 0f;
             _scoreRemainder = 0f;
             _grabAwarded = false;
 
@@ -166,6 +169,7 @@ namespace Shredsquatch.Tricks
                     StartGrind(surface.transform, surface.Type);
                     _isBoxGrind = true;
                     _boxSurface = surface;
+                    _boxEntryProgress = surface.GetProgress(transform.position);
                 }
                 return;
             }
@@ -189,6 +193,10 @@ namespace Shredsquatch.Tricks
         private void UpdateGrind()
         {
             _grindDuration += Time.deltaTime;
+
+            // A box slide only counts deck travel: the exit-grace frames after leaving the deck would
+            // otherwise let a one-frame touch at speed pass the minimum slide distance and score
+            if (_isBoxGrind && _offBoxTimer > 0f) return;
 
             // Track distance traveled (speed in m/s * time)
             _grindDistance += _physics.CurrentSpeed * Time.deltaTime;
@@ -366,7 +374,8 @@ namespace Shredsquatch.Tricks
                 return;
             }
 
-            if (_railProgress >= Constants.Box.ClearProgress)
+            // Pays for deck actually ridden, not for reaching the far end from a landing near it
+            if (_railProgress - _boxEntryProgress >= Constants.Box.ClearProgress)
             {
                 _grindScore += Constants.Box.ClearBonus;
             }

@@ -53,7 +53,13 @@ namespace Shredsquatch.Terrain
         /// Build the chunk surface. heightMap[x, y] is indexed so that y grows toward +Z
         /// (downhill), matching TerrainGenerator's slope bias and object placement.
         /// </summary>
-        public void GenerateMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve)
+        /// <param name="apronHeights">
+        /// Optional (width + 2) x (height + 2) map with one extra ring of samples around heightMap
+        /// (apronHeights[x + 1, y + 1] == heightMap[x, y]). When given, normals come from central
+        /// differences over it, so border vertices shade the same as the neighbouring chunk's;
+        /// otherwise Unity recalculates them from this chunk's triangles only.
+        /// </param>
+        public void GenerateMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, float[,] apronHeights = null)
         {
             int width = heightMap.GetLength(0);
             int height = heightMap.GetLength(1);
@@ -112,13 +118,60 @@ namespace Shredsquatch.Terrain
             _mesh.vertices = vertices;
             _mesh.uv = uvs;
             _mesh.triangles = triangles;
-            _mesh.RecalculateNormals();
+
+            bool hasApron = apronHeights != null
+                && apronHeights.GetLength(0) == width + 2
+                && apronHeights.GetLength(1) == height + 2;
+            if (hasApron)
+            {
+                _mesh.normals = ComputeApronNormals(apronHeights, width, height, heightMultiplier, heightCurve);
+            }
+            else
+            {
+                _mesh.RecalculateNormals();
+            }
+
             _mesh.RecalculateBounds();
 
             if (_meshCollider != null)
             {
                 _meshCollider.sharedMesh = _mesh;
             }
+        }
+
+        private Vector3[] ComputeApronNormals(float[,] apron, int width, int height, float heightMultiplier, AnimationCurve heightCurve)
+        {
+            bool useCurve = heightCurve != null && heightCurve.length > 0;
+            Vector3[] normals = new Vector3[width * height];
+            float twoSpacing = 2f * _vertexSpacing;
+
+            int i = 0;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float left = apron[x, y + 1];
+                    float right = apron[x + 2, y + 1];
+                    float back = apron[x + 1, y];
+                    float front = apron[x + 1, y + 2];
+
+                    if (useCurve)
+                    {
+                        left = heightCurve.Evaluate(left);
+                        right = heightCurve.Evaluate(right);
+                        back = heightCurve.Evaluate(back);
+                        front = heightCurve.Evaluate(front);
+                    }
+
+                    // Surface y = h(x, z): normal is (-dh/dx, 1, -dh/dz), scaled by 2 * spacing
+                    normals[i++] = new Vector3(
+                        (left - right) * heightMultiplier,
+                        twoSpacing,
+                        (back - front) * heightMultiplier).normalized;
+                }
+            }
+
+            return normals;
         }
 
         /// <summary>

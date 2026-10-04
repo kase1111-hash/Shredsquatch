@@ -274,10 +274,12 @@ namespace Shredsquatch.Terrain
             // index, so the offset must advance by (resolution - 1) vertices per chunk for
             // neighbouring chunks to line up seamlessly.
             Vector2 noiseOffset = new Vector2(coord.x, coord.y) * (_chunkResolution - 1);
-            float[,] heightMap = GenerateHeightMap(coord, noiseOffset);
+            float[,] apronMap = GenerateHeightMap(coord, noiseOffset);
+            float[,] heightMap = ExtractInterior(apronMap);
 
-            // Height curve is already applied in GenerateHeightMap (before the slope bias)
-            chunk.GenerateMesh(heightMap, _heightMultiplier, null);
+            // Height curve is already applied in GenerateHeightMap (before the slope bias). The apron
+            // gives border vertices the same normals as the neighbouring chunk's matching vertices.
+            chunk.GenerateMesh(heightMap, _heightMultiplier, null, apronMap);
 
             // Spawn obstacles based on distance/zone
             SpawnObstacles(chunk, coord, heightMap);
@@ -285,11 +287,17 @@ namespace Shredsquatch.Terrain
             _chunks[coord] = chunk;
         }
 
+        /// <summary>
+        /// Heights for the chunk's vertices plus a one-vertex apron ring from the neighbouring chunks:
+        /// map[x + 1, y + 1] is vertex (x, y). Widening the noise map by 2 shifts its centre by exactly
+        /// one sample, so the same offset lines the interior up with the chunk's own vertices.
+        /// </summary>
         private float[,] GenerateHeightMap(Vector2Int coord, Vector2 offset)
         {
+            int size = _chunkResolution + 2;
             float[,] heightMap = NoiseGenerator.GenerateNoiseMap(
-                _chunkResolution,
-                _chunkResolution,
+                size,
+                size,
                 _seed,
                 _noiseScale,
                 _octaves,
@@ -315,23 +323,38 @@ namespace Shredsquatch.Terrain
             int baseX = coord.x * span;
             int baseZ = coord.y * span;
 
-            for (int y = 0; y < _chunkResolution; y++)
+            for (int ya = 0; ya < size; ya++)
             {
-                // Row y sits at chunk-local Z = -chunkSize/2 + y * spacing
+                // Vertex row y (= ya - 1) sits at chunk-local Z = -chunkSize/2 + y * spacing
+                int y = ya - 1;
                 float globalZ = coord.y * _chunkSize - _chunkSize / 2f + y * vertexSpacing;
                 double wz = (baseZ + y) * spacing - half;
 
-                for (int x = 0; x < _chunkResolution; x++)
+                for (int xa = 0; xa < size; xa++)
                 {
-                    float shaped = useCurve ? _heightCurve.Evaluate(heightMap[x, y]) : heightMap[x, y];
+                    int x = xa - 1;
+                    float shaped = useCurve ? _heightCurve.Evaluate(heightMap[xa, ya]) : heightMap[xa, ya];
                     float feature = useFeatures
                         ? (float)(TerrainFeatures.HeightOffset(_seed, _features, (baseX + x) * spacing - half, wz) / _heightMultiplier)
                         : 0f;
-                    heightMap[x, y] = shaped - globalZ * gradePerMetre + feature;
+                    heightMap[xa, ya] = shaped - globalZ * gradePerMetre + feature;
                 }
             }
 
             return heightMap;
+        }
+
+        private float[,] ExtractInterior(float[,] apronMap)
+        {
+            float[,] interior = new float[_chunkResolution, _chunkResolution];
+            for (int y = 0; y < _chunkResolution; y++)
+            {
+                for (int x = 0; x < _chunkResolution; x++)
+                {
+                    interior[x, y] = apronMap[x + 1, y + 1];
+                }
+            }
+            return interior;
         }
 
         private void SpawnObstacles(TerrainChunk chunk, Vector2Int coord, float[,] heightMap)

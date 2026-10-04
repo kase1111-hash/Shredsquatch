@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Shredsquatch.Core;
+using Shredsquatch.Tricks;
 
 namespace Shredsquatch.Player
 {
@@ -9,6 +10,7 @@ namespace Shredsquatch.Player
         [Header("References")]
         [SerializeField] private SnowboardPhysics _physics;
         [SerializeField] private PlayerInput _input;
+        private RailGrindController _railGrind;
 
         [Header("Jump Settings")]
         [SerializeField] private float _baseJumpForce = 8f;
@@ -31,6 +33,9 @@ namespace Shredsquatch.Player
         private readonly List<RampType> _rampTypes = new List<RampType>();
         private readonly List<RampZone> _rampZones = new List<RampZone>();   // null entries for legacy tag triggers
 
+        // Feet within this height of a lip count as being carried up the deck to it
+        private const float LipCarryHeight = 0.35f;
+
         // Properties
         public float AirTime => _airTime;
         public bool IsAirborne => !_physics.IsGrounded;
@@ -45,6 +50,7 @@ namespace Shredsquatch.Player
         {
             if (_physics == null) _physics = GetComponent<SnowboardPhysics>();
             if (_input == null) _input = GetComponent<PlayerInput>();
+            _railGrind = GetComponent<RailGrindController>();
         }
 
         private void Start()
@@ -139,8 +145,11 @@ namespace Shredsquatch.Player
         {
             RampType ramp = _currentRamp;
 
-            // Ollie off a box: counts as a small bump so flips are allowed
-            if (ramp == RampType.None && _physics.CurrentGrindSurface != null)
+            // Ollie off a box: counts as a small bump so flips are allowed. The slide's exit grace counts
+            // too: a Flat/Down box has no exit ramp, so the lock drops the moment the board leaves the deck,
+            // while the grind still pays the ollie bonus for a release in that window.
+            bool onBox = _physics.CurrentGrindSurface != null || (_railGrind != null && _railGrind.IsBoxGrinding);
+            if (ramp == RampType.None && onBox)
             {
                 ramp = RampType.SmallBump;
             }
@@ -153,11 +162,8 @@ namespace Shredsquatch.Player
         /// </summary>
         private void Launch(RampType ramp, float charge01)
         {
-            float gravity = _physics.Gravity > 0f ? _physics.Gravity : 20f;
-
-            // Base height from flat ground plus the ramp bonus, then the charge bonus (0 to 50%)
-            float jumpHeight = (Constants.Jump.BaseHeight + GetRampBonus(ramp))
-                * (1f + Mathf.Clamp01(charge01) * Constants.Jump.ChargeBonus);
+            float gravity = Gravity;
+            float jumpHeight = LaunchHeight(ramp, charge01);
 
             // Speed boost goes first so the flight carries it
             float speedBoost = GetRampSpeedBoost(ramp);
@@ -177,7 +183,20 @@ namespace Shredsquatch.Player
             _currentRamp = ramp;
             OnJump?.Invoke(EstimateAirTime(jumpHeight, gravity));
 
-            ClearRampState();
+            // Keep the zones still overlapped: Unity never re-sends OnTriggerEnter for a trigger the rider
+            // didn't leave, so dropping them would leave a chute wall or kicker dead after landing in it.
+            // Cooldown, IsRising and the lip-carry check stop the same lip firing twice.
+            _currentRamp = RampType.None;
+            _rampMemoryUntil = -1f;
+        }
+
+        private float Gravity => _physics.Gravity > 0f ? _physics.Gravity : 20f;
+
+        /// <summary>Base height from flat ground plus the ramp bonus, then the charge bonus (0 to 50%).</summary>
+        private float LaunchHeight(RampType ramp, float charge01)
+        {
+            return (Constants.Jump.BaseHeight + GetRampBonus(ramp))
+                * (1f + Mathf.Clamp01(charge01) * Constants.Jump.ChargeBonus);
         }
 
         /// <summary>
@@ -187,13 +206,17 @@ namespace Shredsquatch.Player
         private void CheckAutoLaunch()
         {
             if (!_autoLaunchOffLips || _rampZones.Count == 0) return;
-            if (_physics.MovementLocked || _physics.IsRising) return;
+            if (_physics.MovementLocked) return;
 
             float now = Time.time;
             if (_physics.IsGrounded) _lastGroundedTime = now;
-            if (now - _lastGroundedTime > Constants.Launch.GroundedGrace) return;
-            if (now - _lastLaunchTime < Constants.Launch.Cooldown) return;
 
+            // Normal case: riding the deck over the lip
+            bool ridingDeck = !_physics.IsRising
+                && now - _lastGroundedTime <= Constants.Launch.GroundedGrace
+                && now - _lastLaunchTime >= Constants.Launch.Cooldown;
+
+            float charge01 = _isCharging ? _chargeTime / Constants.Jump.ChargeTimeMax : 0f;
             float speed = _physics.CurrentSpeed;
             Vector3 forward = transform.forward;
             forward.y = 0f;
@@ -210,12 +233,22 @@ namespace Shredsquatch.Player
                 if (zoneForward.sqrMagnitude < 1e-6f || Vector3.Angle(forward, zoneForward) > zone.MaxEntryAngle) continue;
 
                 // Lip not reached this frame
-                float toLip = zone.LipLocalZ - zone.transform.InverseTransformPoint(transform.position).z;
-                if (toLip > speed * Time.deltaTime) continue;
+                Vector3 local = zone.transform.InverseTransformPoint(transform.position);
+                if (zone.LipLocalZ - local.z > speed * Time.deltaTime) continue;
+
+                // A hop released just before the ramp leaves the rider "rising" while the deck carries them
+                // up to the lip; skipping the pop then would drop them off a 3-4.5 m lip with no air.
+                // Feet at lip height and leaving slower than half this lip's launch still pops.
+                if (!ridingDeck)
+                {
+                    float lipLaunchSpeed = Mathf.Sqrt(2f * Gravity * LaunchHeight(zone.Ramp, charge01));
+                    bool carriedToLip = local.y <= LipCarryHeight && _physics.Velocity.y < 0.5f * lipLaunchSpeed;
+                    if (!carriedToLip) continue;
+                }
 
                 // Holding jump through the lip adds the charge
-                Launch(zone.Ramp, _isCharging ? _chargeTime / Constants.Jump.ChargeTimeMax : 0f);
-                return; // Launch cleared the lists
+                Launch(zone.Ramp, charge01);
+                return; // One launch per frame
             }
         }
 

@@ -68,7 +68,7 @@ namespace Shredsquatch.Terrain
         public const double DropCellZ = 320;
         public const double DropCore = 12;
         public const double DropShoulder = 22;
-        public const double DropRunout = 70;
+        public const double DropRunout = 105;     // past the landing: a 120 km/h charged launch lands ~123 m out
 
         // Hash salts
         public const int SaltRoller = 0xB0;
@@ -313,16 +313,22 @@ namespace Shredsquatch.Terrain
                 return true;
             }
 
+            // Drops auto-launch up to 45 degrees off-axis, so the cleared landing fans out at 45 degrees;
+            // that reaches into the neighbouring cells across the slope, and the runout into the next row.
             int i = (int)Math.Floor(wx / DropCellX);
             int j = (int)Math.Floor(wz / DropCellZ);
-            for (int jj = j; jj >= j - 1; jj--)
+            for (int ii = i - 1; ii <= i + 1; ii++)
             {
-                if (!TryGetDrop(seed, s, i, jj, out DropFeature f)) continue;
-                double u = wz - f.LipZ;
-                double dx = Math.Abs(wx - f.LipX);
-                if (dx < DropCore + DropShoulder && u >= -(f.RunUp + f.Table) && u <= f.Landing + DropRunout)
+                for (int jj = j; jj >= j - 1; jj--)
                 {
-                    return true;
+                    if (!TryGetDrop(seed, s, ii, jj, out DropFeature f)) continue;
+                    double u = wz - f.LipZ;
+                    double dx = Math.Abs(wx - f.LipX);
+                    double halfWidth = DropCore + DropShoulder + Math.Max(0, u);
+                    if (dx < halfWidth && u >= -(f.RunUp + f.Table) && u <= f.Landing + DropRunout)
+                    {
+                        return true;
+                    }
                 }
             }
 
