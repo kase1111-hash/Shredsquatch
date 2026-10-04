@@ -27,6 +27,7 @@ namespace Shredsquatch.Player
         private float _rampMemoryUntil = -1f;
         private float _lastGroundedTime = -999f;
         private float _lastLaunchTime = -999f;
+        private RampType _lastLaunchRamp = RampType.None;
 
         // Ramp triggers currently overlapped, reference-counted so overlapping zones don't cancel each other
         private readonly List<Collider> _rampColliders = new List<Collider>();
@@ -178,6 +179,7 @@ namespace Shredsquatch.Player
             _isCharging = false;
             _chargeTime = 0f;
             _lastLaunchTime = Time.time;
+            _lastLaunchRamp = ramp;
 
             // TrickController reads CurrentRamp inside OnJump
             _currentRamp = ramp;
@@ -237,12 +239,17 @@ namespace Shredsquatch.Player
                 if (zone.LipLocalZ - local.z > speed * Time.deltaTime) continue;
 
                 // A hop released just before the ramp leaves the rider "rising" while the deck carries them
-                // up to the lip; skipping the pop then would drop them off a 3-4.5 m lip with no air.
-                // Feet at lip height and leaving slower than half this lip's launch still pops.
+                // up to the lip (or lands them on it inside the cooldown); skipping the pop then would drop
+                // them off a 3-4.5 m lip with no air. Feet at lip height, still on the deck (grounded or being
+                // carried up it, never falling past the lip mid-flight) and leaving slower than this lip's
+                // launch still pops. After a ramp launch only half its speed counts, so a lip can't refire
+                // straight after its own launch.
                 if (!ridingDeck)
                 {
+                    bool onDeck = _physics.IsGrounded || _physics.IsRising;
                     float lipLaunchSpeed = Mathf.Sqrt(2f * Gravity * LaunchHeight(zone.Ramp, charge01));
-                    bool carriedToLip = local.y <= LipCarryHeight && _physics.Velocity.y < 0.5f * lipLaunchSpeed;
+                    float limit = _lastLaunchRamp == RampType.None ? lipLaunchSpeed : 0.5f * lipLaunchSpeed;
+                    bool carriedToLip = onDeck && local.y <= LipCarryHeight && _physics.Velocity.y < limit;
                     if (!carriedToLip) continue;
                 }
 
@@ -414,6 +421,7 @@ namespace Shredsquatch.Player
             _chargeTime = 0f;
             _airTime = 0f;
             _lastGroundedTime = -999f;
+            _lastLaunchRamp = RampType.None;
         }
     }
 }

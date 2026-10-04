@@ -637,6 +637,23 @@ namespace Shredsquatch.Terrain
             float halfWidth = BodyHalfWidth[(int)piece];
             float bound = ctx.Size * 0.5f - ChunkEdgeMargin;
 
+            // Kickers launch anywhere within KickerMaxEntryAngle of their axis. Only this chunk clears
+            // trees from the landing fan, so the angled landings must stay inside it too.
+            if (IsKicker(piece))
+            {
+                float angle = Constants.Launch.KickerMaxEntryAngle * Mathf.Deg2Rad;
+                Vector2 lip = entry + dir * foot;
+                Vector2 along = dir * (Mathf.Cos(angle) * after);
+                Vector2 across = right * (Mathf.Sin(angle) * after);
+                Vector2 leftLanding = lip + along - across;
+                Vector2 rightLanding = lip + along + across;
+                if (Mathf.Abs(leftLanding.x) > bound || Mathf.Abs(leftLanding.y) > bound
+                    || Mathf.Abs(rightLanding.x) > bound || Mathf.Abs(rightLanding.y) > bound)
+                {
+                    return false;
+                }
+            }
+
             for (int ti = 0; ti < 6; ti++)
             {
                 float t = ti switch

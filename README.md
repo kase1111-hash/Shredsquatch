@@ -248,7 +248,7 @@ Park lines carry three box types. They have solid decks you ride on top of, rath
 | Down Box | 18m | 500 | 2km+ | Ramp up onto a 14m deck that drops 0.8m more than the slope |
 
 - **Entry:** Ride straight on from the lead-in ramp; no jump needed. The slide starts once you are on the deck heading within 50° of the box.
-- **Heading Lock:** Within 1.3m of the box's centre line your heading follows the box and you are pulled back to the middle, so A/D only adjusts your grind balance. There is no on-screen meter: keep making small A/D corrections, because 2s without input starts a wobble.
+- **Heading Lock:** Within 1.3m of the box's centre line your heading follows the box and you are pulled back to the middle, so A/D only adjusts your grind balance. There is no on-screen meter: keep making small A/D corrections, because 2s without input (or leaning too far one way) makes you fall off and lose the slide.
 - **Balance:** A/D balances as on rails, but at half the rail sensitivity, so boxes are more forgiving.
 - **Clear Bonus:** +300 for riding at least 90% of the deck's length (landing near the end and riding off doesn't count).
 - **Ollie Bonus:** +200 for an ollie off the last 20% of the deck. The ollie counts as a Small Bump ramp launch (+1m of pop, and flips are allowed), including a release just after the board leaves the end of the deck.
@@ -452,8 +452,8 @@ Grab points are based on timing—waiting longer before initiating the grab scor
 |-------|--------|-------------|
 | Frontflip | 2,000 | Any ramp launch (park kicker, cornice drop, chute-wall lip, box ollie) |
 | Backflip | 2,000 | Any ramp launch (park kicker, cornice drop, chute-wall lip, box ollie) |
-| Double Front | 5,000 | Any ramp launch with enough air for two rotations (large kicker or cornice drop) |
-| Double Back | 5,000 | Any ramp launch with enough air for two rotations (large kicker or cornice drop) |
+| Double Front | 5,000 | Any ramp launch with about 1.9s of air for two rotations (large kicker, cornice drop, or a charged medium kicker) |
+| Double Back | 5,000 | Any ramp launch with about 1.9s of air for two rotations (large kicker, cornice drop, or a charged medium kicker) |
 
 ### Combo System
 

@@ -374,8 +374,10 @@ namespace Shredsquatch.Tricks
                 return;
             }
 
-            // Pays for deck actually ridden, not for reaching the far end from a landing near it
-            if (_railProgress - _boxEntryProgress >= Constants.Box.ClearProgress)
+            // Pays for riding on near the start and off near the end, not for a landing near the far end.
+            // Each end is judged on its own: both are snapped to whole frames, so their difference can fall
+            // short of ClearProgress on a full ride at low frame rates.
+            if (_boxEntryProgress <= 1f - Constants.Box.ClearProgress && _railProgress >= Constants.Box.ClearProgress)
             {
                 _grindScore += Constants.Box.ClearBonus;
             }
