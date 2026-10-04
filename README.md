@@ -22,9 +22,10 @@ Unlike the top-down original, this is a full 3D experience with arcade physics, 
 - Snowboard physics with slope acceleration, carving, tuck, braking, powder drag
 - 14 trick types (6 spins, 4 grabs, 4 flips) with combo multipliers and repetition penalties
 - Procedural infinite terrain with seeded generation and chunk streaming
+- Terrain features: rollers, halfpipe chutes, cornice drops, and park lines of kickers and boxes
 - Sasquatch chase AI with rubber-band distance tracking
-- Rail grinding with 7 rail types and balance mechanics
-- HUD with distance/speed, trick display, combo counter, Sasquatch proximity bar
+- Rail grinding with 7 rail types, 3 park boxes and balance mechanics
+- HUD with distance/speed, trick and grind popups, combo counter, Sasquatch proximity bar
 - 17 achievements and local leaderboards
 - Crash/ragdoll system with recovery and invincibility frames
 - Screen shake and controller haptic feedback
@@ -39,6 +40,7 @@ Unlike the top-down original, this is a full 3D experience with arcade physics, 
 - Object pooling (terrain uses Instantiate/Destroy — planned optimization)
 - Moon phase cycling (night mode exists but moon is static)
 - Dynamic LOD for terrain chunks
+- Cabin A-frame and log ramps (the ramp types exist, but nothing places them in the world)
 
 ### Homages to SkiFree
 
@@ -49,11 +51,11 @@ Unlike the top-down original, this is a full 3D experience with arcade physics, 
 
 ## Features
 
-- **Procedural Infinite World:** Seamless terrain generation using Perlin noise for slopes, forests, jumps, and chutes. Chunks load 2km ahead, unload behind—zero loading screens.
+- **Procedural Infinite World:** Seamless 256 m terrain chunks (load 512 m, unload 768 m) with rollers, halfpipe chutes, cornice drops and park lines—zero loading screens.
 - **3D First-Person Physics:** Arcade-style snowboarding with momentum, carve turns, powder drag, and crash recovery.
 - **Dynamic Chase System:** Sasquatch rubber-bands to keep 200-800m behind at top speeds. Faster if you slow/crash; lags if you're flawless.
 - **Trick System:** 14 base tricks (6 spins, 4 grabs, 4 flips) with 50+ combinations, multipliers, and a dedicated score/counter.
-- **Rail Grinding:** 7 rail types including fallen pines, fences, log piles, metal barriers, cabin ridges, pipes, and chairlift cables.
+- **Rail Grinding:** 7 rail types including fallen pines, fences, log piles, metal barriers, cabin ridges, pipes, and chairlift cables, plus Fun, Flat and Down park boxes.
 - **Visual/SFX Polish:** 9 custom URP shaders, snow particles, dynamic lighting (dawn-to-dusk cycle), and Sasquatch roars.
 - **Collectibles & Powerups:** Golden boards (trick multipliers), speed bursts, and "Yeti Repellent" (temp slow for beast).
 - **UI/Meters:** Clean HUD—distance/speed, trick combo/counter/score, Sasquatch proximity bar (green >600m, yellow 300-600m, red <300m, pulsing red <150m).
@@ -133,8 +135,9 @@ Unlike the top-down original, this is a full 3D experience with arcade physics, 
 
 ### Jump Mechanics
 
-- **Jump Height:** Base 2m from flat ground. Ramps add 1-4m depending on ramp size.
+- **Jump Height:** Base 2m from flat ground. Ramps add 1-6.5m depending on ramp type (see table below).
 - **Charge Jump:** Hold jump to charge (max 1.5s). Full charge = +50% height/distance.
+- **Late Release:** Releasing jump up to 0.12s after leaving the ground still jumps.
 - **Airtime Windows:**
   - 0-0.5s: No tricks possible (too short)
   - 0.5-1.5s: Basic tricks (single spin or grab)
@@ -142,30 +145,39 @@ Unlike the top-down original, this is a full 3D experience with arcade physics, 
   - 3.0s+: Full combo potential (multiple spins + grab)
 - **Landing:** Must be within 30° of slope angle for clean land. Steeper = stumble. Perpendicular = crash.
 
+**Auto-Launch:** Park kickers and cornice drops pop you at the lip without a button press, as high as an uncharged jump off that ramp type. Hold jump through the lip to add your charge (up to +50%). The pop needs at least 6 m/s (about 22 km/h) and a heading within 30° of the kicker (45° for drops); slower or more sideways riders roll off the lip. Chute walls never auto-launch: press jump on the upper wall for the Half-pipe Lip bonus.
+
 **Ramp Types:**
 
-| Ramp Type | Height Boost | Speed Boost | Notes |
-|-----------|--------------|-------------|-------|
-| Small Bump | +1m | None | Natural snow mounds, common |
-| Medium Ramp | +2m | +10 km/h | Packed snow kickers |
-| Large Kicker | +4m | +20 km/h | Constructed jump, rare |
-| Half-pipe Lip | +3m | Maintains speed | Found in chutes |
-| Cabin A-Frame | +3m | +15 km/h | Abandoned cabin roofs, grindable peak |
-| Cliff Jump | +5-8m | +25 km/h | Natural rock ledges, high risk/reward |
-| Log Ramp | +2m | +5 km/h | Fallen trees angled upward |
+| Ramp Type | Height Boost | Speed Boost | Where | Notes |
+|-----------|--------------|-------------|-------|-------|
+| Small Bump | +1m | None | Small park kicker (0-5km) | An ollie off a park box also counts |
+| Medium Ramp | +2m | +10 km/h | Medium park kicker (2km+) | Packed snow kickers |
+| Large Kicker | +4m | +20 km/h | Large park kicker (5km+) | Biggest air of the park kickers |
+| Half-pipe Lip | +3m | Maintains speed | Chute walls, press jump | Found in chutes |
+| Cabin A-Frame | +3m | +15 km/h | Planned, not yet in the world | Abandoned cabin roofs, grindable peak |
+| Cliff Jump | +6.5m | +25 km/h | Cornice drops (2km+) | Auto-launches off the knuckle |
+| Log Ramp | +2m | +5 km/h | Planned, not yet in the world | Fallen trees angled upward |
 
-**Cabin A-Frames:**
+**Park Kickers:**
+- Snow wedges with flared 30° sides, so the only wall is the back face below the lip
+- Small: 4m wide, 16° deck, lip about 1.8m above the snow
+- Medium: 5m wide, 20° deck, lip about 3m above the snow
+- Large: 6m wide, 24° deck, lip about 4.5m above the snow
+- An orange stripe marks each lip; the landing zone beyond is kept clear of trees, rocks, rails and coins
+
+**Cabin A-Frames (planned):**
 - Spawn in 3km+ zone near ruins
 - Approach from downhill side to launch off roof peak
 - Can grind the roof ridge (see Rails section)
 - Miss the roof = crash through window (full ragdoll)
 
-**Cliff Jumps:**
-- Natural rock outcrops, 5km+ zone
-- Variable height (5-8m) based on cliff size
-- Must jump before edge or suffer cliff drop penalty
-- Longest airtime potential (3-4 seconds)
-- Often have powder landing zones below (+soft landing bonus)
+**Cornice Drops:**
+- Snow tables shaped into the slope from 2km: a 72m run-up (100m from 5km), a 10m table, a knuckle at the lip, then a steep landing
+- 5m tall (7m from 5km), full height across 24m and shouldering off over 22m either side
+- Each 224x320m cell has a 35% chance of holding one (50% from 5km), unless a chute runs close by
+- Auto-launch as a Cliff Jump (+6.5m, +25 km/h) when you cross the lip heading within 45° of straight downhill; hold jump through the lip to add your charge
+- Orange marker poles stand either side of the lip, and the run-up and landing are kept clear of trees, rocks, rails and coins
 
 ### Rails & Grinds
 
@@ -221,8 +233,27 @@ Grindable surfaces appear throughout the mountain. Approach and jump onto rails 
 **Grind Combos:**
 - Rail-to-rail transfers (jump from one rail to another): x2 multiplier
 - Spin onto rail (180/360 entry): +500 bonus
-- Grind + grab: +300 bonus (grab while grinding)
+- Grind + grab: +300 bonus (grab while grinding), once per grind
 - Perfect dismount (ollie in last 0.5m): +200 bonus
+
+**Park Boxes:**
+
+Park lines carry three box types. They have solid decks you ride on top of, rather than rails you jump onto:
+
+| Box | Length | Points/sec | Spawn Zone | Notes |
+|-----|--------|------------|------------|-------|
+| Fun Box | 18m | 400 | 0-5km | Ramp up, 12m flat deck, ramp down |
+| Flat Box | 16.5m | 450 | 2km+ | Ramp up onto a 14m flat deck |
+| Down Box | 18m | 500 | 2km+ | Ramp up onto a 14m deck that drops 0.8m more than the slope |
+
+- **Entry:** Ride straight on from the lead-in ramp; no jump needed. The slide starts once you are on the deck heading within 50° of the box.
+- **Heading Lock:** Within 1.3m of the box's centre line your heading follows the box and you are pulled back to the middle, so A/D only works the balance meter.
+- **Balance:** A/D balances as on rails, but at half the rail sensitivity, so boxes are more forgiving.
+- **Clear Bonus:** +300 for riding at least 90% of the deck.
+- **Ollie Bonus:** +200 for an ollie off the last 20% of the deck. The ollie counts as a Small Bump ramp launch, so air tricks off it score.
+- **Grab Bonus:** One +300 grab bonus per grind.
+- **Exit:** The slide ends 0.1s after you leave the deck, and slides shorter than 1.5m don't count. Losing your balance forfeits the slide's points.
+- Box slides and rail grinds show a HUD popup with the points scored.
 
 ### Crash & Recovery
 
@@ -307,12 +338,12 @@ Fog dynamically limits visibility, creating tension and preventing players from 
 
 ### Procedural Terrain Generation
 
-**Infinite Heightmap:** 1024x1024m chunks. Noise layers:
-- Base slope (steep downhill bias)
-- Forests (clustered trees via Poisson sampling)
-- Jumps/Ramps (raised ridges + splats)
-- Half-pipes/Chutes (valleys for speed runs)
-- Cliffs (rare drops—jump or death)
+**Infinite Heightmap:** 256x256m chunks: a noise base on a steady 0.15 grade (0.15m drop per metre, about 8.5°). Terrain features are added on top as pure world-space height terms (`TerrainFeatures`), so chunk seams line up exactly. They fade in from 320m, leaving the spawn area untouched:
+- **Rollers:** 60m-wavelength whoops across the fall line (±1m, up to ±1.6m from 5km), on about a third of the slope
+- **Chutes:** Meandering halfpipe channels in lanes every 288m (55% of lanes, along about half their length), 32m wide and 4.5-6.5m deep, with walls no steeper than 34°
+- **Drops:** Cornice tables from 2km (see Cornice Drops above)
+
+**Park Lines:** Kickers and boxes laid down the fall line (`ParkFeatureBuilder`), planned per chunk and deterministic for a given seed and chunk coordinate. Every chunk below the spawn row has 1/2/3 line slots (Tutorial/Forest/Extreme), each filled 70% of the time; the first line straight ahead of the spawn (a small kicker, then a fun box, from about 0.2km) always appears where the terrain allows. Lines steer clear of rollers, chutes and drops. Trees, rocks, rails and coins are kept out of chutes, drops and park landing zones.
 
 **Variety Over Distance:**
 - 0-2km: Tutorial slopes, sparse trees
@@ -574,8 +605,8 @@ Assets/
 ├── Scripts/
 │   ├── Core/              # GameManager, GameState, Constants, error handling
 │   ├── Player/            # PlayerController, physics, input, camera, crash handling
-│   ├── Tricks/            # TrickController, TrickData, RailGrindController
-│   ├── Terrain/           # TerrainGenerator, TerrainChunk, NoiseGenerator
+│   ├── Tricks/            # TrickController, TrickData, RailGrindController, GrindSurface
+│   ├── Terrain/           # TerrainGenerator, TerrainChunk, TerrainFeatures, ParkFeatureBuilder, NoiseGenerator
 │   ├── Sasquatch/         # SasquatchAI, SasquatchSkin
 │   ├── Powerups/          # PowerupBase, individual powerups, spawner
 │   ├── UI/                # HUD, menus, game over, tutorials
@@ -654,8 +685,9 @@ would create circular references. Namespaces still separate the modules.
 
 **TerrainGenerator (`Terrain/TerrainGenerator.cs`)**
 - Infinite procedural terrain with chunking system
-- Perlin noise-based height generation
-- 2km load distance, 2.5km unload distance
+- Perlin noise-based height generation plus world-space terrain features (`TerrainFeatures`)
+- Park lines of kickers and boxes built in code per chunk (`ParkFeatureBuilder`)
+- 512 m load distance, 768 m unload distance (circular, with hysteresis)
 
 **ShaderManager (`Rendering/ShaderManager.cs`)**
 - Runtime shader property management
@@ -681,7 +713,7 @@ would create circular references. Namespaces still separate the modules.
 
 ### Performance Optimizations
 
-- Chunk-based terrain streaming (load 2km ahead, unload 2.5km behind)
+- Chunk-based terrain streaming (load 512 m around the rider, unload beyond 768 m)
 - Shader property caching via PropertyToID
 - 60 FPS target for WebGL
 - Performance monitoring with quality scaling (PerformanceMonitor.cs)

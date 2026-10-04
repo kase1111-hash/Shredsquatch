@@ -32,7 +32,7 @@ Assets/
 ├── Materials/         # Material assets
 ├── Scenes/            # GameScene.unity (main scene)
 ├── Input/             # ShredsquatchControls.inputactions
-└── Tests/             # PlayMode tests
+└── Tests/             # PlayMode and EditMode tests
 ```
 
 ## Building & Testing
@@ -48,7 +48,7 @@ Assets/
 
 ### Running Tests
 - Open Window → Testing → Test Runner
-- Select Play Mode tab
+- Select the Play Mode or Edit Mode tab
 - Run all tests
 
 Key test files:
@@ -56,6 +56,8 @@ Key test files:
 - `ErrorRecoveryTests.cs` - Safe execution and recovery
 - `SasquatchChaseTests.cs` - Chase AI behavior
 - `PlayerTrickScoringTests.cs` - Trick and combo system
+- `TerrainFeaturesTests.cs` (Edit Mode) - Terrain feature math: spawn area, determinism, slopes, seams
+- `ParkFeatureBuilderTests.cs` (Edit Mode) - Kicker/box builders, grind surface math, reservations
 
 ### Validation
 - Run `Tools → Shredsquatch → Project Setup Validator` in Unity
@@ -98,7 +100,9 @@ Tricks), which per-feature assemblies cannot express.
 | `TrickController` | Trick execution, combo tracking |
 | `SasquatchAI` | NavMesh pathfinding, rubber-band chase |
 | `TerrainGenerator` | Infinite procedural terrain with chunk streaming |
-| `RailGrindController` | Rail grinding with balance mechanics |
+| `TerrainFeatures` | Pure world-space terrain shape terms (rollers, chutes, drops) |
+| `ParkFeatureBuilder` | Runtime kickers, boxes and ramp zones |
+| `RailGrindController` | Rail and park-box grinding with balance mechanics |
 | `ErrorRecoveryManager` | Safe execution wrappers |
 | `ShaderManager` | Runtime shader property management |
 
@@ -136,7 +140,7 @@ Control mappings in `Assets/Input/ShredsquatchControls.inputactions`:
 - Use PropertyToID for shader property access
 - Avoid FindObjectOfType in gameplay code
 - Target 60 FPS for WebGL builds
-- Terrain chunks: load 2km ahead, unload at 2.5km
+- Terrain chunks: load 512 m, unload 768 m
 
 ## Common Tasks
 
@@ -148,7 +152,19 @@ Control mappings in `Assets/Input/ShredsquatchControls.inputactions`:
 ### Creating a New Obstacle
 1. Create prefab in `Assets/Prefabs/Obstacles/`
 2. Register in `PrefabRegistry.cs`
-3. Add spawn logic in `PowerupSpawner.cs`
+3. Add spawn logic in `TerrainGenerator.SpawnObstacles`
+
+### Adding a Park Feature
+1. Terrain shapes go in `TerrainFeatures.HeightOffset`: world XZ only (no chunk
+   indices or RNG state), exactly zero outside a footprint that stays inside
+   its cell or lane, and faces under 40°
+2. Rideable solids go on layer `Ground` with root rotation pitch/yaw only and
+   unit scale; parent them with `TerrainChunk.AdoptObject`, not `SpawnObject`
+3. Launch volumes are trigger BoxColliders on `Ignore Raycast` with a `RampZone`
+4. Grindable boxes get a `GrindSurface` and a `RailType` value appended at the
+   END of the enum
+5. Never tag them Tree or Rock
+6. Add no `_seededRandom` draws; use `TerrainFeatures.Hash`
 
 ### Adding a New Shader
 1. Create shader in `Assets/Shaders/`
