@@ -43,6 +43,7 @@ namespace Shredsquatch.Terrain
         private Dictionary<Vector2Int, TerrainChunk> _chunks = new Dictionary<Vector2Int, TerrainChunk>();
         private Queue<Vector2Int> _chunksToGenerate = new Queue<Vector2Int>();
         private HashSet<Vector2Int> _queuedChunks = new HashSet<Vector2Int>(); // For O(1) lookup
+        private readonly List<Vector2Int> _chunksToRemove = new List<Vector2Int>();
 
         // Seeded random for deterministic generation
         private System.Random _seededRandom;
@@ -124,11 +125,14 @@ namespace Shredsquatch.Terrain
             if (_player == null) return;
 
             Vector2Int playerChunk = GetChunkCoord(_player.position);
+            float loadRadius = LoadRadius;
 
             // Calculate visible range in chunks
-            int chunkRange = Mathf.CeilToInt(_loadDistance / _chunkSize);
+            int chunkRange = Mathf.CeilToInt(loadRadius / _chunkSize);
 
-            // Find chunks to load
+            // Find chunks to load. Loading uses the same (horizontal, circular) distance test as
+            // unloading, with UnloadRadius > LoadRadius. Loading a square while unloading a circle
+            // made the corner chunks load and unload every frame, regenerating meshes nonstop.
             for (int x = -chunkRange; x <= chunkRange; x++)
             {
                 for (int z = -chunkRange; z <= chunkRange; z++)
@@ -138,34 +142,44 @@ namespace Shredsquatch.Terrain
                     // Only generate chunks ahead and around (not too far behind)
                     if (z < -2) continue; // Don't generate far behind player
 
+                    if (HorizontalDistanceToChunk(coord) > loadRadius) continue;
+
                     if (!_chunks.ContainsKey(coord))
                     {
                         QueueChunk(coord);
-                    }
-                    else
-                    {
-                        _chunks[coord].SetActive(true);
                     }
                 }
             }
 
             // Unload far chunks
-            List<Vector2Int> toRemove = new List<Vector2Int>();
+            float unloadRadius = UnloadRadius;
+            _chunksToRemove.Clear();
             foreach (var kvp in _chunks)
             {
-                Vector3 chunkCenter = GetChunkWorldPosition(kvp.Key);
-                float distance = Vector3.Distance(_player.position, chunkCenter);
-
-                if (distance > _unloadDistance)
+                if (HorizontalDistanceToChunk(kvp.Key) > unloadRadius)
                 {
-                    toRemove.Add(kvp.Key);
+                    _chunksToRemove.Add(kvp.Key);
                 }
             }
 
-            foreach (var coord in toRemove)
+            foreach (var coord in _chunksToRemove)
             {
                 UnloadChunk(coord);
             }
+        }
+
+        // Always reach past the chunk under the rider, whatever the inspector says
+        private float LoadRadius => Mathf.Max(_loadDistance, _chunkSize);
+
+        // Keep a full chunk of hysteresis so chunks on the boundary don't thrash
+        private float UnloadRadius => Mathf.Max(_unloadDistance, LoadRadius + _chunkSize);
+
+        private float HorizontalDistanceToChunk(Vector2Int coord)
+        {
+            Vector3 center = GetChunkWorldPosition(coord);
+            float dx = center.x - _player.position.x;
+            float dz = center.z - _player.position.z;
+            return Mathf.Sqrt(dx * dx + dz * dz);
         }
 
         private void QueueChunk(Vector2Int coord)
@@ -186,6 +200,9 @@ namespace Shredsquatch.Terrain
             {
                 Vector2Int coord = _chunksToGenerate.Dequeue();
                 _queuedChunks.Remove(coord); // Keep HashSet in sync
+
+                // The rider may have moved on since this chunk was queued
+                if (_player != null && HorizontalDistanceToChunk(coord) > UnloadRadius) continue;
 
                 if (!_chunks.ContainsKey(coord))
                 {
@@ -476,9 +493,10 @@ namespace Shredsquatch.Terrain
 
         private Vector2Int GetChunkCoord(Vector3 position)
         {
+            // Chunks are centred on coord * size, so round (not floor) to find the one underfoot
             return new Vector2Int(
-                Mathf.FloorToInt(position.x / _chunkSize),
-                Mathf.FloorToInt(position.z / _chunkSize)
+                Mathf.RoundToInt(position.x / _chunkSize),
+                Mathf.RoundToInt(position.z / _chunkSize)
             );
         }
 

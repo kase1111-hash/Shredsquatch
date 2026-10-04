@@ -18,6 +18,8 @@ namespace Shredsquatch.Player
         [SerializeField] private float _tuckSpeedBonus = 1.5f;
         [SerializeField] private float _brakeStrength = 0.5f;
         [SerializeField] private float _groundStickSpeed = 5f;      // m/s pressed into the slope while grounded
+        [Tooltip("Furthest the rider can face away from straight downhill (+Z), in degrees either side.")]
+        [SerializeField] private float _maxHeadingAngle = 80f;
 
         [Header("Ground Detection")]
         [SerializeField] private float _groundCheckDistance = 0.5f;
@@ -70,6 +72,7 @@ namespace Shredsquatch.Player
                 return;
 
             CheckGround();
+            KeepHeadingDownhill();
 
             if (!MovementLocked)
             {
@@ -118,6 +121,35 @@ namespace Shredsquatch.Player
             else
             {
                 _groundNormal = Vector3.up;
+            }
+        }
+
+        /// <summary>
+        /// The mountain only descends toward +Z, and grounded velocity follows the rider's facing.
+        /// Landing a 180 (spins rotate the rider in the air) would otherwise send them back uphill
+        /// at full speed straight into the Sasquatch, and steering could turn them around too.
+        /// Landing facing uphill means riding away switch, so turn the stance around, then keep
+        /// the heading within the downhill arc.
+        /// </summary>
+        private void KeepHeadingDownhill()
+        {
+            if (!_isGrounded) return;
+
+            Vector3 euler = transform.eulerAngles;
+            float yaw = Mathf.DeltaAngle(0f, euler.y);
+            float heading = yaw;
+
+            if (Mathf.Abs(heading) > 90f)
+            {
+                heading = Mathf.DeltaAngle(0f, heading + 180f);
+            }
+
+            heading = Mathf.Clamp(heading, -_maxHeadingAngle, _maxHeadingAngle);
+
+            if (!Mathf.Approximately(heading, yaw))
+            {
+                euler.y = heading;
+                transform.eulerAngles = euler;
             }
         }
 

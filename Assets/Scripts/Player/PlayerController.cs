@@ -33,6 +33,9 @@ namespace Shredsquatch.Player
         private Vector3 _lastSafePosition;
         private Quaternion _lastSafeRotation;
 
+        // Further below the last grounded spot than any jump can drop: the rider fell through the world
+        private const float FallThroughDepth = 150f;
+
         // Where a run begins. Defaults to the scene placement; SceneInitializer moves it
         // onto the generated terrain surface.
         private Vector3 _spawnPosition;
@@ -105,6 +108,21 @@ namespace Shredsquatch.Player
 
             UpdateEffects();
             UpdateSafePosition();
+            CheckFellThroughWorld();
+        }
+
+        private void CheckFellThroughWorld()
+        {
+            if (transform.position.y > _lastSafePosition.y - FallThroughDepth) return;
+
+            // Put the rider back on the slope rather than letting them fall forever
+            // (which would stall the run until the Sasquatch arrives)
+            Debug.LogWarning("[PlayerController] Rider fell through the terrain; returning to last safe position");
+            TeleportTo(_lastSafePosition, _lastSafeRotation);
+            if (_physics != null)
+            {
+                _physics.SetSpeedAfterRecovery();
+            }
         }
 
         private void UpdateSafePosition()
@@ -206,6 +224,10 @@ namespace Shredsquatch.Player
         {
             // Back to the spawn point (never the world origin, which may be under the terrain)
             TeleportTo(_spawnPosition, _spawnRotation);
+
+            // The previous run's safe spot is far down the mountain; don't carry it over
+            _lastSafePosition = _spawnPosition;
+            _lastSafeRotation = _spawnRotation;
         }
 
         /// <summary>
