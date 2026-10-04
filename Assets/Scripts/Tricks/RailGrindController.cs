@@ -160,7 +160,8 @@ namespace Shredsquatch.Tricks
 
             if (!_isGrinding)
             {
-                if (onDeck && surface != _bailedSurface)
+                // A ragdolling rider (edge catch on the lead-in) can slide onto the deck: that is no slide
+                if (onDeck && surface != _bailedSurface && !_physics.MovementLocked)
                 {
                     StartGrind(surface.transform, surface.Type);
                     _isBoxGrind = true;
