@@ -156,6 +156,19 @@ namespace Shredsquatch.Terrain
             _spawnedObjects.Add(obj);
         }
 
+        /// <summary>
+        /// Parent a code-built object to this chunk without touching its scale (unlike SpawnObject).
+        /// Clear() destroys it with the rest of the chunk's objects.
+        /// </summary>
+        public void AdoptObject(GameObject obj, Vector3 localPosition, Quaternion localRotation)
+        {
+            if (obj == null) return;
+            obj.transform.SetParent(transform, false);
+            obj.transform.localPosition = localPosition;
+            obj.transform.localRotation = localRotation;
+            _spawnedObjects.Add(obj);
+        }
+
         public void SetActive(bool active)
         {
             _isActive = active;

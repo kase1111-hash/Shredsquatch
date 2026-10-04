@@ -12,7 +12,10 @@ namespace Shredsquatch.Tricks
         MetalBarrier,   // 300 pts/sec
         CabinRidge,     // 350 pts/sec
         PipeRail,       // 400 pts/sec
-        ChairliftCable  // 200-400 pts/sec
+        ChairliftCable, // 200-400 pts/sec
+        FunBox,         // 400 pts/sec (park box, ridden on top)
+        FlatBox,        // 450 pts/sec
+        DownBox         // 500 pts/sec
     }
 
     public class RailGrindController : MonoBehaviour
@@ -274,6 +277,9 @@ namespace Shredsquatch.Tricks
                 RailType.CabinRidge => 350,
                 RailType.PipeRail => 400,
                 RailType.ChairliftCable => 300, // Variable 200-400
+                RailType.FunBox => Constants.Box.FunBoxPointsPerSecond,
+                RailType.FlatBox => Constants.Box.FlatBoxPointsPerSecond,
+                RailType.DownBox => Constants.Box.DownBoxPointsPerSecond,
                 _ => 150
             };
         }
@@ -289,6 +295,9 @@ namespace Shredsquatch.Tricks
                 RailType.CabinRidge => "Cabin Ridge",
                 RailType.PipeRail => "Pipe Rail",
                 RailType.ChairliftCable => "Chairlift Cable",
+                RailType.FunBox => "Fun Box",
+                RailType.FlatBox => "Flat Box",
+                RailType.DownBox => "Down Box",
                 _ => "Rail"
             };
         }
