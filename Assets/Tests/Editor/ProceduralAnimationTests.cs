@@ -44,6 +44,18 @@ namespace Shredsquatch.Tests.Editor
             return pose.RigPosition + pose.RigRotation * rigPoint;
         }
 
+        // Height of the board's lowest corner (the default 1.5 m x 0.3 m board) above the player root
+        private static float LowestBoardEdge(RiderPose pose)
+        {
+            float lowest = float.MaxValue;
+            foreach (var corner in new[] { new Vector3(-0.15f, 0f, -0.75f), new Vector3(0.15f, 0f, -0.75f),
+                                           new Vector3(-0.15f, 0f, 0.75f), new Vector3(0.15f, 0f, 0.75f) })
+            {
+                lowest = Mathf.Min(lowest, ToRoot(pose, pose.BoardPosition + pose.BoardRotation * corner).y);
+            }
+            return lowest;
+        }
+
         private static void AssertLegsOnBoard(RiderPose pose)
         {
             Assert.AreEqual(RiderPoseSolver.ThighLength, Vector3.Distance(pose.HipLeft, pose.KneeLeft), 0.001f);
@@ -329,10 +341,31 @@ namespace Shredsquatch.Tests.Editor
             sliding.Balance = 0.5f;
             RiderPose pose = Run(_rider, sliding, 1f);
 
-            // Within a couple of centimetres: the balance lean pivots the body at the hips
-            Assert.AreEqual(BoardHeight, ToRoot(pose, pose.BoardPosition).y, 0.02f, "board should not lift off the deck");
+            Assert.AreEqual(BoardHeight, LowestBoardEdge(pose), 0.01f, "board should rest on the deck, not float above it");
             Assert.Greater(Mathf.Abs((pose.BoardRotation * Vector3.forward).x), 0.9f, "board should still be across the box");
             AssertLegsOnBoard(pose);
+        }
+
+        [Test]
+        public void BoxSlideGrab_RestsTheBoardOnTheDeckInsteadOfBuryingIt()
+        {
+            foreach (GrabType grab in new[] { GrabType.Nose, GrabType.Indy, GrabType.Melon, GrabType.Stalefish })
+            {
+                foreach (float balance in new[] { -0.9f, 0f, 0.9f })
+                {
+                    var solver = new RiderPoseSolver(1.6f, BoardHeight);
+                    var sliding = Riding;
+                    sliding.Grinding = true;
+                    sliding.OnBox = true;
+                    sliding.Balance = balance;
+                    sliding.Grab = grab;
+                    RiderPose pose = Run(solver, sliding, 1f);
+
+                    Assert.AreEqual(BoardHeight, LowestBoardEdge(pose), 0.01f,
+                        $"{grab} at balance {balance}: lowest board edge should rest on the deck");
+                    AssertLegsOnBoard(pose);
+                }
+            }
         }
 
         [Test]

@@ -104,6 +104,12 @@ namespace Shredsquatch.Player
 
         private void HandleJumpInput()
         {
+            // A release that happened while paused never reached us; don't carry that charge on
+            if (_isCharging && !_input.JumpHeld && !_input.JumpReleased)
+            {
+                _isCharging = false;
+            }
+
             // Start charging
             if (_physics.IsGrounded && _input.JumpPressed)
             {
@@ -258,8 +264,15 @@ namespace Shredsquatch.Player
                     if (!carriedToLip) continue;
                 }
 
+                // The player asked for this launch if jump is held, pressed or released at the lip, a
+                // charge's release hasn't been handled yet, or the deck carried a button hop up here.
+                // Only a launch nobody asked for is automatic (TrickController won't let a W/S that was
+                // just tucking or braking start a flip then).
+                bool jumpInvolved = _isCharging || _input.JumpHeld || _input.JumpPressed || _input.JumpReleased;
+                bool auto = !jumpInvolved && (ridingDeck || LastLaunchWasAuto);
+
                 // Holding jump through the lip adds the charge
-                Launch(zone.Ramp, charge01, true);
+                Launch(zone.Ramp, charge01, auto);
                 return; // One launch per frame
             }
         }

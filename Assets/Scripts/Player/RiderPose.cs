@@ -98,6 +98,8 @@ namespace Shredsquatch.Player
         private const float HandRate = 14f;
 
         private readonly float _boardHeight;
+        private readonly float _boardHalfLength;
+        private readonly float _boardHalfWidth;
         private readonly float _eyeOffset;      // eyes above the hips
 
         // Smoothed pose channels
@@ -108,6 +110,8 @@ namespace Shredsquatch.Player
         private float _bodyRoll;
         private float _balanceRoll;
         private float _grindLift;
+        private bool _onBox;
+        private float _deckRaise;
         private float _nod;
         private float _chatter;
         private Vector3 _boardEuler;           // pitch (+ = nose down), yaw, roll (+ = right edge up)
@@ -143,10 +147,13 @@ namespace Shredsquatch.Player
 
         public RiderPose Pose { get; private set; }
 
-        public RiderPoseSolver(float eyeHeight = 1.6f, float boardHeight = 0.05f)
+        public RiderPoseSolver(float eyeHeight = 1.6f, float boardHeight = 0.05f,
+            float boardHalfLength = 0.75f, float boardHalfWidth = 0.15f)
         {
             _eyeOffset = eyeHeight - HipHeight;
             _boardHeight = boardHeight;
+            _boardHalfLength = boardHalfLength;
+            _boardHalfWidth = boardHalfWidth;
             Reset();
         }
 
@@ -162,6 +169,8 @@ namespace Shredsquatch.Player
             _bodyRoll = 0f;
             _balanceRoll = 0f;
             _grindLift = 0f;
+            _onBox = false;
+            _deckRaise = 0f;
             _nod = 0f;
             _chatter = 0f;
             _boardEuler = Vector3.zero;
@@ -456,6 +465,7 @@ namespace Shredsquatch.Player
             // a box's deck is already under the feet
             bool onRail = input.Grinding && !input.OnBox;
             _grindLift = ProceduralAnimation.Damp(_grindLift, onRail ? GrindLift : 0f, 12f, dt);
+            _onBox = input.Grinding && input.OnBox;
             _balanceRoll = ProceduralAnimation.Damp(_balanceRoll, input.Grinding ? -input.Balance * 9f : 0f, 10f, dt);
             bool riding = input.Grounded && !input.Grinding && !input.Crashed && !input.Recovering;
             _chatter = ProceduralAnimation.Damp(_chatter, riding ? speedRatio * speedRatio * MaxChatter : 0f, 10f, dt);
@@ -497,6 +507,26 @@ namespace Shredsquatch.Player
             float chatter = _chatter * (Mathf.Sin(_time * 41f) * 0.6f + Mathf.Sin(_time * 23f + 1.7f) * 0.4f);
             pose.BoardPosition = new Vector3(0f, _boardHeight - HipHeight + fold, 0f) + _boardOffset;
             pose.BoardRotation = Quaternion.Euler(_boardEuler.x - 24f * _ollie, _boardEuler.y, _boardEuler.z + chatter);
+
+            // A box deck is solid: when a grab tweak or the balance lean tips the board, rest its
+            // lowest edge on the deck (a nose or tail press) rather than burying that end. Rise at
+            // once so it never clips; ease back down afterwards so it never drops with a jolt.
+            float deckRaise = 0f;
+            if (_onBox)
+            {
+                float lowest = float.MaxValue;
+                for (int corner = 0; corner < 4; corner++)
+                {
+                    var offset = new Vector3(
+                        (corner & 1) == 0 ? -_boardHalfWidth : _boardHalfWidth,
+                        0f,
+                        (corner & 2) == 0 ? -_boardHalfLength : _boardHalfLength);
+                    lowest = Mathf.Min(lowest, (pose.RigRotation * (pose.BoardPosition + pose.BoardRotation * offset)).y);
+                }
+                deckRaise = Mathf.Max(0f, _boardHeight - (pose.RigPosition.y + lowest));
+            }
+            _deckRaise = Mathf.Max(deckRaise, ProceduralAnimation.Damp(_deckRaise, deckRaise, 12f, dt));
+            pose.RigPosition.y += _deckRaise;
 
             // Upper body pivots at the hips and leans into carves
             Vector3 pelvis = new Vector3(_bodyRoll * BodyShiftPerDegree, 0f, 0f);

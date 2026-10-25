@@ -3,6 +3,9 @@ using UnityEngine.InputSystem;
 
 namespace Shredsquatch.Player
 {
+    // Read input before the gameplay scripts so every one of them sees this frame's presses
+    // (a lip launch decides on the spot whether jump was involved)
+    [DefaultExecutionOrder(-100)]
     public class PlayerInput : MonoBehaviour
     {
         [Header("Input Actions")]

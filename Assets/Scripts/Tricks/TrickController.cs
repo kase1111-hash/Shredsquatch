@@ -99,9 +99,9 @@ namespace Shredsquatch.Tricks
 
             // Lips pop the rider with no jump press, often while W is still held to tuck or S to
             // brake, and those are the flip keys. Only a fresh press counts as asking for a flip
-            // then; holding jump through the lip is still the deliberate W+Jump.
+            // then (JumpController treats a lip launch with jump involved as deliberate W+Jump).
             _flipNeedsNeutral = _jumpController != null && _jumpController.LastLaunchWasAuto
-                                && !_input.JumpHeld && (_input.FlipForward || _input.FlipBackward);
+                                && (_input.FlipForward || _input.FlipBackward);
         }
 
         private void ProcessSpinInput()
@@ -148,7 +148,10 @@ namespace Shredsquatch.Tricks
 
             if (_flipNeedsNeutral)
             {
-                if (!_input.FlipForward && !_input.FlipBackward) _flipNeedsNeutral = false;
+                // The keyboard flip axis reads 0 with W and S both down, which is not letting go
+                bool released = !_input.FlipForward && !_input.FlipBackward
+                                && !(_input.IsTucking && _input.IsBraking);
+                if (released) _flipNeedsNeutral = false;
                 return;
             }
 

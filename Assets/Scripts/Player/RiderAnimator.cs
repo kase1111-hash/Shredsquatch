@@ -216,7 +216,16 @@ namespace Shredsquatch.Player
                 : 1.6f;
             eyeHeight = Mathf.Max(eyeHeight, RiderPoseSolver.HipHeight + RiderPoseSolver.NeckHeight);
             float boardHeight = transform.InverseTransformPoint(_board.position).y;
-            _solver = new RiderPoseSolver(eyeHeight, boardHeight);
+
+            // Board footprint, so a tipped board can be rested on a box deck by its edge
+            Vector3 boardHalfSize = 0.5f * _board.localScale;
+            var boardMesh = _board.GetComponent<MeshFilter>();
+            if (boardMesh != null && boardMesh.sharedMesh != null)
+            {
+                boardHalfSize = Vector3.Scale(boardMesh.sharedMesh.bounds.extents, _board.localScale);
+            }
+
+            _solver = new RiderPoseSolver(eyeHeight, boardHeight, boardHalfSize.z, boardHalfSize.x);
 
             _rig = new GameObject("RiderRig").transform;
             _rig.gameObject.layer = gameObject.layer;
