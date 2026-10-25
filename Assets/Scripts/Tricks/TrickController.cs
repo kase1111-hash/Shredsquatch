@@ -35,6 +35,17 @@ namespace Shredsquatch.Tricks
         // Properties
         public int ComboCount => _comboCount;
         public bool IsPerformingTrick => _currentTrick.Type != TrickType.None || _currentTrick.Grab != GrabType.None;
+        public bool IsFlipping => _isAirborne && _currentTrick.IsFlipping;
+        public float FlipRotation => _currentTrick.FlipRotation;   // degrees, + = frontflip
+
+        /// <summary>
+        /// The grab being held right now (the first grab of the jump is the one that scores).
+        /// </summary>
+        public GrabType HeldGrab =>
+            _isAirborne && _input != null && _currentTrick.Grab != GrabType.None
+            && _input.GrabInput == (int)_currentTrick.Grab
+                ? _currentTrick.Grab
+                : GrabType.None;
 
         private void Awake()
         {
@@ -130,6 +141,9 @@ namespace Shredsquatch.Tricks
             if (_input.FlipForward || _input.FlipBackward)
             {
                 _currentTrick.IsFlipping = true;
+                // Committed for the rest of the jump: letting go of W must not turn a
+                // frontflip into a backflip
+                _currentTrick.FlipDirection = _input.FlipForward ? 1f : -1f;
             }
         }
 
@@ -137,10 +151,8 @@ namespace Shredsquatch.Tricks
         {
             if (_currentTrick.IsFlipping)
             {
-                float flipDirection = _input.FlipForward ? 1f : -1f;
-                _currentTrick.FlipRotation += flipDirection * _flipSpeed * Time.deltaTime;
-
-                // Visual rotation would happen here via animator or direct transform
+                // RiderAnimator rotates the rider's body and view by FlipRotation
+                _currentTrick.FlipRotation += _currentTrick.FlipDirection * _flipSpeed * Time.deltaTime;
             }
         }
 

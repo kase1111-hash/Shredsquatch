@@ -24,6 +24,8 @@ namespace Shredsquatch.Player
         public float AirTime => _airTime;
         public bool IsAirborne => !_physics.IsGrounded;
         public RampType CurrentRamp => _currentRamp;
+        public bool IsCharging => _isCharging && _input.JumpHeld && _physics.IsGrounded;
+        public float ChargeProgress => IsCharging ? Mathf.Clamp01(_chargeTime / Constants.Jump.ChargeTimeMax) : 0f;
 
         // Events
         public event System.Action<float> OnJump;           // airtime potential

@@ -6,7 +6,6 @@ namespace Shredsquatch.Player
     public class FirstPersonCamera : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private Transform _playerBody;
         [SerializeField] private Transform _cameraHolder;
         [SerializeField] private PlayerInput _input;
 
@@ -31,6 +30,7 @@ namespace Shredsquatch.Player
         [SerializeField] private float _shakeDecay = 5f;
 
         private Camera _camera;
+        private SnowboardPhysics _physics;
         private float _xRotation;
         private float _yRotation;
         private Vector2 _smoothedInput;
@@ -43,8 +43,9 @@ namespace Shredsquatch.Player
         {
             _camera = GetComponentInChildren<Camera>();
 
-            // Wire references if not Inspector-assigned (procedural player)
-            if (_playerBody == null) _playerBody = transform.parent;
+            // Wire references if not Inspector-assigned (procedural player). RiderAnimator
+            // re-parents the holder under its rig, so look up the player through the ancestors.
+            _physics = GetComponentInParent<SnowboardPhysics>();
             if (_cameraHolder == null) _cameraHolder = transform;
             if (_input == null) _input = GetComponentInParent<PlayerInput>();
 
@@ -129,14 +130,13 @@ namespace Shredsquatch.Player
             if (_camera == null) return;
 
             // Speed-based FOV
-            var physics = _playerBody?.GetComponent<SnowboardPhysics>();
-            if (physics != null)
+            if (_physics != null)
             {
-                float speedRatio = physics.CurrentSpeedKmh / 120f;
+                float speedRatio = _physics.CurrentSpeedKmh / 120f;
                 _targetFOV = Mathf.Lerp(_baseFOV, _maxFOV, speedRatio * _fovSpeedInfluence);
 
                 // Lean-based camera tilt
-                float targetTilt = -physics.LeanAngle * (_tiltAmount / 45f);
+                float targetTilt = -_physics.LeanAngle * (_tiltAmount / 45f);
                 _currentTilt = Mathf.Lerp(_currentTilt, targetTilt, Time.deltaTime * _tiltSpeed);
             }
 
@@ -166,8 +166,9 @@ namespace Shredsquatch.Player
                 rotation.y += Random.Range(-_shakeIntensity, _shakeIntensity);
             }
 
-            // Local rotation: the holder is a child of the player body, whose yaw is driven by
-            // SnowboardPhysics steering. A world-space assignment would cancel that yaw.
+            // Local rotation: the holder sits under the player body (via RiderAnimator's rig),
+            // whose yaw is driven by steering and whose flips and wipeouts turn the view.
+            // A world-space assignment would cancel all of that.
             _cameraHolder.localRotation = Quaternion.Euler(rotation);
         }
 

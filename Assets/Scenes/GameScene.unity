@@ -365,6 +365,7 @@ GameObject:
   - component: {fileID: 114000026}
   - component: {fileID: 114000027}
   - component: {fileID: 114000028}
+  - component: {fileID: 114000029}
   m_Layer: 9
   m_Name: Player
   m_TagString: Player
@@ -431,7 +432,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Shredsquatch.Player.SnowboardPhysics
   _controller: {fileID: 143000020}
   _input: {fileID: 114000020}
-  _boardTransform: {fileID: 400000023}
   _gravity: 20
   _slopeAcceleration: 15
   _maxSpeed: 120
@@ -487,6 +487,7 @@ MonoBehaviour:
   _physics: {fileID: 114000021}
   _jumpController: {fileID: 114000022}
   _crashHandler: {fileID: 114000023}
+  _riderAnimator: {fileID: 114000029}
 --- !u!114 &114000025
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -542,9 +543,21 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Shredsquatch.Player.BoardVisuals
   _boardMesh: {fileID: 400000023}
-  _leanMultiplier: 1
-  _leanSmoothing: 10
   _trailMinSpeed: 20
+--- !u!114 &114000029
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d10faeab6ff04954933c3143ec310187, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Shredsquatch.Player.RiderAnimator
+  _board: {fileID: 400000023}
+  _cameraHolder: {fileID: 400000021}
 --- !u!1 &100000021
 GameObject:
   m_ObjectHideFlags: 0
@@ -590,7 +603,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00000000000000000000000000000022, type: 3}
   m_Name:
   m_EditorClassIdentifier: Shredsquatch.Player.FirstPersonCamera
-  _playerBody: {fileID: 400000020}
   _cameraHolder: {fileID: 400000021}
   _input: {fileID: 114000020}
   _mouseSensitivity: 2

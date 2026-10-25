@@ -44,8 +44,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   surface instead of at a fixed world height
 - Sasquatch follows the terrain surface and no longer carries a NavMeshAgent
   that logged errors on every enable (no NavMesh exists on procedural terrain)
+- Letting go of W mid-frontflip reversed the flip (and could score it as a
+  backflip); a flip now keeps the direction it started in
+- The Sasquatch placeholder used Unity's built-in default material, which
+  renders magenta under URP; it now uses `SasquatchFur.mat`
 
 ### Added
+
+- Animations for every movement and trick, driven in code (the project has no
+  rigged models or animation clips). `RiderAnimator` gives the first-person
+  rider a body (legs, boots, arms, gloves; the torso and head only cast
+  shadows so the view stays clear) and poses it from the gameplay state:
+  soft-knee stance, edging into carves, tuck, braking skid, jump charge
+  crouch, ollie pop, landing compression scaled by airtime, all four grabs
+  (the hand reaches the right spot on a tweaked board and the view tips down
+  to it), spin wind-up, flips (body and view rotate with the scored flip, then
+  settle upright), boardslides with the board across the rail and the body
+  wobbling with balance, a head-over-heels wipeout or a sideways slam for an
+  edge catch, and getting back up. A landed 180 that turns into riding switch
+  now swings the view round instead of snapping it
+- `SasquatchAnimator` replaces the Sasquatch's capsule with a body and long
+  arms and animates a loping bound matched to its real ground speed, a roar
+  when it appears, swatting at its head while repelled, and a lunge when it
+  catches the rider
+- The HUD trick name pops in and fades out
+- Edit Mode tests for the limb IK, rider poses, and Sasquatch gait
+  (`ProceduralAnimationTests`)
 
 - Minimal in-game overlay for Game Over ("press R"), Paused, and the reset
   state error recovery returns to; the scene has no menu or game-over canvas

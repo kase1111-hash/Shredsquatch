@@ -114,6 +114,7 @@ namespace Shredsquatch.Tricks
         public float GrabStartTime;
         public float GrabHoldDuration;
         public bool IsFlipping;
+        public float FlipDirection;   // +1 frontflip, -1 backflip
         public float FlipRotation;
         public bool Completed;
 
@@ -126,6 +127,7 @@ namespace Shredsquatch.Tricks
             GrabStartTime = 0;
             GrabHoldDuration = 0;
             IsFlipping = false;
+            FlipDirection = 0;
             FlipRotation = 0;
             Completed = false;
         }

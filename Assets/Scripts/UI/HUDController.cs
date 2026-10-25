@@ -19,7 +19,10 @@ namespace Shredsquatch.UI
         [SerializeField] private Text _trickScoreText;
         [SerializeField] private Text _comboText;
         [SerializeField] private Text _totalTrickScoreText;
+        [Tooltip("Optional. Without one the trick text pops in and fades out in code.")]
         [SerializeField] private Animator _trickAnimator;
+        [SerializeField] private float _trickPopScale = 1.5f;
+        [SerializeField] private float _trickFadeTime = 0.4f;
 
         [Header("Sasquatch Proximity")]
         [SerializeField] private Slider _proximityBar;
@@ -37,6 +40,7 @@ namespace Shredsquatch.UI
         [SerializeField] private SasquatchAI _sasquatch;
 
         private float _trickDisplayTimer;
+        private float _trickPopTime;
         private bool _isPulsing;
         private float _errorMessageTimer;
 
@@ -141,6 +145,8 @@ namespace Shredsquatch.UI
             }
 
             _trickDisplayTimer = 2f;
+            _trickPopTime = 0f;
+            AnimateTrickPopup();
         }
 
         private void UpdateCombo(int comboCount)
@@ -175,12 +181,43 @@ namespace Shredsquatch.UI
             if (_trickDisplayTimer > 0)
             {
                 _trickDisplayTimer -= Time.deltaTime;
+                _trickPopTime += Time.deltaTime;
 
                 if (_trickDisplayTimer <= 0)
                 {
                     HideTrickDisplay();
                 }
+                else
+                {
+                    AnimateTrickPopup();
+                }
             }
+        }
+
+        /// <summary>
+        /// Punch the trick text in with a little overshoot, then fade it out at the end.
+        /// </summary>
+        private void AnimateTrickPopup()
+        {
+            if (_trickAnimator != null) return;
+
+            float punch = Mathf.Exp(-9f * _trickPopTime) * Mathf.Cos(16f * _trickPopTime);
+            float scale = 1f + (_trickPopScale - 1f) * punch;
+            float alpha = Mathf.Clamp01(_trickDisplayTimer / _trickFadeTime);
+
+            SetPopupStyle(_trickNameText, scale, alpha);
+            SetPopupStyle(_trickScoreText, scale, alpha);
+            SetPopupStyle(_comboText, scale, alpha);
+        }
+
+        private static void SetPopupStyle(Text text, float scale, float alpha)
+        {
+            if (text == null) return;
+
+            text.rectTransform.localScale = Vector3.one * scale;
+            Color color = text.color;
+            color.a = alpha;
+            text.color = color;
         }
 
         private void HideTrickDisplay()
@@ -193,6 +230,11 @@ namespace Shredsquatch.UI
 
             if (_comboText != null)
                 _comboText.gameObject.SetActive(false);
+
+            // The error message reuses the trick text; show it plainly
+            SetPopupStyle(_trickNameText, 1f, 1f);
+            SetPopupStyle(_trickScoreText, 1f, 1f);
+            SetPopupStyle(_comboText, 1f, 1f);
         }
 
         private void UpdateTotalScore()
@@ -296,6 +338,7 @@ namespace Shredsquatch.UI
             {
                 _trickNameText.text = "Recovering...";
                 _trickNameText.gameObject.SetActive(true);
+                SetPopupStyle(_trickNameText, 1f, 1f);
             }
 
             if (_trickScoreText != null)

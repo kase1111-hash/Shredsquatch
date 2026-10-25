@@ -8,7 +8,6 @@ namespace Shredsquatch.Player
         [Header("References")]
         [SerializeField] private CharacterController _controller;
         [SerializeField] private PlayerInput _input;
-        [SerializeField] private Transform _boardTransform;
 
         [Header("Movement Settings")]
         [SerializeField] private float _gravity = 20f;
@@ -54,6 +53,7 @@ namespace Shredsquatch.Player
         // Events
         public event System.Action OnCrash;
         public event System.Action OnEdgeCatch;
+        public event System.Action<float> OnHeadingCorrected;   // degrees the heading was snapped by
 
         private float MaxSpeedMs => _maxSpeed * KmhToMs;
 
@@ -150,6 +150,7 @@ namespace Shredsquatch.Player
             {
                 euler.y = heading;
                 transform.eulerAngles = euler;
+                OnHeadingCorrected?.Invoke(Mathf.DeltaAngle(yaw, heading));
             }
         }
 
@@ -201,15 +202,9 @@ namespace Shredsquatch.Player
             float targetLean = steerInput * Constants.Carving.CarveMaxAngle;
             _currentLeanAngle = Mathf.Lerp(_currentLeanAngle, targetLean, Time.deltaTime * 5f);
 
-            // Apply turn
+            // Apply turn (RiderAnimator puts the board on edge from LeanAngle)
             float turnAmount = steerInput * _turnSpeed * Time.deltaTime;
             transform.Rotate(0, turnAmount, 0);
-
-            // Rotate board visual for lean
-            if (_boardTransform != null)
-            {
-                _boardTransform.localRotation = Quaternion.Euler(0, 0, -_currentLeanAngle);
-            }
 
             // Check for edge catch (at or above threshold)
             float absLean = Mathf.Abs(_currentLeanAngle);

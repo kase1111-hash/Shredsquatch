@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 136000000000000}
   - component: {fileID: 114000000000000}
   - component: {fileID: 82000000000000}
+  - component: {fileID: 114000000000001}
   m_Layer: 0
   m_Name: Sasquatch
   m_TagString: Untagged
@@ -72,6 +73,18 @@ MonoBehaviour:
   _baseSpeed: 25
   _targetDistance: 400
   _catchDistance: 3
+--- !u!114 &114000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1281bd734bb148c5980b4a7612bc46c1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Shredsquatch.Sasquatch.SasquatchAnimator
 --- !u!82 &82000000000000
 AudioSource:
   m_ObjectHideFlags: 0
@@ -228,7 +241,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: b1a99902359d40adad84f89dbee6b086, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

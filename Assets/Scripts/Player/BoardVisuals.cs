@@ -2,6 +2,10 @@ using UnityEngine;
 
 namespace Shredsquatch.Player
 {
+    /// <summary>
+    /// Board trails, snow spray and board skins. The board's pose (edge lean, tweaks) is
+    /// animated by RiderAnimator.
+    /// </summary>
     public class BoardVisuals : MonoBehaviour
     {
         [Header("References")]
@@ -11,10 +15,6 @@ namespace Shredsquatch.Player
         [SerializeField] private ParticleSystem _snowSpray;
         [SerializeField] private ParticleSystem _powderBurst;
 
-        [Header("Board Animation")]
-        [SerializeField] private float _leanMultiplier = 1f;
-        [SerializeField] private float _leanSmoothing = 10f;
-
         [Header("Trail Settings")]
         [SerializeField] private float _trailMinSpeed = 20f;
         [SerializeField] private Gradient _normalTrailColor;
@@ -23,7 +23,6 @@ namespace Shredsquatch.Player
         [SerializeField] private Gradient _lightningTrailColor;
 
         private SnowboardPhysics _physics;
-        private float _currentLean;
         private TrailType _currentTrailType = TrailType.Normal;
 
         public enum TrailType
@@ -41,19 +40,8 @@ namespace Shredsquatch.Player
 
         private void Update()
         {
-            UpdateBoardLean();
             UpdateTrails();
             UpdateSnowSpray();
-        }
-
-        private void UpdateBoardLean()
-        {
-            if (_physics == null || _boardMesh == null) return;
-
-            float targetLean = _physics.LeanAngle * _leanMultiplier;
-            _currentLean = Mathf.Lerp(_currentLean, targetLean, Time.deltaTime * _leanSmoothing);
-
-            _boardMesh.localRotation = Quaternion.Euler(0, 0, -_currentLean);
         }
 
         private void UpdateTrails()

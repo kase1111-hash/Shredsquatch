@@ -19,6 +19,7 @@ namespace Shredsquatch.Player
         [SerializeField] private RailGrindController _railController;
 
         [Header("Visual")]
+        [SerializeField] private RiderAnimator _riderAnimator;
         [SerializeField] private GameObject _boardModel;
         [SerializeField] private ParticleSystem _snowSpray;
         [SerializeField] private ParticleSystem _boardTrail;
@@ -53,6 +54,10 @@ namespace Shredsquatch.Player
             if (_crashHandler == null) _crashHandler = GetComponent<CrashHandler>();
             if (_trickController == null) _trickController = GetComponent<TrickController>();
             if (_railController == null) _railController = GetComponent<RailGrindController>();
+
+            // Every rider is animated, including ones built in code or saved before the animator existed
+            if (_riderAnimator == null) _riderAnimator = GetComponent<RiderAnimator>();
+            if (_riderAnimator == null) _riderAnimator = gameObject.AddComponent<RiderAnimator>();
 
             _spawnPosition = transform.position;
             _spawnRotation = transform.rotation;
@@ -228,6 +233,12 @@ namespace Shredsquatch.Player
             // The previous run's safe spot is far down the mountain; don't carry it over
             _lastSafePosition = _spawnPosition;
             _lastSafeRotation = _spawnRotation;
+
+            // Start standing, even if the last run ended mid-wipeout
+            if (_riderAnimator != null)
+            {
+                _riderAnimator.ResetPose();
+            }
         }
 
         /// <summary>
