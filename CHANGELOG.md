@@ -70,8 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   backflip); a flip now keeps the direction it started in
 - Tucking (W) or braking (S) through a kicker or drop that launched the rider
   on its own started a flip they never asked for; a W/S already held at a
-  no-button launch must be released and pressed again (holding Jump through
-  the lip still flips straight away)
+  no-button launch must be released and pressed again (the other key, or
+  holding Jump through the lip, still flips straight away)
 - A lip launch in the middle of a rail grind left the grind running in the
   air, where a jump press launched the rider a second time; launching now
   ends the grind

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 namespace Shredsquatch.Player
 {
@@ -37,6 +38,9 @@ namespace Shredsquatch.Player
         public int GrabInput { get; private set; }         // 0=none, 1-4 for grabs
         public bool FlipForward { get; private set; }
         public bool FlipBackward { get; private set; }
+        // Held flip controls, even when W and S are both down and the axis cancels out to 0
+        public bool FlipForwardHeld { get; private set; }
+        public bool FlipBackwardHeld { get; private set; }
 
         // Camera
         public Vector2 LookInput { get; private set; }
@@ -267,6 +271,32 @@ namespace Shredsquatch.Player
             float flipValue = _flipAction?.ReadValue<float>() ?? 0f;
             FlipForward = flipValue > 0.5f;
             FlipBackward = flipValue < -0.5f;
+            ReadFlipKeysHeld();
+        }
+
+        /// <summary>
+        /// The keyboard flip axis is a composite that reads 0 with both of its keys down, so check
+        /// the keys bound to its positive and negative parts one by one. The stick needs no help:
+        /// it already shows up in FlipForward/FlipBackward.
+        /// </summary>
+        private void ReadFlipKeysHeld()
+        {
+            FlipForwardHeld = FlipForward;
+            FlipBackwardHeld = FlipBackward;
+            if (_flipAction == null) return;
+
+            var controls = _flipAction.controls;
+            for (int i = 0; i < controls.Count; i++)
+            {
+                if (!(controls[i] is ButtonControl key) || !key.isPressed) continue;
+
+                int bindingIndex = _flipAction.GetBindingIndexForControl(key);
+                if (bindingIndex < 0) continue;
+
+                string part = _flipAction.bindings[bindingIndex].name;
+                if (string.Equals(part, "positive", System.StringComparison.OrdinalIgnoreCase)) FlipForwardHeld = true;
+                else if (string.Equals(part, "negative", System.StringComparison.OrdinalIgnoreCase)) FlipBackwardHeld = true;
+            }
         }
 
         private void ReadCameraInput()

@@ -447,7 +447,7 @@ Grab points are based on timing—waiting longer before initiating the grab scor
 
 **Grab Hold Bonus:** +50 points per 0.5s held (max 2s hold = +200 bonus)
 
-**Flips (W+Jump or Up+Jump at ramp):** Kickers and drops also pop you at the lip without a jump press. W and S double as tuck and brake, so if you were already holding one when the lip launched you, release it and press it again in the air to flip (or hold Jump through the lip with it).
+**Flips (W+Jump or Up+Jump at ramp):** Kickers and drops also pop you at the lip without a jump press. W and S double as tuck and brake, so if you were already holding one when the lip launched you, release it and press it again in the air to flip (the other key flips straight away, and so does holding Jump through the lip).
 
 | Trick | Points | Requirement |
 |-------|--------|-------------|

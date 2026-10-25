@@ -20,7 +20,8 @@ namespace Shredsquatch.Tricks
         private bool _isAirborne;
         private float _airStartTime;
         private bool _launchedFromRamp; // Cache ramp state at jump start for flip eligibility
-        private bool _flipNeedsNeutral; // W/S already held at a no-button lip launch: release before flipping
+        private bool _flipForwardBlocked;   // W (or stick up) already held at a no-button lip launch
+        private bool _flipBackwardBlocked;  // S (or stick down) already held at a no-button lip launch
 
         // Combo tracking
         private List<TrickType> _comboTricks = new List<TrickType>();
@@ -98,10 +99,12 @@ namespace Shredsquatch.Tricks
                                 _jumpController.CurrentRamp != JumpController.RampType.None;
 
             // Lips pop the rider with no jump press, often while W is still held to tuck or S to
-            // brake, and those are the flip keys. Only a fresh press counts as asking for a flip
-            // then (JumpController treats a lip launch with jump involved as deliberate W+Jump).
-            _flipNeedsNeutral = _jumpController != null && _jumpController.LastLaunchWasAuto
-                                && (_input.FlipForward || _input.FlipBackward);
+            // brake, and those are the flip keys. A direction already held then only counts once
+            // it has been let go and pressed again (JumpController treats a lip launch with jump
+            // involved as the deliberate W+Jump, so nothing is blocked)
+            bool auto = _jumpController != null && _jumpController.LastLaunchWasAuto;
+            _flipForwardBlocked = auto && _input.FlipForwardHeld;
+            _flipBackwardBlocked = auto && _input.FlipBackwardHeld;
         }
 
         private void ProcessSpinInput()
@@ -146,21 +149,19 @@ namespace Shredsquatch.Tricks
             // Can only flip if launched from a ramp (use cached value since ramp is reset after jump)
             if (!_launchedFromRamp) return;
 
-            if (_flipNeedsNeutral)
-            {
-                // The keyboard flip axis reads 0 with W and S both down, which is not letting go
-                bool released = !_input.FlipForward && !_input.FlipBackward
-                                && !(_input.IsTucking && _input.IsBraking);
-                if (released) _flipNeedsNeutral = false;
-                return;
-            }
+            // A blocked direction frees up once its key or stick is actually let go
+            if (_flipForwardBlocked && !_input.FlipForwardHeld) _flipForwardBlocked = false;
+            if (_flipBackwardBlocked && !_input.FlipBackwardHeld) _flipBackwardBlocked = false;
 
-            if (_input.FlipForward || _input.FlipBackward)
+            bool forward = _input.FlipForward && !_flipForwardBlocked;
+            bool backward = _input.FlipBackward && !_flipBackwardBlocked;
+
+            if (forward || backward)
             {
                 _currentTrick.IsFlipping = true;
                 // Committed for the rest of the jump: letting go of W must not turn a
                 // frontflip into a backflip
-                _currentTrick.FlipDirection = _input.FlipForward ? 1f : -1f;
+                _currentTrick.FlipDirection = forward ? 1f : -1f;
             }
         }
 
