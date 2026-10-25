@@ -36,6 +36,11 @@ namespace Shredsquatch.Terrain
         [SerializeField] private GameObject[] _railPrefabs;
         [SerializeField] private GameObject _coinPrefab;
 
+        [Header("Terrain Features")]
+        [SerializeField] private TerrainFeatureSettings _features = new TerrainFeatureSettings();
+        [Tooltip("Also spawn the registry ramp prefabs. Off: they are broken (Medium blocks, Large gives no bonus, Cliff is a Rock crash wall) and park kickers replace them.")]
+        [SerializeField] private bool _spawnLegacyRamps = false;
+
         [Header("References")]
         [SerializeField] private Transform _player;
 
@@ -47,6 +52,10 @@ namespace Shredsquatch.Terrain
 
         // Seeded random for deterministic generation
         private System.Random _seededRandom;
+
+        // Park features of the chunk being generated (chunk-local) and their shared materials
+        private readonly List<ParkReservation> _reservations = new List<ParkReservation>();
+        private ParkMaterials _parkMaterials;
 
         // TODO: Implement object pooling for terrain obstacles (trees, rocks, ramps, coins, rails) — currently uses Instantiate/Destroy
         private Transform _chunkContainer;
@@ -108,6 +117,24 @@ namespace Shredsquatch.Terrain
             if (_chunkContainer != null)
             {
                 Destroy(_chunkContainer.gameObject);
+            }
+
+            if (_parkMaterials != null)
+            {
+                DestroyMaterial(_parkMaterials.Kicker);
+                DestroyMaterial(_parkMaterials.FunBox);
+                DestroyMaterial(_parkMaterials.FlatBox);
+                DestroyMaterial(_parkMaterials.DownBox);
+                DestroyMaterial(_parkMaterials.Marker);
+                _parkMaterials = null;
+            }
+        }
+
+        private static void DestroyMaterial(Material material)
+        {
+            if (material != null)
+            {
+                Destroy(material);
             }
         }
 
@@ -247,10 +274,12 @@ namespace Shredsquatch.Terrain
             // index, so the offset must advance by (resolution - 1) vertices per chunk for
             // neighbouring chunks to line up seamlessly.
             Vector2 noiseOffset = new Vector2(coord.x, coord.y) * (_chunkResolution - 1);
-            float[,] heightMap = GenerateHeightMap(coord, noiseOffset);
+            float[,] apronMap = GenerateHeightMap(coord, noiseOffset);
+            float[,] heightMap = ExtractInterior(apronMap);
 
-            // Height curve is already applied in GenerateHeightMap (before the slope bias)
-            chunk.GenerateMesh(heightMap, _heightMultiplier, null);
+            // Height curve is already applied in GenerateHeightMap (before the slope bias). The apron
+            // gives border vertices the same normals as the neighbouring chunk's matching vertices.
+            chunk.GenerateMesh(heightMap, _heightMultiplier, null, apronMap);
 
             // Spawn obstacles based on distance/zone
             SpawnObstacles(chunk, coord, heightMap);
@@ -258,11 +287,17 @@ namespace Shredsquatch.Terrain
             _chunks[coord] = chunk;
         }
 
+        /// <summary>
+        /// Heights for the chunk's vertices plus a one-vertex apron ring from the neighbouring chunks:
+        /// map[x + 1, y + 1] is vertex (x, y). Widening the noise map by 2 shifts its centre by exactly
+        /// one sample, so the same offset lines the interior up with the chunk's own vertices.
+        /// </summary>
         private float[,] GenerateHeightMap(Vector2Int coord, Vector2 offset)
         {
+            int size = _chunkResolution + 2;
             float[,] heightMap = NoiseGenerator.GenerateNoiseMap(
-                _chunkResolution,
-                _chunkResolution,
+                size,
+                size,
                 _seed,
                 _noiseScale,
                 _octaves,
@@ -278,27 +313,61 @@ namespace Shredsquatch.Terrain
             float vertexSpacing = VertexSpacing;
             bool useCurve = _heightCurve != null && _heightCurve.length > 0;
 
-            for (int y = 0; y < _chunkResolution; y++)
-            {
-                // Row y sits at chunk-local Z = -chunkSize/2 + y * spacing
-                float globalZ = coord.y * _chunkSize - _chunkSize / 2f + y * vertexSpacing;
+            // Terrain features (metres) are pure functions of world XZ. Their positions come from
+            // integer global vertex indices, so the two chunks sharing an edge evaluate bit-identical
+            // coordinates (and heights) there. Same world positions as globalZ and the mesh vertices.
+            bool useFeatures = _features != null && _features.Enabled && _heightMultiplier > 0f;
+            int span = Mathf.Max(1, _chunkResolution - 1);
+            double spacing = (double)_chunkSize / span;
+            double half = _chunkSize * 0.5;
+            int baseX = coord.x * span;
+            int baseZ = coord.y * span;
 
-                for (int x = 0; x < _chunkResolution; x++)
+            for (int ya = 0; ya < size; ya++)
+            {
+                // Vertex row y (= ya - 1) sits at chunk-local Z = -chunkSize/2 + y * spacing
+                int y = ya - 1;
+                float globalZ = coord.y * _chunkSize - _chunkSize / 2f + y * vertexSpacing;
+                double wz = (baseZ + y) * spacing - half;
+
+                for (int xa = 0; xa < size; xa++)
                 {
-                    float shaped = useCurve ? _heightCurve.Evaluate(heightMap[x, y]) : heightMap[x, y];
-                    heightMap[x, y] = shaped - globalZ * gradePerMetre;
+                    int x = xa - 1;
+                    float shaped = useCurve ? _heightCurve.Evaluate(heightMap[xa, ya]) : heightMap[xa, ya];
+                    float feature = useFeatures
+                        ? (float)(TerrainFeatures.HeightOffset(_seed, _features, (baseX + x) * spacing - half, wz) / _heightMultiplier)
+                        : 0f;
+                    heightMap[xa, ya] = shaped - globalZ * gradePerMetre + feature;
                 }
             }
 
             return heightMap;
         }
 
+        private float[,] ExtractInterior(float[,] apronMap)
+        {
+            float[,] interior = new float[_chunkResolution, _chunkResolution];
+            for (int y = 0; y < _chunkResolution; y++)
+            {
+                for (int x = 0; x < _chunkResolution; x++)
+                {
+                    interior[x, y] = apronMap[x + 1, y + 1];
+                }
+            }
+            return interior;
+        }
+
         private void SpawnObstacles(TerrainChunk chunk, Vector2Int coord, float[,] heightMap)
         {
+            _reservations.Clear();
+
             float distance = coord.y * _chunkSize / 1000f; // Approximate km
 
             // Determine zone
             TerrainZone zone = GetZone(distance);
+
+            // Park features first, so the scattered obstacles below can keep clear of them
+            SpawnParkFeatures(chunk, zone);
 
             // Tree density based on zone
             float treeDensity = GetTreeDensity(zone);
@@ -316,6 +385,63 @@ namespace Shredsquatch.Terrain
 
             // Rails (sparse, increase with zone)
             SpawnRails(chunk, heightMap, zone);
+        }
+
+        private void SpawnParkFeatures(TerrainChunk chunk, TerrainZone zone)
+        {
+            if (_features == null || !_features.Enabled) return;
+
+            // Plain try/catch rather than SafeExecution: repeated SafeExecution errors trip
+            // ErrorRecoveryManager into AttemptRecovery, which rebuilds every chunk.
+            try
+            {
+                ParkFeatureBuilder.SpawnChunkFeatures(chunk, _seed, _features, (int)zone, GetParkMaterials(), _reservations);
+            }
+            catch (System.Exception e)
+            {
+                // A throw here would orphan the chunk and regenerate it every frame
+                Debug.LogException(e);
+            }
+        }
+
+        /// <summary>
+        /// True where scattered obstacles must not spawn: this chunk's park features (bodies and
+        /// landings) and the terrain features' reserved areas (chute floors, drop run-ups and landings).
+        /// </summary>
+        private bool IsReserved(TerrainChunk chunk, float localX, float localZ)
+        {
+            for (int i = 0; i < _reservations.Count; i++)
+            {
+                if (_reservations[i].Contains(localX, localZ)) return true;
+            }
+
+            return _features != null && TerrainFeatures.IsReserved(
+                _seed,
+                _features,
+                chunk.ChunkCoord.x * (double)_chunkSize + localX,
+                chunk.ChunkCoord.y * (double)_chunkSize + localZ);
+        }
+
+        /// <summary>Park materials are tinted copies of the terrain material, created once.</summary>
+        private ParkMaterials GetParkMaterials()
+        {
+            if (_parkMaterials == null)
+            {
+                _parkMaterials = new ParkMaterials
+                {
+                    Kicker = MakeParkMaterial(0.80f, 0.88f, 0.97f),
+                    FunBox = MakeParkMaterial(0.18f, 0.66f, 1f),
+                    FlatBox = MakeParkMaterial(1f, 0.54f, 0.12f),
+                    DownBox = MakeParkMaterial(1f, 0.82f, 0.12f),
+                    Marker = MakeParkMaterial(1f, 0.35f, 0.05f)
+                };
+            }
+            return _parkMaterials;
+        }
+
+        private Material MakeParkMaterial(float r, float g, float b)
+        {
+            return _terrainMaterial != null ? new Material(_terrainMaterial) { color = new Color(r, g, b) } : null;
         }
 
         // Helper methods for seeded random
@@ -353,6 +479,10 @@ namespace Shredsquatch.Terrain
                 float scale = SeededRandomRange(0.8f, 1.5f);
 
                 GameObject prefab = _treePrefabs[SeededRandomRange(0, _treePrefabs.Length)];
+
+                // Skip only after the last draw so the seeded stream stays unchanged
+                if (IsReserved(chunk, localPos.x, localPos.z)) continue;
+
                 chunk.SpawnObject(prefab, localPos, rotation, Vector3.one * scale);
             }
         }
@@ -379,6 +509,8 @@ namespace Shredsquatch.Terrain
                 float scale = SeededRandomRange(0.5f, 2f);
 
                 GameObject prefab = _rockPrefabs[SeededRandomRange(0, _rockPrefabs.Length)];
+                if (IsReserved(chunk, localPos.x, localPos.z)) continue;
+
                 chunk.SpawnObject(prefab, localPos, rotation, Vector3.one * scale);
             }
         }
@@ -410,6 +542,10 @@ namespace Shredsquatch.Terrain
                 Quaternion rotation = Quaternion.Euler(0, SeededRandomRange(-20, 20), 0);
 
                 GameObject prefab = _rampPrefabs[SeededRandomRange(0, _rampPrefabs.Length)];
+
+                // Legacy ramps still consume their draws when disabled, keeping later layouts stable
+                if (!_spawnLegacyRamps || IsReserved(chunk, localPos.x, localPos.z)) continue;
+
                 chunk.SpawnObject(prefab, localPos, rotation, Vector3.one);
             }
         }
@@ -445,6 +581,8 @@ namespace Shredsquatch.Terrain
                     float height = chunk.SampleHeight(x - _chunkSize / 2, z - _chunkSize / 2) + 1.5f; // Float above ground
 
                     Vector3 localPos = new Vector3(x - _chunkSize / 2, height, z - _chunkSize / 2);
+                    if (IsReserved(chunk, localPos.x, localPos.z)) continue;
+
                     chunk.SpawnObject(_coinPrefab, localPos, Quaternion.identity, Vector3.one);
                 }
             }
@@ -477,6 +615,8 @@ namespace Shredsquatch.Terrain
                 Quaternion rotation = Quaternion.Euler(0, SeededRandomRange(-30, 30), 0);
 
                 GameObject prefab = _railPrefabs[SeededRandomRange(0, _railPrefabs.Length)];
+                if (IsReserved(chunk, localPos.x, localPos.z)) continue;
+
                 chunk.SpawnObject(prefab, localPos, rotation, Vector3.one);
             }
         }

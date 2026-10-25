@@ -134,6 +134,38 @@ namespace Shredsquatch.Core
             public const float MaxGrindSpeed = 80f;    // km/h
         }
 
+        // Ramp launches (seconds unless noted)
+        public static class Launch
+        {
+            public const float GroundedGrace = 0.15f;      // auto-launch still fires this long after the ray loses ground
+            public const float Cooldown = 0.5f;            // minimum time between two launches
+            public const float CoyoteTime = 0.12f;         // a jump release still counts this long after leaving the ground
+            public const float RampMemory = 0.25f;         // ramp type kept after leaving its last trigger
+            public const float DefaultMinSpeed = 6f;       // m/s; slower riders roll off lips without a pop
+            public const float KickerMaxEntryAngle = 30f;  // degrees between rider heading and kicker axis
+            public const float DropMaxEntryAngle = 45f;
+        }
+
+        // Park boxes (grindable, ridden on top)
+        public static class Box
+        {
+            public const int FunBoxPointsPerSecond = 400;
+            public const int FlatBoxPointsPerSecond = 450;
+            public const int DownBoxPointsPerSecond = 500;
+            public const int ClearBonus = 300;             // rode at least ClearProgress of the deck
+            public const float ClearProgress = 0.9f;
+            public const float OllieProgress = 0.8f;       // ollie off at or after this progress pays Score.RailOllieBonus
+            public const float LockHalfWidth = 1.3f;       // m from the box axis where the heading lock engages
+            public const float LockReleaseMargin = 0.3f;   // extra m before an engaged lock lets go
+            public const float LockMaxEntryAngle = 50f;    // degrees; crossing a box more steeply never locks
+            public const float CentringGain = 6f;          // (m/s) per m of lateral offset
+            public const float CentringMaxSpeed = 4f;      // m/s
+            public const float HeadingSnapRate = 540f;     // deg/s
+            public const float ExitGrace = 0.1f;           // s off the deck before the slide ends
+            public const float MinSlideDistance = 1.5f;    // m; shorter slides are cancelled silently
+            public const float BalanceSensitivity = 1f;    // rails use 2 (RailGrindController._balanceSensitivity)
+        }
+
         // Visibility (meters)
         public static class Visibility
         {

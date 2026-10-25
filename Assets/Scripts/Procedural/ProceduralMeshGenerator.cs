@@ -232,6 +232,77 @@ namespace Shredsquatch.Procedural
         }
 
         /// <summary>
+        /// Generate a park kicker: a deck rising at a constant angle to the lip, sides flared down at
+        /// sideSlopeDeg to a buried bottom, and a vertical back face downhill of the lip.
+        /// The pivot is the entry-edge centre on the snow; +Z points toward the lip, +Y is up.
+        /// The solid is convex and every face has its own vertices and winds outward, so it renders
+        /// with flat normals and works as a convex MeshCollider.
+        /// </summary>
+        public static Mesh GenerateKicker(float width, float zLip, float yEntry, float yLip, float yBottom, float sideSlopeDeg)
+        {
+            var mesh = new Mesh();
+            mesh.name = "ProceduralKicker";
+
+            float halfWidth = width / 2f;
+            float tan = (yLip - yEntry) / zLip;
+            // The deck plane continues under the snow uphill of the entry, down to the bottom
+            float zDeck = (yBottom - yEntry) / tan;
+            float flare = (yLip - yBottom) / Mathf.Tan(sideSlopeDeg * Mathf.Deg2Rad);
+
+            Vector3 deckLeft = new Vector3(-halfWidth, yBottom, zDeck);
+            Vector3 deckRight = new Vector3(halfWidth, yBottom, zDeck);
+            Vector3 lipLeft = new Vector3(-halfWidth, yLip, zLip);
+            Vector3 lipRight = new Vector3(halfWidth, yLip, zLip);
+            Vector3 cornerLeft = new Vector3(-halfWidth - flare, yBottom, zLip);
+            Vector3 cornerRight = new Vector3(halfWidth + flare, yBottom, zLip);
+
+            var vertices = new Vector3[]
+            {
+                // Deck
+                deckLeft, deckRight, lipRight, lipLeft,
+                // Back (vertical, faces downhill)
+                cornerLeft, cornerRight, lipRight, lipLeft,
+                // Bottom
+                deckLeft, deckRight, cornerRight, cornerLeft,
+                // Right side
+                deckRight, lipRight, cornerRight,
+                // Left side
+                deckLeft, cornerLeft, lipLeft,
+            };
+
+            var triangles = new int[]
+            {
+                // Deck (normal points up and back toward the entry)
+                0, 3, 2, 0, 2, 1,
+                // Back
+                4, 5, 6, 4, 6, 7,
+                // Bottom
+                8, 9, 10, 8, 10, 11,
+                // Sides
+                12, 13, 14,
+                15, 16, 17,
+            };
+
+            // Deck and bottom map (x, z), the back (x, y), the sides (z, y)
+            var uvs = new Vector2[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector3 v = vertices[i];
+                if (i < 4 || (i >= 8 && i < 12)) uvs[i] = new Vector2(v.x, v.z);
+                else if (i < 8) uvs[i] = new Vector2(v.x, v.y);
+                else uvs[i] = new Vector2(v.z, v.y);
+            }
+
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            mesh.uv = uvs;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            return mesh;
+        }
+
+        /// <summary>
         /// Generate a half-pipe section.
         /// </summary>
         public static Mesh GenerateHalfPipe(float width = 6f, float length = 20f, float height = 3f, int segments = 12)

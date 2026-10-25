@@ -323,6 +323,12 @@ namespace Shredsquatch.Core
                 _hudController.SetTrickController(trickController);
             }
 
+            var railController = _playerInstance.GetComponent<Tricks.RailGrindController>();
+            if (railController != null)
+            {
+                _hudController.SetRailGrindController(railController);
+            }
+
             Debug.Log("[SceneInitializer] HUD wired to player");
         }
 
