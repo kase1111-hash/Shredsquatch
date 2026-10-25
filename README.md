@@ -28,6 +28,7 @@ Unlike the top-down original, this is a full 3D experience with arcade physics, 
 - HUD with distance/speed, trick and grind popups, combo counter, Sasquatch proximity bar
 - 17 achievements and local leaderboards
 - Crash/ragdoll system with recovery and invincibility frames
+- Procedural animation: the first-person rider carves, tucks, crouches and pops jumps, absorbs landings, grabs, spins, flips, boardslides, wipes out and gets back up; the Sasquatch runs, roars, swats when repelled and lunges
 - Screen shake and controller haptic feedback
 - Error recovery system with automatic reset
 - 9 custom URP shaders
@@ -446,7 +447,7 @@ Grab points are based on timing—waiting longer before initiating the grab scor
 
 **Grab Hold Bonus:** +50 points per 0.5s held (max 2s hold = +200 bonus)
 
-**Flips (W+Jump or Up+Jump at ramp):**
+**Flips (W+Jump or Up+Jump at ramp):** Kickers and drops also pop you at the lip without a jump press. W and S double as tuck and brake, so if you were already holding one when the lip launched you, release it and press it again in the air to flip (the other key flips straight away, and so does holding Jump through the lip).
 
 | Trick | Points | Requirement |
 |-------|--------|-------------|
@@ -678,6 +679,15 @@ would create circular references. Namespaces still separate the modules.
 - Trick execution and combo tracking
 - Processes spin/grab/flip inputs
 - Manages repetition penalties and style bonuses
+
+**RiderAnimator (`Player/RiderAnimator.cs`)**
+- Builds the rider's body (legs, boots, arms, gloves; shadow-only torso and head) around the board and first-person camera
+- Poses it every frame from physics, jump, trick, rail and crash state via `RiderPoseSolver` (`Player/RiderPose.cs`)
+- Flips and wipeouts rotate the view with the body; grabs tip the view down to the hand on the board
+
+**SasquatchAnimator (`Sasquatch/SasquatchAnimator.cs`)**
+- Replaces the placeholder capsule with an animated body
+- `SasquatchGait`: a loping bound matched to ground speed, plus roar, repelled and lunge actions
 
 **SasquatchAI (`Sasquatch/SasquatchAI.cs`)**
 - Chase AI with rubber-band mechanics

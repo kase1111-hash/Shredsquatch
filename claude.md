@@ -98,7 +98,10 @@ Tricks), which per-feature assemblies cannot express.
 | `PlayerController` | Orchestrates physics, input, jumping, crashing |
 | `SnowboardPhysics` | Gravity-driven descent, carving, momentum |
 | `TrickController` | Trick execution, combo tracking |
+| `RiderAnimator` | Builds the rider's body and poses it every frame (owns the board's pose) |
+| `RiderPoseSolver` | Pure pose math for every movement and trick (`RiderPose.cs`) |
 | `SasquatchAI` | NavMesh pathfinding, rubber-band chase |
+| `SasquatchAnimator` / `SasquatchGait` | Sasquatch body, run cycle, roar, lunge |
 | `TerrainGenerator` | Infinite procedural terrain with chunk streaming |
 | `TerrainFeatures` | Pure world-space terrain shape terms (rollers, chutes, drops) |
 | `ParkFeatureBuilder` | Runtime kickers, boxes and ramp zones |
@@ -148,6 +151,15 @@ Control mappings in `Assets/Input/ShredsquatchControls.inputactions`:
 1. Add trick definition in `TrickController.cs`
 2. Update scoring in `Constants.cs`
 3. Add input mapping if needed in `.inputactions`
+4. Give it a pose in `RiderPoseSolver` (`Player/RiderPose.cs`; grabs are a
+   `GrabStyle` entry) and cover it in `Tests/Editor/ProceduralAnimationTests.cs`
+
+### Animation
+Characters are animated procedurally; there are no Animator controllers or clips.
+`RiderAnimator` and `SasquatchAnimator` build primitive bodies at runtime and pose
+them from pure solvers (`RiderPoseSolver`, `SasquatchGait`) using the shared
+two-bone IK and damping in `Procedural/ProceduralAnimation.cs`. Keep the solvers
+free of scene access so they stay unit-testable.
 
 ### Creating a New Obstacle
 1. Create prefab in `Assets/Prefabs/Obstacles/`

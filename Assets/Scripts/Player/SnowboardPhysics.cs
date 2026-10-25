@@ -9,7 +9,6 @@ namespace Shredsquatch.Player
         [Header("References")]
         [SerializeField] private CharacterController _controller;
         [SerializeField] private PlayerInput _input;
-        [SerializeField] private Transform _boardTransform;
 
         [Header("Movement Settings")]
         [SerializeField] private float _gravity = 20f;
@@ -70,6 +69,7 @@ namespace Shredsquatch.Player
         // Events
         public event System.Action OnCrash;
         public event System.Action OnEdgeCatch;
+        public event System.Action<float> OnHeadingCorrected;   // degrees the heading was snapped by
         public event System.Action BeforeMove;     // after ground check + steering, before gravity and the move
         public event System.Action OnMotionReset;  // raised by ResetMotion (teleport, run start, recovery)
 
@@ -225,6 +225,7 @@ namespace Shredsquatch.Player
             {
                 euler.y = heading;
                 transform.eulerAngles = euler;
+                OnHeadingCorrected?.Invoke(Mathf.DeltaAngle(yaw, heading));
             }
         }
 
@@ -277,11 +278,8 @@ namespace Shredsquatch.Player
                 float newYaw = Mathf.MoveTowardsAngle(yaw, _lockedSurface.AxisYaw, Constants.Box.HeadingSnapRate * Time.deltaTime);
                 transform.rotation = Quaternion.Euler(0f, newYaw, 0f);
 
+                // Flatten off the edge; RiderAnimator sets the board's lean from LeanAngle
                 _currentLeanAngle = Mathf.Lerp(_currentLeanAngle, 0f, Time.deltaTime * 5f);
-                if (_boardTransform != null)
-                {
-                    _boardTransform.localRotation = Quaternion.Euler(0, 0, -_currentLeanAngle);
-                }
 
                 _carveBoostAccumulator = 0f;
                 return;
@@ -293,15 +291,9 @@ namespace Shredsquatch.Player
             float targetLean = steerInput * Constants.Carving.CarveMaxAngle;
             _currentLeanAngle = Mathf.Lerp(_currentLeanAngle, targetLean, Time.deltaTime * 5f);
 
-            // Apply turn
+            // Apply turn (RiderAnimator puts the board on edge from LeanAngle)
             float turnAmount = steerInput * _turnSpeed * Time.deltaTime;
             transform.Rotate(0, turnAmount, 0);
-
-            // Rotate board visual for lean
-            if (_boardTransform != null)
-            {
-                _boardTransform.localRotation = Quaternion.Euler(0, 0, -_currentLeanAngle);
-            }
 
             // Check for edge catch (at or above threshold)
             float absLean = Mathf.Abs(_currentLeanAngle);

@@ -502,21 +502,10 @@ namespace Shredsquatch.Procedural
 
         private GameObject CreatePlayerTemplate(Transform parent)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            go.name = "Player_Procedural";
+            // No mesh of its own: RiderAnimator builds the animated body and board around the camera
+            var go = new GameObject("Player_Procedural");
             go.transform.parent = parent;
             go.tag = "Player";
-
-            // Color it blue
-            var renderer = go.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                renderer.material = CreateMaterial(new Color(0.2f, 0.4f, 0.8f));
-            }
-
-            // Replace primitive collider with CharacterController
-            var primitiveCollider = go.GetComponent<Collider>();
-            if (primitiveCollider != null) Destroy(primitiveCollider);
 
             var cc = go.AddComponent<CharacterController>();
             cc.height = 1.8f;
@@ -539,6 +528,8 @@ namespace Shredsquatch.Procedural
             camObj.AddComponent<Camera>();
             camObj.AddComponent<AudioListener>();
             camObj.AddComponent<FirstPersonCamera>();
+
+            go.AddComponent<RiderAnimator>();
 
             return go;
         }
@@ -573,6 +564,7 @@ namespace Shredsquatch.Procedural
             // since it can't differentiate two AudioSources by serialized field, we wire
             // the proximity source after AddComponent via the public field setter
             var ai = go.AddComponent<SasquatchAI>();
+            go.AddComponent<SasquatchAnimator>();
 
             return go;
         }

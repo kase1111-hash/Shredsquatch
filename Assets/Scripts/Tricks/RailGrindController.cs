@@ -31,6 +31,9 @@ namespace Shredsquatch.Tricks
         [SerializeField] private float _maxWobble = 1f;
         [SerializeField] private float _ollieForce = 8f;
 
+        // Rail progress from which jumping off pays the ollie bonus
+        private const float PerfectDismountProgress = 0.9f;
+
         // State
         private bool _isGrinding;
         private RailType _currentRailType;
@@ -344,7 +347,7 @@ namespace Shredsquatch.Tricks
             if (_input.JumpPressed)
             {
                 // Check if ollie at end for bonus
-                bool perfectDismount = _railProgress >= 0.9f;
+                bool perfectDismount = _railProgress >= PerfectDismountProgress;
 
                 if (perfectDismount)
                 {
@@ -357,7 +360,25 @@ namespace Shredsquatch.Tricks
 
         private void HandleJump(float estimatedAirTime)
         {
-            if (_isGrinding && _isBoxGrind) EndBoxGrind(true);
+            if (!_isGrinding) return;
+
+            if (_isBoxGrind)
+            {
+                EndBoxGrind(true);
+            }
+            else
+            {
+                // A lip popped the rider off mid-rail, or a charge held onto the rail was released
+                // (a fresh press is handled in CheckGrindEnd). A jump the player made still earns
+                // the dismount bonus. jumped: false, since JumpController already launched.
+                if (_jumpController != null && !_jumpController.LastLaunchWasAuto
+                    && _railProgress >= PerfectDismountProgress)
+                {
+                    _grindScore += Constants.Score.RailOllieBonus;
+                }
+
+                EndGrind(true);
+            }
         }
 
         /// <summary>

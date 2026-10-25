@@ -41,6 +41,10 @@ namespace Shredsquatch.Player
         public float AirTime => _airTime;
         public bool IsAirborne => !_physics.IsGrounded;
         public RampType CurrentRamp => _currentRamp;
+        /// <summary>True when the last launch was a lip popping the rider with no jump press.</summary>
+        public bool LastLaunchWasAuto { get; private set; }
+        public bool IsCharging => _isCharging && _input.JumpHeld && _physics.IsGrounded;
+        public float ChargeProgress => IsCharging ? Mathf.Clamp01(_chargeTime / Constants.Jump.ChargeTimeMax) : 0f;
 
         // Events
         public event System.Action<float> OnJump;           // airtime potential
@@ -100,6 +104,12 @@ namespace Shredsquatch.Player
 
         private void HandleJumpInput()
         {
+            // A release that happened while paused never reached us; don't carry that charge on
+            if (_isCharging && !_input.JumpHeld && !_input.JumpReleased)
+            {
+                _isCharging = false;
+            }
+
             // Start charging
             if (_physics.IsGrounded && _input.JumpPressed)
             {
@@ -155,13 +165,13 @@ namespace Shredsquatch.Player
                 ramp = RampType.SmallBump;
             }
 
-            Launch(ramp, _chargeTime / Constants.Jump.ChargeTimeMax);
+            Launch(ramp, _chargeTime / Constants.Jump.ChargeTimeMax, false);
         }
 
         /// <summary>
         /// The single launch path for button jumps and lip auto-launches.
         /// </summary>
-        private void Launch(RampType ramp, float charge01)
+        private void Launch(RampType ramp, float charge01, bool auto)
         {
             float gravity = Gravity;
             float jumpHeight = LaunchHeight(ramp, charge01);
@@ -181,8 +191,9 @@ namespace Shredsquatch.Player
             _lastLaunchTime = Time.time;
             _lastLaunchRamp = ramp;
 
-            // TrickController reads CurrentRamp inside OnJump
+            // TrickController reads CurrentRamp and LastLaunchWasAuto inside OnJump
             _currentRamp = ramp;
+            LastLaunchWasAuto = auto;
             OnJump?.Invoke(EstimateAirTime(jumpHeight, gravity));
 
             // Keep the zones still overlapped: Unity never re-sends OnTriggerEnter for a trigger the rider
@@ -253,8 +264,15 @@ namespace Shredsquatch.Player
                     if (!carriedToLip) continue;
                 }
 
+                // The player asked for this launch if jump is held, pressed or released at the lip, a
+                // charge's release hasn't been handled yet, or the deck carried a button hop up here.
+                // Only a launch nobody asked for is automatic (TrickController won't let a W/S that was
+                // just tucking or braking start a flip then).
+                bool jumpInvolved = _isCharging || _input.JumpHeld || _input.JumpPressed || _input.JumpReleased;
+                bool auto = !jumpInvolved && (ridingDeck || LastLaunchWasAuto);
+
                 // Holding jump through the lip adds the charge
-                Launch(zone.Ramp, charge01);
+                Launch(zone.Ramp, charge01, auto);
                 return; // One launch per frame
             }
         }

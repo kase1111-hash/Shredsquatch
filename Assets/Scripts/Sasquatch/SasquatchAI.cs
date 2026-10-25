@@ -47,6 +47,7 @@ namespace Shredsquatch.Sasquatch
 
         // Properties
         public bool IsActive => _isActive;
+        public bool IsRepelled => _isRepelled;
         public float DistanceToPlayer => _currentDistance;
         public float CurrentSpeed => _currentSpeed * 3.6f; // km/h
 
@@ -59,6 +60,12 @@ namespace Shredsquatch.Sasquatch
         {
             _groundMask = LayerMask.GetMask("Ground");
             if (_groundMask == 0) _groundMask = ~0;
+
+            // The run, roar and lunge are procedural; make sure every Sasquatch has them
+            if (GetComponent<SasquatchAnimator>() == null)
+            {
+                gameObject.AddComponent<SasquatchAnimator>();
+            }
 
             // Wire audio sources for procedural Sasquatch
             var sources = GetComponents<AudioSource>();

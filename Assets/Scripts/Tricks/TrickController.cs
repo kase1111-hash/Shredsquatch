@@ -20,6 +20,8 @@ namespace Shredsquatch.Tricks
         private bool _isAirborne;
         private float _airStartTime;
         private bool _launchedFromRamp; // Cache ramp state at jump start for flip eligibility
+        private bool _flipForwardBlocked;   // W (or stick up) already held at a no-button lip launch
+        private bool _flipBackwardBlocked;  // S (or stick down) already held at a no-button lip launch
 
         // Combo tracking
         private List<TrickType> _comboTricks = new List<TrickType>();
@@ -35,6 +37,18 @@ namespace Shredsquatch.Tricks
         // Properties
         public int ComboCount => _comboCount;
         public bool IsPerformingTrick => _currentTrick.Type != TrickType.None || _currentTrick.Grab != GrabType.None;
+        public bool IsAirborne => _isAirborne;   // launched and not yet landed: spins, grabs and flips count
+        public bool IsFlipping => _isAirborne && _currentTrick.IsFlipping;
+        public float FlipRotation => _currentTrick.FlipRotation;   // degrees, + = frontflip
+
+        /// <summary>
+        /// The grab being held right now (the first grab of the jump is the one that scores).
+        /// </summary>
+        public GrabType HeldGrab =>
+            _isAirborne && _input != null && _currentTrick.Grab != GrabType.None
+            && _input.GrabInput == (int)_currentTrick.Grab
+                ? _currentTrick.Grab
+                : GrabType.None;
 
         private void Awake()
         {
@@ -83,6 +97,14 @@ namespace Shredsquatch.Tricks
             // Cache ramp state at jump start since JumpController resets it immediately
             _launchedFromRamp = _jumpController != null &&
                                 _jumpController.CurrentRamp != JumpController.RampType.None;
+
+            // Lips pop the rider with no jump press, often while W is still held to tuck or S to
+            // brake, and those are the flip keys. A direction already held then only counts once
+            // it has been let go and pressed again (JumpController treats a lip launch with jump
+            // involved as the deliberate W+Jump, so nothing is blocked)
+            bool auto = _jumpController != null && _jumpController.LastLaunchWasAuto;
+            _flipForwardBlocked = auto && _input.FlipForwardHeld;
+            _flipBackwardBlocked = auto && _input.FlipBackwardHeld;
         }
 
         private void ProcessSpinInput()
@@ -127,9 +149,19 @@ namespace Shredsquatch.Tricks
             // Can only flip if launched from a ramp (use cached value since ramp is reset after jump)
             if (!_launchedFromRamp) return;
 
-            if (_input.FlipForward || _input.FlipBackward)
+            // A blocked direction frees up once its key or stick is actually let go
+            if (_flipForwardBlocked && !_input.FlipForwardHeld) _flipForwardBlocked = false;
+            if (_flipBackwardBlocked && !_input.FlipBackwardHeld) _flipBackwardBlocked = false;
+
+            bool forward = _input.FlipForward && !_flipForwardBlocked;
+            bool backward = _input.FlipBackward && !_flipBackwardBlocked;
+
+            if (forward || backward)
             {
                 _currentTrick.IsFlipping = true;
+                // Committed for the rest of the jump: letting go of W must not turn a
+                // frontflip into a backflip
+                _currentTrick.FlipDirection = forward ? 1f : -1f;
             }
         }
 
@@ -137,10 +169,8 @@ namespace Shredsquatch.Tricks
         {
             if (_currentTrick.IsFlipping)
             {
-                float flipDirection = _input.FlipForward ? 1f : -1f;
-                _currentTrick.FlipRotation += flipDirection * _flipSpeed * Time.deltaTime;
-
-                // Visual rotation would happen here via animator or direct transform
+                // RiderAnimator rotates the rider's body and view by FlipRotation
+                _currentTrick.FlipRotation += _currentTrick.FlipDirection * _flipSpeed * Time.deltaTime;
             }
         }
 
