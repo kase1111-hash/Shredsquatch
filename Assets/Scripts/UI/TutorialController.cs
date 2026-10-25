@@ -218,7 +218,7 @@ namespace Shredsquatch.UI
             if (!_shown1_5kmPrompt && distanceKm >= 1.5f)
             {
                 _shown1_5kmPrompt = true;
-                ShowPrompt("Jump onto rails to grind\nBalance with A/D for bonus points");
+                ShowPrompt("Ride onto boxes or jump onto rails to grind\nBalance with A/D for bonus points");
             }
         }
 

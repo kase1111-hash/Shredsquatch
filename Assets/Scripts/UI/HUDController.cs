@@ -34,8 +34,10 @@ namespace Shredsquatch.UI
         [Header("References")]
         [SerializeField] private PlayerController _player;
         [SerializeField] private TrickController _trickController;
+        [SerializeField] private RailGrindController _railController;
         [SerializeField] private SasquatchAI _sasquatch;
 
+        private string _lastGrindName = "Grind";
         private float _trickDisplayTimer;
         private bool _isPulsing;
         private float _errorMessageTimer;
@@ -72,6 +74,12 @@ namespace Shredsquatch.UI
             {
                 _trickController.OnTrickCompleted -= ShowTrick;
                 _trickController.OnComboUpdated -= UpdateCombo;
+            }
+
+            if (_railController != null)
+            {
+                _railController.OnGrindStart -= CacheGrindName;
+                _railController.OnGrindComplete -= ShowGrindScore;
             }
 
             if (_sasquatch != null)
@@ -141,6 +149,20 @@ namespace Shredsquatch.UI
             }
 
             _trickDisplayTimer = 2f;
+        }
+
+        private void CacheGrindName(string railName)
+        {
+            _lastGrindName = railName;
+        }
+
+        private void ShowGrindScore(int points)
+        {
+            // Rail grinds and box slides score outside TrickController, so pop them up here
+            if (points > 0)
+            {
+                ShowTrick(_lastGrindName, points);
+            }
         }
 
         private void UpdateCombo(int comboCount)
@@ -341,6 +363,29 @@ namespace Shredsquatch.UI
             {
                 _trickController.OnTrickCompleted += ShowTrick;
                 _trickController.OnComboUpdated += UpdateCombo;
+            }
+        }
+
+        /// <summary>
+        /// Set the rail grind controller reference at runtime (grind and box slide popups).
+        /// Start does not subscribe to it, so wiring it here never double-subscribes.
+        /// </summary>
+        public void SetRailGrindController(RailGrindController rails)
+        {
+            // Unsubscribe from old
+            if (_railController != null)
+            {
+                _railController.OnGrindStart -= CacheGrindName;
+                _railController.OnGrindComplete -= ShowGrindScore;
+            }
+
+            _railController = rails;
+
+            // Subscribe to new
+            if (_railController != null)
+            {
+                _railController.OnGrindStart += CacheGrindName;
+                _railController.OnGrindComplete += ShowGrindScore;
             }
         }
 

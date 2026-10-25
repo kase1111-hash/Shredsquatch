@@ -12,7 +12,10 @@ namespace Shredsquatch.Tricks
         MetalBarrier,   // 300 pts/sec
         CabinRidge,     // 350 pts/sec
         PipeRail,       // 400 pts/sec
-        ChairliftCable  // 200-400 pts/sec
+        ChairliftCable, // 200-400 pts/sec
+        FunBox,         // 400 pts/sec (park box, ridden on top)
+        FlatBox,        // 450 pts/sec
+        DownBox         // 500 pts/sec
     }
 
     public class RailGrindController : MonoBehaviour
@@ -40,9 +43,20 @@ namespace Shredsquatch.Tricks
         private bool _isHoldingGrab;
         private Transform _currentRail;
         private float _railProgress;         // 0 to 1 along rail
+        private float _scoreRemainder;       // Fractional points carried between frames
+        private bool _grabAwarded;           // Grab bonus pays once per grind
+
+        // Park boxes (ridden on top; contact comes from SnowboardPhysics' box lock)
+        private JumpController _jumpController;
+        private bool _isBoxGrind;
+        private GrindSurface _boxSurface;
+        private GrindSurface _bailedSurface; // Box just fallen off; no re-grind until the rider leaves it
+        private float _offBoxTimer;
+        private float _boxEntryProgress;     // Deck progress where the slide began
 
         // Properties
         public bool IsGrinding => _isGrinding;
+        public bool IsBoxGrinding => _isGrinding && _isBoxGrind;
         public float Balance => _balance;
         public float GrindDuration => _grindDuration;
 
@@ -57,14 +71,50 @@ namespace Shredsquatch.Tricks
             if (_physics == null) _physics = GetComponent<SnowboardPhysics>();
             if (_input == null) _input = GetComponent<PlayerInput>();
             if (_trickController == null) _trickController = GetComponent<TrickController>();
+            _jumpController = GetComponent<JumpController>();
+        }
+
+        private void Start()
+        {
+            if (_jumpController != null)
+            {
+                _jumpController.OnJump += HandleJump;
+            }
+
+            if (_physics != null)
+            {
+                // A grind never survives a crash, teleport, run reset or recovery
+                _physics.OnCrash += CancelGrind;
+                _physics.OnMotionReset += CancelGrind;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_jumpController != null)
+            {
+                _jumpController.OnJump -= HandleJump;
+            }
+
+            if (_physics != null)
+            {
+                _physics.OnCrash -= CancelGrind;
+                _physics.OnMotionReset -= CancelGrind;
+            }
         }
 
         private void Update()
         {
-            if (!_isGrinding) return;
-
-            if (GameManager.Instance?.CurrentState != GameState.Playing)
+            GameState? state = GameManager.Instance?.CurrentState;
+            if (state != GameState.Playing)
+            {
+                // Game over, menu or no manager: don't carry a stale grind into the next run
+                if (_isGrinding && state != GameState.Paused) CancelGrind();
                 return;
+            }
+
+            UpdateBoxContact();
+            if (!_isGrinding) return;
 
             UpdateGrind();
             UpdateBalance();
@@ -83,6 +133,12 @@ namespace Shredsquatch.Tricks
             _wobbleTimer = 0f;
             _entryRotation = entryRotation;
             _railProgress = 0f;
+            _isBoxGrind = false;
+            _boxSurface = null;
+            _offBoxTimer = 0f;
+            _boxEntryProgress = 0f;
+            _scoreRemainder = 0f;
+            _grabAwarded = false;
 
             // Apply spin entry bonus
             if (Mathf.Abs(entryRotation) >= 180f)
@@ -93,35 +149,88 @@ namespace Shredsquatch.Tricks
             OnGrindStart?.Invoke(GetRailName(type));
         }
 
+        /// <summary>
+        /// Start a box slide when the rider is locked onto a box deck, and end it a moment
+        /// after they leave it.
+        /// </summary>
+        private void UpdateBoxContact()
+        {
+            // Non-null only while SnowboardPhysics holds the heading lock on a box
+            GrindSurface surface = _physics != null ? _physics.CurrentGrindSurface : null;
+            if (_bailedSurface != null && surface != _bailedSurface) _bailedSurface = null;
+
+            bool onDeck = surface != null && surface.IsOnDeck(transform.position);
+
+            if (!_isGrinding)
+            {
+                // A ragdolling rider (edge catch on the lead-in) can slide onto the deck: that is no slide
+                if (onDeck && surface != _bailedSurface && !_physics.MovementLocked)
+                {
+                    StartGrind(surface.transform, surface.Type);
+                    _isBoxGrind = true;
+                    _boxSurface = surface;
+                    _boxEntryProgress = surface.GetProgress(transform.position);
+                }
+                return;
+            }
+
+            if (!_isBoxGrind) return;
+
+            if (onDeck && surface == _boxSurface)
+            {
+                _offBoxTimer = 0f;
+            }
+            else
+            {
+                _offBoxTimer += Time.deltaTime;
+                if (_offBoxTimer > Constants.Box.ExitGrace)
+                {
+                    EndBoxGrind(false);
+                }
+            }
+        }
+
         private void UpdateGrind()
         {
             _grindDuration += Time.deltaTime;
+
+            // A box slide only counts deck travel: the exit-grace frames after leaving the deck would
+            // otherwise let a one-frame touch at speed pass the minimum slide distance and score
+            if (_isBoxGrind && _offBoxTimer > 0f) return;
 
             // Track distance traveled (speed in m/s * time)
             _grindDistance += _physics.CurrentSpeed * Time.deltaTime;
 
             // Points per second based on rail type
-            int pointsPerSec = GetRailPointsPerSecond(_currentRailType);
+            float pointsPerSec = GetRailPointsPerSecond(_currentRailType);
 
             // Bonus for long grinds
             if (_grindDuration > 5f)
             {
-                pointsPerSec *= 2; // +400/sec for 5+ seconds
+                pointsPerSec *= 2f; // Double for 5+ seconds
             }
             else if (_grindDuration > 2f)
             {
-                pointsPerSec = Mathf.RoundToInt(pointsPerSec * 1.33f); // +200/sec for 2-5 seconds
+                pointsPerSec *= 1.33f; // +33% for 2-5 seconds
             }
 
-            _grindScore += Mathf.RoundToInt(pointsPerSec * Time.deltaTime);
+            // Carry the fraction between frames so no points are lost to per-frame rounding
+            _scoreRemainder += pointsPerSec * Time.deltaTime;
+            int wholePoints = Mathf.FloorToInt(_scoreRemainder);
+            _grindScore += wholePoints;
+            _scoreRemainder -= wholePoints;
 
-            // Check for grab while grinding
+            // Check for grab while grinding (the bonus pays once per grind)
             if (_input.GrabInput > 0)
             {
                 if (!_isHoldingGrab)
                 {
                     _isHoldingGrab = true;
-                    _grindScore += Constants.Score.RailGrabBonus;
+                    if (!_grabAwarded)
+                    {
+                        _grindScore += Constants.Score.RailGrabBonus;
+                        _grabAwarded = true;
+                    }
                 }
             }
             else
@@ -141,10 +250,13 @@ namespace Shredsquatch.Tricks
             // Player input affects balance
             float balanceInput = _input.SteerInput;
 
+            // Boxes are wider than rails, so balancing on them is more forgiving
+            float sensitivity = _isBoxGrind ? Constants.Box.BalanceSensitivity : _balanceSensitivity;
+
             if (Mathf.Abs(balanceInput) > 0.1f)
             {
                 // Counteract wobble with input
-                _balance -= balanceInput * _balanceSensitivity * Time.deltaTime;
+                _balance -= balanceInput * sensitivity * Time.deltaTime;
                 _wobbleTimer = 0f;
             }
             else
@@ -200,6 +312,16 @@ namespace Shredsquatch.Tricks
 
         private void UpdateRailPosition()
         {
+            if (_isBoxGrind)
+            {
+                // Real progress along the deck; UpdateBoxContact decides when the slide ends
+                if (_boxSurface != null && _offBoxTimer <= 0f)
+                {
+                    _railProgress = Mathf.Max(_railProgress, _boxSurface.GetProgress(transform.position));
+                }
+                return;
+            }
+
             if (_currentRail == null) return;
 
             // Move player along rail
@@ -215,6 +337,9 @@ namespace Shredsquatch.Tricks
 
         private void CheckGrindEnd()
         {
+            // JumpController handles jumping off a box (see HandleJump)
+            if (_isBoxGrind) return;
+
             // Jump off rail
             if (_input.JumpPressed)
             {
@@ -230,9 +355,48 @@ namespace Shredsquatch.Tricks
             }
         }
 
+        private void HandleJump(float estimatedAirTime)
+        {
+            if (_isGrinding && _isBoxGrind) EndBoxGrind(true);
+        }
+
+        /// <summary>
+        /// Finish a box slide that was ridden off the end or side, or ollied off.
+        /// </summary>
+        private void EndBoxGrind(bool viaJump)
+        {
+            if (!_isGrinding || !_isBoxGrind) return;
+
+            // Clipping a corner is not a slide
+            if (_grindDistance < Constants.Box.MinSlideDistance)
+            {
+                CancelGrind();
+                return;
+            }
+
+            // Pays for riding on near the start and off near the end, not for a landing near the far end.
+            // Each end is judged on its own: both are snapped to whole frames, so their difference can fall
+            // short of ClearProgress on a full ride at low frame rates.
+            if (_boxEntryProgress <= 1f - Constants.Box.ClearProgress && _railProgress >= Constants.Box.ClearProgress)
+            {
+                _grindScore += Constants.Box.ClearBonus;
+            }
+
+            if (viaJump && _railProgress >= Constants.Box.OllieProgress)
+            {
+                _grindScore += Constants.Score.RailOllieBonus;
+            }
+
+            // jumped: false, so no ApplyJumpForce here; JumpController already launched
+            EndGrind(true);
+        }
+
         public void EndGrind(bool success, bool jumped = false)
         {
             if (!_isGrinding) return;
+
+            // Falling off a box blocks an instant re-grind of the same box
+            if (!success && _isBoxGrind) _bailedSurface = _boxSurface;
 
             _isGrinding = false;
 
@@ -261,6 +425,23 @@ namespace Shredsquatch.Tricks
 
             _currentRail = null;
             _grindScore = 0;
+            _isBoxGrind = false;
+            _boxSurface = null;
+            _scoreRemainder = 0f;
+        }
+
+        /// <summary>
+        /// End any grind silently: no score and no events (crash, teleport, run reset, game over).
+        /// </summary>
+        public void CancelGrind()
+        {
+            _isGrinding = false;
+            _isBoxGrind = false;
+            _boxSurface = null;
+            _currentRail = null;
+            _grindScore = 0;
+            _scoreRemainder = 0f;
+            _isHoldingGrab = false;
         }
 
         private int GetRailPointsPerSecond(RailType type)
@@ -274,6 +455,9 @@ namespace Shredsquatch.Tricks
                 RailType.CabinRidge => 350,
                 RailType.PipeRail => 400,
                 RailType.ChairliftCable => 300, // Variable 200-400
+                RailType.FunBox => Constants.Box.FunBoxPointsPerSecond,
+                RailType.FlatBox => Constants.Box.FlatBoxPointsPerSecond,
+                RailType.DownBox => Constants.Box.DownBoxPointsPerSecond,
                 _ => 150
             };
         }
@@ -289,6 +473,9 @@ namespace Shredsquatch.Tricks
                 RailType.CabinRidge => "Cabin Ridge",
                 RailType.PipeRail => "Pipe Rail",
                 RailType.ChairliftCable => "Chairlift Cable",
+                RailType.FunBox => "Fun Box",
+                RailType.FlatBox => "Flat Box",
+                RailType.DownBox => "Down Box",
                 _ => "Rail"
             };
         }

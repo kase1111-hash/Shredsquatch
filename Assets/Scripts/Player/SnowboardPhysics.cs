@@ -1,5 +1,6 @@
 using UnityEngine;
 using Shredsquatch.Core;
+using Shredsquatch.Tricks;
 
 namespace Shredsquatch.Player
 {
@@ -37,6 +38,11 @@ namespace Shredsquatch.Player
         private Vector3 _groundNormal = Vector3.up;
         private float _carveBoostAccumulator;
 
+        // Park boxes: the heading lock lives here so it heals itself from the ground ray every frame
+        private GrindSurface _groundSurface;   // GrindSurface owning the collider under the ground ray
+        private GrindSurface _lockedSurface;   // box the heading lock currently holds
+        private bool _boxLocked;
+
         // Public properties
         public float CurrentSpeed => _currentSpeed;
         public float CurrentSpeedKmh => _currentSpeed * 3.6f;
@@ -44,6 +50,16 @@ namespace Shredsquatch.Player
         public bool IsInPowder => _isInPowder;
         public float LeanAngle => _currentLeanAngle;
         public Vector3 Velocity => _velocity;
+        public float Gravity => _gravity;
+
+        /// <summary>True while still climbing after a jump (the ground ray is not consulted).</summary>
+        public bool IsRising => _isJumping && _velocity.y > 0f;
+
+        /// <summary>Collider under the ground ray; null when airborne or rising.</summary>
+        public Collider GroundCollider { get; private set; }
+
+        /// <summary>The park box the heading is locked to, or null when not riding one.</summary>
+        public GrindSurface CurrentGrindSurface => _boxLocked ? _lockedSurface : null;
 
         /// <summary>
         /// While true (ragdoll / recovery) no acceleration or steering is applied.
@@ -54,6 +70,8 @@ namespace Shredsquatch.Player
         // Events
         public event System.Action OnCrash;
         public event System.Action OnEdgeCatch;
+        public event System.Action BeforeMove;     // after ground check + steering, before gravity and the move
+        public event System.Action OnMotionReset;  // raised by ResetMotion (teleport, run start, recovery)
 
         private float MaxSpeedMs => _maxSpeed * KmhToMs;
 
@@ -80,6 +98,9 @@ namespace Shredsquatch.Player
                 HandleCarving();
             }
 
+            // Grounded state is fresh here, so ramp lips can launch the rider before this frame's move
+            BeforeMove?.Invoke();
+
             ApplyGravity();
             MovePlayer();
 
@@ -97,18 +118,21 @@ namespace Shredsquatch.Player
                 {
                     _isGrounded = false;
                     _groundNormal = Vector3.up;
+                    ClearGroundSurface();
                     return;
                 }
                 _isJumping = false;
             }
 
+            // Trigger volumes (ramp zones, rails, coins) must never act as an invisible floor
             RaycastHit hit;
             _isGrounded = Physics.Raycast(
                 transform.position + Vector3.up * 0.1f,
                 Vector3.down,
                 out hit,
                 _groundCheckDistance + 0.1f,
-                _groundMask
+                _groundMask,
+                QueryTriggerInteraction.Ignore
             );
 
             if (_isGrounded)
@@ -117,11 +141,62 @@ namespace Shredsquatch.Player
 
                 // Check for powder (could be a tag or layer)
                 _isInPowder = hit.collider.CompareTag("Powder");
+
+                // Only look the box up when the surface underfoot changes
+                if (hit.collider != GroundCollider)
+                {
+                    GroundCollider = hit.collider;
+                    _groundSurface = hit.collider.GetComponentInParent<GrindSurface>();
+                }
             }
             else
             {
                 _groundNormal = Vector3.up;
+                ClearGroundSurface();
             }
+
+            UpdateBoxLock();
+        }
+
+        private void ClearGroundSurface()
+        {
+            GroundCollider = null;
+            _groundSurface = null;
+            _boxLocked = false;
+            _lockedSurface = null;
+        }
+
+        /// <summary>
+        /// Engage the heading lock when riding onto a box near its axis and roughly along it;
+        /// once engaged, hold it until the rider drifts clearly off the side.
+        /// </summary>
+        private void UpdateBoxLock()
+        {
+            if (_groundSurface == null)
+            {
+                _boxLocked = false;
+                _lockedSurface = null;
+                return;
+            }
+
+            float lateral = Mathf.Abs(_groundSurface.LateralOffset(transform.position));
+
+            if (_boxLocked && _lockedSurface == _groundSurface)
+            {
+                if (lateral > Constants.Box.LockHalfWidth + Constants.Box.LockReleaseMargin)
+                {
+                    _boxLocked = false;
+                    _lockedSurface = null;
+                }
+                return;
+            }
+
+            float yaw = Mathf.DeltaAngle(0f, transform.eulerAngles.y);
+            bool engage = lateral <= Constants.Box.LockHalfWidth
+                && Mathf.Abs(Mathf.DeltaAngle(yaw, _groundSurface.AxisYaw)) <= Constants.Box.LockMaxEntryAngle;
+
+            _boxLocked = engage;
+            _lockedSurface = engage ? _groundSurface : null;
         }
 
         /// <summary>
@@ -195,6 +270,23 @@ namespace Shredsquatch.Player
         {
             if (!_isGrounded) return;
 
+            if (_boxLocked && _lockedSurface != null)
+            {
+                // On a box the heading follows the box axis; steer input only drives RailGrindController's balance game.
+                float yaw = Mathf.DeltaAngle(0f, transform.eulerAngles.y);
+                float newYaw = Mathf.MoveTowardsAngle(yaw, _lockedSurface.AxisYaw, Constants.Box.HeadingSnapRate * Time.deltaTime);
+                transform.rotation = Quaternion.Euler(0f, newYaw, 0f);
+
+                _currentLeanAngle = Mathf.Lerp(_currentLeanAngle, 0f, Time.deltaTime * 5f);
+                if (_boardTransform != null)
+                {
+                    _boardTransform.localRotation = Quaternion.Euler(0, 0, -_currentLeanAngle);
+                }
+
+                _carveBoostAccumulator = 0f;
+                return;
+            }
+
             float steerInput = _input.SteerInput;
 
             // Update lean angle
@@ -240,7 +332,18 @@ namespace Shredsquatch.Player
             if (_isGrounded)
             {
                 // Follow the slope, and press into it so the controller stays in contact
-                _velocity = Vector3.ProjectOnPlane(transform.forward * _currentSpeed, _groundNormal);
+                Vector3 desired = transform.forward * _currentSpeed;
+
+                if (_boxLocked && _lockedSurface != null)
+                {
+                    // Slide along the box axis and steer back toward its centre line
+                    float lateral = _lockedSurface.LateralOffset(transform.position);
+                    float side = Mathf.Clamp(-Constants.Box.CentringGain * lateral,
+                        -Constants.Box.CentringMaxSpeed, Constants.Box.CentringMaxSpeed);
+                    desired = _lockedSurface.AxisFlat * _currentSpeed + _lockedSurface.RightFlat * side;
+                }
+
+                _velocity = Vector3.ProjectOnPlane(desired, _groundNormal);
                 _velocity.y -= _groundStickSpeed;
             }
             else
@@ -266,7 +369,13 @@ namespace Shredsquatch.Player
         {
             _isGrounded = false;
             _isJumping = true;
+
+            // Leave at full heading speed (transform.forward is always horizontal): the slope-projected
+            // grounded velocity lost cos^2 of the deck angle.
+            _velocity = transform.forward * _currentSpeed;
             _velocity.y = force;
+
+            ClearGroundSurface();
         }
 
         public void ApplyBoost(float speedBoost)
@@ -307,6 +416,9 @@ namespace Shredsquatch.Player
             _isGrounded = false;
             _groundNormal = Vector3.up;
             MovementLocked = false;
+            ClearGroundSurface();
+
+            OnMotionReset?.Invoke();
         }
     }
 }
