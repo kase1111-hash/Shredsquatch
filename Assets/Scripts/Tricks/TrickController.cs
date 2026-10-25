@@ -20,6 +20,7 @@ namespace Shredsquatch.Tricks
         private bool _isAirborne;
         private float _airStartTime;
         private bool _launchedFromRamp; // Cache ramp state at jump start for flip eligibility
+        private bool _flipNeedsNeutral; // W/S already held at a no-button lip launch: release before flipping
 
         // Combo tracking
         private List<TrickType> _comboTricks = new List<TrickType>();
@@ -35,6 +36,7 @@ namespace Shredsquatch.Tricks
         // Properties
         public int ComboCount => _comboCount;
         public bool IsPerformingTrick => _currentTrick.Type != TrickType.None || _currentTrick.Grab != GrabType.None;
+        public bool IsAirborne => _isAirborne;   // launched and not yet landed: spins, grabs and flips count
         public bool IsFlipping => _isAirborne && _currentTrick.IsFlipping;
         public float FlipRotation => _currentTrick.FlipRotation;   // degrees, + = frontflip
 
@@ -94,6 +96,12 @@ namespace Shredsquatch.Tricks
             // Cache ramp state at jump start since JumpController resets it immediately
             _launchedFromRamp = _jumpController != null &&
                                 _jumpController.CurrentRamp != JumpController.RampType.None;
+
+            // Lips pop the rider with no jump press, often while W is still held to tuck or S to
+            // brake, and those are the flip keys. Only a fresh press counts as asking for a flip
+            // then; holding jump through the lip is still the deliberate W+Jump.
+            _flipNeedsNeutral = _jumpController != null && _jumpController.LastLaunchWasAuto
+                                && !_input.JumpHeld && (_input.FlipForward || _input.FlipBackward);
         }
 
         private void ProcessSpinInput()
@@ -137,6 +145,12 @@ namespace Shredsquatch.Tricks
 
             // Can only flip if launched from a ramp (use cached value since ramp is reset after jump)
             if (!_launchedFromRamp) return;
+
+            if (_flipNeedsNeutral)
+            {
+                if (!_input.FlipForward && !_input.FlipBackward) _flipNeedsNeutral = false;
+                return;
+            }
 
             if (_input.FlipForward || _input.FlipBackward)
             {

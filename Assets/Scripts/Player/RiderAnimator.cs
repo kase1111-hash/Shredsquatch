@@ -160,7 +160,9 @@ namespace Shredsquatch.Player
                 state.Steer = _input.SteerInput;
                 state.Tucking = _input.IsTucking;
                 state.Braking = _input.IsBraking;
-                if (!state.Grounded) state.Spin = _input.SpinInput;
+
+                // Spins only turn the rider after a launch, not when rolling off an edge
+                if (_tricks != null && _tricks.IsAirborne) state.Spin = _input.SpinInput;
             }
 
             if (_jump != null)
@@ -176,9 +178,12 @@ namespace Shredsquatch.Player
                 state.FlipAngle = _tricks.FlipRotation;
             }
 
-            if (_rails != null && _rails.IsGrinding)
+            // Boxes are ridden on their deck; rails are triggers the rider passes through at snow
+            // level, so a rail grind only shows while the board is down (not if it rolls off a crest)
+            if (_rails != null && _rails.IsGrinding && (_rails.IsBoxGrinding || state.Grounded))
             {
                 state.Grinding = true;
+                state.OnBox = _rails.IsBoxGrinding;
                 state.Balance = _rails.Balance;
                 state.Grab = _input != null ? (GrabType)_input.GrabInput : GrabType.None;
             }

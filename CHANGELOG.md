@@ -68,6 +68,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that logged errors on every enable (no NavMesh exists on procedural terrain)
 - Letting go of W mid-frontflip reversed the flip (and could score it as a
   backflip); a flip now keeps the direction it started in
+- Tucking (W) or braking (S) through a kicker or drop that launched the rider
+  on its own started a flip they never asked for; a W/S already held at a
+  no-button launch must be released and pressed again (holding Jump through
+  the lip still flips straight away)
+- A lip launch in the middle of a rail grind left the grind running in the
+  air, where a jump press launched the rider a second time; launching now
+  ends the grind
 - The Sasquatch placeholder used Unity's built-in default material, which
   renders magenta under URP; it now uses `SasquatchFur.mat`
 
@@ -81,8 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   crouch, ollie pop, landing compression scaled by airtime, all four grabs
   (the hand reaches the right spot on a tweaked board and the view tips down
   to it), spin wind-up, flips (body and view rotate with the scored flip, then
-  settle upright), boardslides with the board across the rail and the body
-  wobbling with balance, a head-over-heels wipeout or a sideways slam for an
+  settle upright), boardslides with the board across the rail (up on top of
+  it) or across a park box deck, the body wobbling with balance and sinking
+  into a charged box ollie, a head-over-heels wipeout or a sideways slam for an
   edge catch, and getting back up. A landed 180 that turns into riding switch
   now swings the view round instead of snapping it
 - `SasquatchAnimator` replaces the Sasquatch's capsule with a body and long

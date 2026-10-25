@@ -22,6 +22,7 @@ namespace Shredsquatch.Player
         public bool Flipping;
         public float FlipAngle;     // degrees, + = frontflip
         public bool Grinding;
+        public bool OnBox;          // sliding a park box: the feet are already on its deck
         public float Balance;       // -1..1 rail balance
         public bool Crashed;        // wiped out, tumbling or lying in the snow
         public bool Recovering;     // getting back up
@@ -329,13 +330,21 @@ namespace Shredsquatch.Player
             }
             else if (input.Grinding)
             {
-                // Boardslide: hips turned with the board across the rail, shoulders still facing
-                // down the hill, arms out in front against the wobble
+                // Boardslide: hips turned with the board across the rail or box, shoulders still
+                // facing down the hill, arms out in front against the wobble
                 legBend = 0.3f;
                 hunch = 6f;
                 boardEuler = new Vector3(0f, 80f, -input.Balance * 18f);
                 handLeft = new Vector3(-0.4f, 0.48f + 0.14f * input.Balance, 0.5f);
                 handRight = new Vector3(0.4f, 0.48f - 0.14f * input.Balance, 0.5f);
+
+                if (input.Charging)
+                {
+                    // Winding up an ollie off a box deck (a rail ollies the moment jump is pressed)
+                    float charge = Mathf.Clamp01(input.Charge);
+                    legBend = Mathf.Lerp(0.3f, 0.75f, charge);
+                    hunch = 6f + 12f * charge;
+                }
             }
             else if (airborne)
             {
@@ -443,7 +452,10 @@ namespace Shredsquatch.Player
             _nod = ProceduralAnimation.Damp(_nod, nod, 10f, dt);
             _boardEuler = ProceduralAnimation.Damp(_boardEuler, boardEuler, 12f, dt);
             _boardOffset = ProceduralAnimation.Damp(_boardOffset, boardOffset, 12f, dt);
-            _grindLift = ProceduralAnimation.Damp(_grindLift, input.Grinding ? GrindLift : 0f, 12f, dt);
+            // Rails are triggers passed through at snow level, so the board climbs onto them;
+            // a box's deck is already under the feet
+            bool onRail = input.Grinding && !input.OnBox;
+            _grindLift = ProceduralAnimation.Damp(_grindLift, onRail ? GrindLift : 0f, 12f, dt);
             _balanceRoll = ProceduralAnimation.Damp(_balanceRoll, input.Grinding ? -input.Balance * 9f : 0f, 10f, dt);
             bool riding = input.Grounded && !input.Grinding && !input.Crashed && !input.Recovering;
             _chatter = ProceduralAnimation.Damp(_chatter, riding ? speedRatio * speedRatio * MaxChatter : 0f, 10f, dt);

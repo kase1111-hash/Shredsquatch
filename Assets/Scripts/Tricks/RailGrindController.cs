@@ -357,7 +357,18 @@ namespace Shredsquatch.Tricks
 
         private void HandleJump(float estimatedAirTime)
         {
-            if (_isGrinding && _isBoxGrind) EndBoxGrind(true);
+            if (!_isGrinding) return;
+
+            if (_isBoxGrind)
+            {
+                EndBoxGrind(true);
+            }
+            else
+            {
+                // A lip popped the rider off mid-rail (a jump press would already have ended the
+                // grind in CheckGrindEnd). jumped: false, since JumpController already launched.
+                EndGrind(true);
+            }
         }
 
         /// <summary>

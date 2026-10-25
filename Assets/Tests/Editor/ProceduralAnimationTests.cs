@@ -320,6 +320,40 @@ namespace Shredsquatch.Tests.Editor
         }
 
         [Test]
+        public void BoxSlide_KeepsTheBoardOnTheDeck()
+        {
+            // Park boxes are ridden on top, so the player root is already on the deck
+            var sliding = Riding;
+            sliding.Grinding = true;
+            sliding.OnBox = true;
+            sliding.Balance = 0.5f;
+            RiderPose pose = Run(_rider, sliding, 1f);
+
+            // Within a couple of centimetres: the balance lean pivots the body at the hips
+            Assert.AreEqual(BoardHeight, ToRoot(pose, pose.BoardPosition).y, 0.02f, "board should not lift off the deck");
+            Assert.Greater(Mathf.Abs((pose.BoardRotation * Vector3.forward).x), 0.9f, "board should still be across the box");
+            AssertLegsOnBoard(pose);
+        }
+
+        [Test]
+        public void BoxOllieCharge_SinksIntoTheKnees()
+        {
+            var sliding = Riding;
+            sliding.Grinding = true;
+            sliding.OnBox = true;
+            RiderPose slide = Run(_rider, sliding, 1f);
+
+            var charging = sliding;
+            charging.Charging = true;
+            charging.Charge = 1f;
+            RiderPose charged = Run(_rider, charging, 1f);
+
+            Assert.Less(ToRoot(charged, charged.CameraPosition).y, ToRoot(slide, slide.CameraPosition).y - 0.1f);
+            Assert.AreEqual(BoardHeight, ToRoot(charged, charged.BoardPosition).y, 0.002f);
+            AssertLegsOnBoard(charged);
+        }
+
+        [Test]
         public void SasquatchGait_KeepsAFootPlantedWhileRunning()
         {
             var gait = new SasquatchGait();
